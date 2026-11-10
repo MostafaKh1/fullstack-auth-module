@@ -1,10 +1,10 @@
 import type { RouteObject } from "react-router";
-import { RequireSession } from "../features/auth/require-session";
-import { RequireSignedOut } from "../features/auth/require-signed-out";
-import { ApplicationPage } from "../pages/application-page";
-import { NotFoundPage } from "../pages/not-found-page";
-import { SignInPage } from "../pages/sign-in-page";
-import { SignUpPage } from "../pages/sign-up-page";
+import { RequireSession } from "../components/layout/route-guards/RequireSession";
+import { RequireSignedOut } from "../components/layout/route-guards/RequireSignedOut";
+import { SignInPage } from "../pages/(auth)/sign-in/SignInPage";
+import { SignUpPage } from "../pages/(auth)/sign-up/SignUpPage";
+import { ApplicationPage } from "../pages/(webapp)/application/ApplicationPage";
+import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 
 /** The one route table, shared by the browser router and the test harness. */
 export const routes: RouteObject[] = [

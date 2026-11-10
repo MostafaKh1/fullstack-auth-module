@@ -5,7 +5,7 @@ export default defineConfig((env) =>
   mergeConfig(viteConfig(env), {
     test: {
       environment: "jsdom",
-      setupFiles: ["./src/test/setup.ts"],
+      setupFiles: ["./src/tests/setup/setup.ts"],
       restoreMocks: true,
     },
   }),

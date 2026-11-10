@@ -1,0 +1,20 @@
+{
+  "name": "fullstack-auth-module",
+  "private": true,
+  "description": "Thin root: convenience scripts that delegate to the two independent apps in backend/ and frontend/.",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "setup": "npm ci && npm ci --prefix backend && npm ci --prefix frontend",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "dev": "concurrently --names backend,frontend --prefix-colors blue,magenta --kill-others-on-fail \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  // Biome lints; Prettier formats (ADR 0004). The formatter stays off so the two never fight.
+  "formatter": { "enabled": false },
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignoreUnknown": true,
+    // Installed skills are vendored from upstream, not our code.
+    "includes": ["**", "!.claude/skills", "!.agents/skills", "!**/package-lock.json"],
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        // Application code logs through the injected pino logger (CODING_STANDARDS.md).
+        "noConsole": "error",
+      },
+    },
+  },
+  "javascript": {
+    "parser": {
+      // NestJS injects through parameter decorators.
+      "unsafeParameterDecoratorsEnabled": true,
+    },
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true,
+    },
+  },
+  "overrides": [
+    {
+      "includes": ["backend/**"],
+      "linter": {
+        "rules": {
+          // An `import type` of an injected class erases it at runtime and breaks Nest DI.
+          "style": { "useImportType": "off" },
+        },
+      },
+    },
+  ],
+}

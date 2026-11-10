@@ -108,13 +108,13 @@ The back end keeps one Session per signed-in device, accepts only signed-in User
 
 All routes sit under `/api`.
 
-| Method | Path             | Auth                   | Request                     | Success                                            |
-| ------ | ---------------- | ---------------------- | --------------------------- | -------------------------------------------------- |
-| POST   | `/auth/sign-up`  | Public, throttled      | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie    |
-| POST   | `/auth/sign-in`  | Public, throttled      | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie    |
-| POST   | `/auth/refresh`  | Refresh cookie, Origin | none                        | `200 { accessToken, expiresIn, user }` + new cookie |
-| POST   | `/auth/sign-out` | Refresh cookie, Origin | none                        | `204`, cookie cleared                              |
-| GET    | `/users/me`      | Access token           | none                        | `200 { id, email, name, createdAt }`               |
+| Method | Path             | Auth                   | Request                     | Success                                                     |
+| ------ | ---------------- | ---------------------- | --------------------------- | ----------------------------------------------------------- |
+| POST   | `/auth/sign-up`  | Public, throttled      | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie             |
+| POST   | `/auth/sign-in`  | Public, throttled      | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie             |
+| POST   | `/auth/refresh`  | Refresh cookie, Origin | none                        | `200 { accessToken, expiresIn, user }` + new cookie         |
+| POST   | `/auth/sign-out` | Refresh cookie, Origin | none                        | `204`, cookie cleared                                       |
+| GET    | `/users/me`      | Access token           | none                        | `200 { id, email, name, createdAt }`                        |
 | GET    | `/health`        | Public                 | none                        | `200 { status, database }`; `503` when the database is down |
 
 - `user` in auth responses has the same shape as `/users/me`.

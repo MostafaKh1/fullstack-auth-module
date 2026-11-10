@@ -1,0 +1,7 @@
+# Prettier also honours .gitignore.
+package-lock.json
+skills-lock.json
+
+# Installed skills are vendored from upstream, not our code.
+.claude/skills/
+.agents/skills/

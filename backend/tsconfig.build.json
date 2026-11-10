@@ -4,5 +4,7 @@
     "rootDir": "src",
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  // The HTTP-seam suites and their harness live in `src/test/` but never ship.
+  "exclude": ["src/test"]
 }

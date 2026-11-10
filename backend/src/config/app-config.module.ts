@@ -1,6 +1,6 @@
 import { type DynamicModule, Global, Module } from "@nestjs/common";
 import { AppConfigService } from "./app-config.service";
-import type { AppConfig } from "./config.schema";
+import type { AppConfig } from "./app-env";
 
 @Global()
 @Module({})

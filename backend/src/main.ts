@@ -3,7 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import pino from "pino";
 import { AppModule } from "./app.module";
 import { configureApp } from "./app.setup";
-import { InvalidConfigError, loadConfig } from "./config/config.schema";
+import { InvalidConfigError, loadConfig } from "./config/app-env";
 
 async function bootstrap(): Promise<void> {
   const config = loadConfig();

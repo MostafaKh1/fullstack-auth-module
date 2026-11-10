@@ -4,7 +4,7 @@ import type { Config } from "jest";
 const config: Config = {
   testEnvironment: "node",
   rootDir: ".",
-  testMatch: ["<rootDir>/test/**/*.spec.ts"],
+  testMatch: ["<rootDir>/src/test/**/*.spec.ts"],
   transform: { "^.+\\.ts$": "ts-jest" },
   testTimeout: 30_000,
 };

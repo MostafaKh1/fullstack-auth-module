@@ -1,11 +1,11 @@
 import { type CanActivate, type ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request } from "express";
-import { Clock } from "../clock/clock";
-import { SessionRepository } from "../database/session.repository";
-import { ApiError } from "../errors/api-error";
+import { IS_PUBLIC } from "../common/auth.decorator";
+import { ApiError } from "../common/errors/api-error";
+import { ClockService } from "../core/clock.service";
+import { SessionRepository } from "../database/repositories/session.repository";
 import { type AccessClaims, AccessTokenService } from "./access-token.service";
-import { IS_PUBLIC } from "./public.decorator";
 import { isSessionLive } from "./session.rules";
 
 export type AuthenticatedRequest = Request & { authSession?: AccessClaims };
@@ -22,7 +22,7 @@ export class AccessTokenGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly accessTokens: AccessTokenService,
     private readonly sessions: SessionRepository,
-    private readonly clock: Clock,
+    private readonly clock: ClockService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

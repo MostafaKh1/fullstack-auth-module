@@ -40,3 +40,9 @@ What survived from the discarded attempt, because it was learned rather than wri
 - Windows Application Control on the development machine blocks unsigned native `.node` addons: password hashing uses scrypt from `node:crypto` (recorded in `CODING_STANDARDS.md`), and Vite's Rollup needs its WebAssembly build (`@rollup/wasm-node` as an npm override).
 - Biome needs Tailwind directive parsing enabled for CSS, and a `"//"` comment key is invalid in its configuration; use `biome.jsonc` comments.
 - Validation issues on the wire are `{ path, code }` with rule ids as codes (ADR 0002 updated).
+
+### 01: Repository setup (#11)
+
+- **AI-generated:** the root `package.json` (delegating scripts, `concurrently` as the only root dependency), `compose.yaml` for MongoDB 8 with a `mongosh` ping health check, `backend/.env.example` and `frontend/.env.example`, `.gitignore`, `.editorconfig`, and ADR 0003. The env variable names (`ACCESS_TOKEN_TTL_SECONDS`, `SESSION_IDLE_TTL_DAYS`, `SESSION_ABSOLUTE_TTL_DAYS`, `REFRESH_GRACE_SECONDS`, `PASSWORD_HASH_COST`, `COOKIE_SECURE`, `API_PROXY_TARGET`) were chosen here; the spec names the settings, not the variables, and later tickets must read exactly these.
+- **Verified:** with throwaway stub `package.json` files in `backend/` and `frontend/` (removed before committing), `npm run setup`, `dev`, `test`, `build` and `typecheck` each ran the matching script inside each app's own directory. `docker compose config` validates the Compose file. There is no test suite: the apps do not exist yet, so no agreed test seam covers this ticket.
+- **Not verified:** `docker compose up` itself, because the Docker engine was not running on the development machine during this ticket; the health check is unexercised until it is.

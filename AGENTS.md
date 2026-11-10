@@ -13,8 +13,8 @@ Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB
 ## Workflow
 
 Work flows spec -> tickets -> implementation, one ticket at a time, test first.
-Take the next ticket from the frontier described in [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md).
-A ticket is done when lint, typecheck, tests and build are green for every app it touched, and it lands as one commit with its ticket file updated.
+Take the next ticket from the frontier: an open sub-issue of the spec with no open blocker (`docs/agents/issue-tracker.md`).
+A ticket is done when lint, typecheck, tests and build are green for every app it touched, and it lands as one commit whose message carries `Closes #<n>`.
 
 ## Commits
 
@@ -24,7 +24,7 @@ Conventional Commits; see the `git-conventions` skill.
 
 ### Issue tracker
 
-Specs, tickets and retros are committed Markdown under `docs/spec/`, `docs/tickets/` and `docs/retro/`. See `docs/agents/issue-tracker.md`.
+Specs and tickets are GitHub Issues: the spec is a `spec` issue, its tickets are sub-issues with native "blocked by" links. See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 

@@ -3,7 +3,7 @@
 - **Status:** ready-for-agent
 - **Requirements:** [docs/requirements.md](../requirements.md)
 - **Decisions:** [ADR 0001](../adr/0001-session-record-with-short-lived-access-token.md), [ADR 0002](../adr/0002-api-errors-carry-codes-not-copy.md)
-- **Tickets:** [docs/tickets/](../tickets/)
+- **Tracker:** spec [#1](https://github.com/MostafaKh1/fullstack-auth-module/issues/1); tickets [#2](https://github.com/MostafaKh1/fullstack-auth-module/issues/2) to [#9](https://github.com/MostafaKh1/fullstack-auth-module/issues/9)
 
 ## Problem Statement
 
@@ -85,14 +85,14 @@ The back end keeps a Session per signed-in device, accepts only signed-in Users 
 
 All routes sit under `/api`.
 
-| Method | Path                 | Auth                   | Request                     | Success                                    |
-| ------ | -------------------- | ---------------------- | --------------------------- | ------------------------------------------ |
-| POST   | `/auth/sign-up`      | Public, throttled      | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie |
-| POST   | `/auth/sign-in`      | Public, throttled      | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie |
-| POST   | `/auth/refresh`      | Refresh cookie, Origin | none                        | `200 { accessToken, expiresIn, user }` + rotated cookie |
-| POST   | `/auth/sign-out`     | Refresh cookie, Origin | none                        | `204`, cookie cleared                      |
-| GET    | `/users/me`          | Access token           | none                        | `200 { id, email, name, createdAt }`       |
-| GET    | `/health`            | Public                 | none                        | `200 { status, database }`, `503` if the database is down |
+| Method | Path             | Auth                   | Request                     | Success                                                   |
+| ------ | ---------------- | ---------------------- | --------------------------- | --------------------------------------------------------- |
+| POST   | `/auth/sign-up`  | Public, throttled      | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie           |
+| POST   | `/auth/sign-in`  | Public, throttled      | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie           |
+| POST   | `/auth/refresh`  | Refresh cookie, Origin | none                        | `200 { accessToken, expiresIn, user }` + rotated cookie   |
+| POST   | `/auth/sign-out` | Refresh cookie, Origin | none                        | `204`, cookie cleared                                     |
+| GET    | `/users/me`      | Access token           | none                        | `200 { id, email, name, createdAt }`                      |
+| GET    | `/health`        | Public                 | none                        | `200 { status, database }`, `503` if the database is down |
 
 - `user` in auth responses has the same shape as `/users/me`.
 - The refresh cookie is `httpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Secure` in production, and its `Max-Age` matches the Session's expiry.
@@ -106,7 +106,7 @@ All routes sit under `/api`.
 type User = {
   email: string; // trimmed, lowercased, unique index
   name: string; // trimmed
-  passwordHash: string; // argon2id, excluded from default projections
+  passwordHash: string; // scrypt via node:crypto, excluded from default projections
   createdAt: Date;
   updatedAt: Date;
 };

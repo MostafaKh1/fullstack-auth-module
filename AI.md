@@ -1,0 +1,42 @@
+# AI.md
+
+How AI assistance was used to build this repository, written as the work happened, one entry per ticket.
+The assistant was Claude (Claude Code in VS Code). Every generated line was read, run and owned before it was committed.
+
+## Method
+
+The workflow was chosen up front and followed throughout:
+
+1. **Grill with docs.** Instead of prompting "build an auth module", the AI interviewed me in rounds about the design, one numbered question per open decision with its recommended answer. Decisions were written down as they settled: the clarified rules in `docs/requirements.md`, the vocabulary in `GLOSSARY.md`, and the two hard-to-reverse choices as ADRs in `docs/adr/`.
+2. **Spec, then tickets.** The conversation was synthesised into `docs/spec/auth-module.md`, then split into eight tracer-bullet tickets in `docs/tickets/`, each a thin end-to-end slice with explicit blocking edges.
+3. **Implement one ticket at a time, test first, at agreed seams only.** Three seams were agreed before any test was written: the back end's HTTP API (against a throwaway `mongod`), the front end's rendered app (network faked with MSW), and a small set of Playwright journeys.
+4. **Review against written standards.** `CODING_STANDARDS.md` holds the rules a reviewer checks; `AGENTS.md` files hold only navigation pointers.
+
+## What worked
+
+- **Constraining scope with the brief first.** The first planning round jumped straight to technology. I redirected it to the brief's requirements, and the resulting clarifications (what counts as a "special character", whether a name is trimmed before counting, what sign-in reveals) became the testable rules everything else hangs on.
+- **"Answer from conventions you already have; ask me only what's left."** Pointing the AI at an existing codebase's conventions (one handler per operation, repositories as the only database door, a closed error-code set with front-end-owned copy) removed most of its questions and produced a more consistent design than open-ended prompting did.
+- **ADRs only for the hard-to-reverse.** Two ADRs, not ten: the Session model and the error contract.
+
+## Corrections and decisions made differently
+
+- **Rejected the first scaffold.** An earlier attempt had generated a back end before any design was agreed; it contained a broken Jest config (regexes written as invalid JSON escapes in `package.json`) and a hard-coded, fabricated bcrypt hash used as a timing-attack decoy. I had it deleted and restarted from the requirements.
+- **Asked for less, not more.** The AI's first question rounds were long and over-engineered (a Redis-backed grace cache, asymmetric signing keys). I cut them back to what a few-hours brief warrants; the Session model kept rotation and reuse detection but dropped the infrastructure.
+- **NestJS 11, not 12.** The newest major had shipped only weeks earlier; I chose the version whose ecosystem (`@nestjs/mongoose`, `nestjs-pino`, `@nestjs/swagger`) is proven, over the newest.
+- **scrypt, not argon2id.** argon2id was the AI's recommendation, but its native addon was blocked by Windows Application Control on my machine, as was Rollup's native binary. Password hashing moved to scrypt from `node:crypto` (OWASP-listed, no native dependency, no 72-byte limit like bcrypt), and Vite's Rollup was swapped for its WebAssembly build.
+
+## Log
+
+### Moving the tickets onto GitHub Issues
+
+The tickets started as committed Markdown files. I asked for them to live on the tracker instead, so the work is visible as issues that open and close: the spec is issue #1 and tickets 01-08 are its sub-issues #2-#9, linked with GitHub's native "blocked by" dependencies.
+
+### Restarting the implementation with agents
+
+The first two tickets were implemented by the assistant directly in the main conversation, with tests written alongside the code rather than strictly first. That skipped the agreed workflow: each ticket built by a fresh implementer agent, test-first at the agreed seams, then merged into an integration branch and reviewed. I had all of that code discarded, keeping only the planning documents, and the implementation restarted from issue #2 under `implement-spec`.
+
+What survived from the discarded attempt, because it was learned rather than written:
+
+- Windows Application Control on the development machine blocks unsigned native `.node` addons: password hashing uses scrypt from `node:crypto` (recorded in `CODING_STANDARDS.md`), and Vite's Rollup needs its WebAssembly build (`@rollup/wasm-node` as an npm override).
+- Biome needs Tailwind directive parsing enabled for CSS, and a `"//"` comment key is invalid in its configuration; use `biome.jsonc` comments.
+- Validation issues on the wire are `{ path, code }` with rule ids as codes (ADR 0002 updated).

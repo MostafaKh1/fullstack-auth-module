@@ -52,7 +52,7 @@ Every back-end capability has exactly one door, and the door is injected:
 
 ### Secrets
 
-- Passwords are stored only as argon2id hashes; refresh secrets only as SHA-256 hashes ([ADR 0001](docs/adr/0001-session-record-with-short-lived-access-token.md)).
+- Passwords are stored only as scrypt hashes (`node:crypto`, per-password salt, parameters encoded in the hash); refresh secrets only as SHA-256 hashes ([ADR 0001](docs/adr/0001-session-record-with-short-lived-access-token.md)).
 - Secret comparisons are constant-time.
 - A query that needs a secret field selects it explicitly; secret fields are excluded from every default projection, so no response can leak one by accident.
 

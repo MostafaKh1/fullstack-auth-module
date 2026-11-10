@@ -1,7 +1,7 @@
 # Auth Module
 
 - **Status:** Archived
-- **Superseded by:** [docs/spec/auth-module.md](../../docs/spec/auth-module.md) and the tickets in [docs/tickets/](../../docs/tickets/)
+- **Superseded by:** [docs/spec/auth-module.md](../../docs/spec/auth-module.md) and its tickets, GitHub issues #2 to #9
 - **Stage:** Superseded before implementation began
 - **Owner:** MostafaKh1
 - **Branch of record:** `main`
@@ -34,14 +34,14 @@ Vocabulary follows [GLOSSARY.md](../../GLOSSARY.md); the two load-bearing decisi
 - Sessions per ADR 0001; errors per ADR 0002.
 - Global prefix `/api`.
 
-| Method | Path                 | Access                 | Purpose                                                 |
-| ------ | -------------------- | ---------------------- | ------------------------------------------------------- |
-| POST   | `/api/auth/sign-up`  | Public, throttled      | Create a User and a Session                             |
-| POST   | `/api/auth/sign-in`  | Public, throttled      | Create a Session                                        |
-| POST   | `/api/auth/refresh`  | Refresh cookie, Origin | Rotate the refresh credential, issue an access token    |
-| POST   | `/api/auth/sign-out` | Refresh cookie, Origin | End the current Session                                 |
-| GET    | `/api/users/me`      | **Access token**       | The protected endpoint: the signed-in User's profile    |
-| GET    | `/api/health`        | Public                 | Liveness and database ping                              |
+| Method | Path                 | Access                 | Purpose                                              |
+| ------ | -------------------- | ---------------------- | ---------------------------------------------------- |
+| POST   | `/api/auth/sign-up`  | Public, throttled      | Create a User and a Session                          |
+| POST   | `/api/auth/sign-in`  | Public, throttled      | Create a Session                                     |
+| POST   | `/api/auth/refresh`  | Refresh cookie, Origin | Rotate the refresh credential, issue an access token |
+| POST   | `/api/auth/sign-out` | Refresh cookie, Origin | End the current Session                              |
+| GET    | `/api/users/me`      | **Access token**       | The protected endpoint: the signed-in User's profile |
+| GET    | `/api/health`        | Public                 | Liveness and database ping                           |
 
 - Cross-cutting: `nestjs-pino` (JSON logs, a request id per request that is echoed as `traceId` in errors), `helmet`, a CORS allowlist, `@nestjs/throttler` on the auth routes, Swagger UI at `/api/docs`.
 

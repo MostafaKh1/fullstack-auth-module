@@ -152,20 +152,20 @@ Email verification, password reset, "remember me", social sign-in, a signed-in-d
 
 ## Traceability
 
-| Requirement                                   | Implemented in | Verified by |
-| --------------------------------------------- | -------------- | ----------- |
-| React or Vue, TypeScript                      |                |             |
-| Sign up form: email, name, password rules     |                |             |
-| Sign in form: email, password                 |                |             |
-| Application page with the welcome message     |                |             |
-| Sign out ends the session                     |                |             |
-| NestJS + MongoDB                              |                |             |
-| Sign up and sign in endpoints, same rules     |                |             |
-| At least one protected endpoint               |                |             |
-| README                                        |                |             |
-| AI.md                                         |                |             |
-| Bonus: logging                                |                |             |
-| Bonus: error handling                         |                |             |
-| Bonus: testing                                |                |             |
-| Bonus: CI/CD                                  |                |             |
-| Bonus: API documentation                      |                |             |
+| Requirement                               | Implemented in | Verified by |
+| ----------------------------------------- | -------------- | ----------- |
+| React or Vue, TypeScript                  |                |             |
+| Sign up form: email, name, password rules |                |             |
+| Sign in form: email, password             |                |             |
+| Application page with the welcome message |                |             |
+| Sign out ends the session                 |                |             |
+| NestJS + MongoDB                          |                |             |
+| Sign up and sign in endpoints, same rules |                |             |
+| At least one protected endpoint           |                |             |
+| README                                    |                |             |
+| AI.md                                     |                |             |
+| Bonus: logging                            |                |             |
+| Bonus: error handling                     |                |             |
+| Bonus: testing                            |                |             |
+| Bonus: CI/CD                              |                |             |
+| Bonus: API documentation                  |                |             |

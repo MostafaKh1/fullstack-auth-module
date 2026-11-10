@@ -36,6 +36,8 @@
         "rules": {
           // An `import type` of an injected class erases it at runtime and breaks Nest DI.
           "style": { "useImportType": "off" },
+          // A Nest dynamic module is a decorated class with a static `forRoot`; a function cannot carry `@Module`.
+          "complexity": { "noStaticOnlyClass": "off" },
         },
       },
     },

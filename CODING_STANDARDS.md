@@ -9,26 +9,26 @@ Anything Biome, Prettier or the TypeScript compiler already enforces is not repe
 
 Every back-end capability has exactly one door, and the door is injected:
 
-- **The database is reached only through a repository** (`UserRepository`, `SessionRepository`). Nothing outside `src/database/` imports `mongoose` or a model. A repository injects its model and nothing else: repositories have no outward edges.
+- **The database is reached only through a repository** (`UserRepository`, `SessionRepository`). Nothing outside `src/database/` imports `mongoose` or a collection. A repository injects its model and nothing else: repositories have no outward edges.
 - **Configuration is read only through `AppConfigService`.** No file outside `src/config/` reads `process.env`. The environment is parsed with Zod at boot and the process crashes on an invalid value, so a misconfiguration fails at start-up and not under load.
-- **The current time and randomness come from where they can be controlled in tests.** Token, secret and expiry logic takes `now` from an injected clock or as an argument, never `Date.now()` buried in a helper.
+- **The current time and randomness come from where they can be controlled in tests.** Token, secret and expiry logic takes `now` from the injected `ClockService` or as an argument, never `Date.now()` buried in a helper.
 
 ### One operation, one handler
 
-- A business operation is one `@Injectable()` class in `src/features/<feature>/handlers/<operation>.handler.ts`, with `execute` as its **only** public method.
+- A business operation is one `@Injectable()` class in `handlers/<operation>.handler.ts` beside its module's controller (`src/auth/`, `src/health/`, `src/features/<feature>/`), with `execute` as its **only** public method.
 - A handler knows nothing about HTTP: no `Request`, `Response`, cookies, status codes or decorators from `@nestjs/common` beyond `Injectable`. It throws `ApiError` with a code from the closed set and returns plain data.
 - A handler holds the operation's ordering and failure policy, and reaches the database through repositories.
 - Pure logic shared by handlers is a module-level `export function` in a sibling `*.rules.ts`.
 
 ### Controllers are transport
 
-- One controller per feature, one method per route. A method extracts the request (body, current Session, cookie), calls **one** handler, and shapes the response.
+- One controller per module, one method per route. A method extracts the request (body, current Session, cookie), calls **one** handler, and shapes the response.
 - Setting or clearing the refresh cookie is transport, so it happens in the controller, never in a handler.
 - The controller method's field for an injected handler carries a `Handler` suffix (`signUpHandler`).
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule` and `LoggingModule` (global) -> `DatabaseModule` (models and repositories) -> `AuthModule` (token service, global guard) -> feature modules (`auth`, `users`, `health`).
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections and repositories) -> `AuthModule` (the auth routes, the token and Session services, the global guard) -> feature modules (`users`, `health`). Shared transport pieces (the filter, the pipe, the decorators, the `Origin` guard) sit in `src/common/`, which has no module.
 - A module imports only from a lower tier. A feature module exports nothing and never imports another feature module. `forwardRef` is never needed and never used.
 
 ### Authentication is deny-by-default
@@ -58,11 +58,11 @@ Every back-end capability has exactly one door, and the door is injected:
 
 ## Architecture: front end
 
-- Pages live in `src/pages/`, one per route, default-exported only where the router requires it; every other component is a **named** export.
+- Pages live in `src/pages/`, one `<Name>Page.tsx` per route, default-exported only where the router requires it; every other component is a **named** export.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
-- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/api/`.
-- Forms use React Hook Form with the Zod schema from `src/features/auth/schemas.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/<resource>-api.ts`.
+- Forms use React Hook Form with the Zod schema from `src/components/composite/auth/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules
@@ -85,4 +85,5 @@ Every back-end capability has exactly one door, and the door is injected:
 
 ## Naming
 
+- File and folder names follow each app's naming rule ([backend/AGENTS.md](backend/AGENTS.md), [frontend/AGENTS.md](frontend/AGENTS.md), "Naming and exports"): a file's name says what it exports, and a class or component is named for its file.
 - Domain names come from [GLOSSARY.md](GLOSSARY.md): `signUp`, `signIn`, `signOut`, `Session`, `User`. Avoided synonyms (`login`, `register`, `account`) do not appear in identifiers, routes, copy or test names.

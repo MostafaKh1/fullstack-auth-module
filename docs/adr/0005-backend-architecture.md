@@ -6,7 +6,7 @@ Zod parses both the environment at boot (every bad variable named at once, the p
 pino, through `nestjs-pino`, writes one JSON line per event with the request id on every line; the request id is also the error envelope's `traceId` and the `X-Request-Id` header, and secret-bearing paths are redacted by a single list rather than masked by hand.
 
 Each business operation is one `@Injectable()` handler with a single `execute` method that knows nothing about HTTP; controllers only extract the request, call one handler and shape the response, including the cookie.
-The modules form tiers, lowest first: configuration, logging and the clock (global) -> the database (connection, models, repositories) -> authentication infrastructure (token service, password hasher, global guard) -> the feature modules (auth, users, health). A module imports only from a lower tier and a feature module exports nothing, so there are no cycles and `forwardRef` is never needed.
+The modules form tiers, lowest first: configuration, logging and `core/` (the clock, and later any external client), all global -> the database (`PersistenceModule`: the connection, `collections/`, `repositories/`) -> authentication (`AuthModule` in `src/auth/`: the auth routes, the token service, the password hasher, the global guard) -> the feature modules (`src/features/users/`, `src/health/`). Transport pieces every module shares (the filter, the validation pipe, the decorators, the `Origin` guard, the cookie service, the error codes) sit in `src/common/`, which has no module. A module imports only from a lower tier and a feature module exports nothing, so there are no cycles and `forwardRef` is never needed.
 
 Configuration is parsed in `main.ts` before Nest is created and handed to `AppModule.forRoot(config)`, so the test harness builds the identical module from a test environment and swaps only the clock and the log destination.
 
@@ -21,4 +21,4 @@ Configuration is parsed in `main.ts` before Nest is created and handed to `AppMo
 ## Consequences
 
 - Nest's dependency injection reads constructor parameter types at runtime, so injected classes are imported as values: Biome's `useImportType` is off for `backend/` (ADR 0004).
-- Code that needs the time injects `Clock`; tests replace it, so expiry and grace windows are tested without waiting.
+- Code that needs the time injects `ClockService` (`src/core/clock.service.ts`); tests replace it, so expiry and grace windows are tested without waiting.

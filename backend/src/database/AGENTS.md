@@ -1,25 +1,27 @@
 # backend/src/database/AGENTS.md
 
-The database tier and the only door to MongoDB: nothing outside this folder imports `mongoose`, `@nestjs/mongoose` or a model. The rules are in [CODING_STANDARDS.md](../../../CODING_STANDARDS.md) ("Three doors", "Secrets").
+The persistence tier and the only door to MongoDB: nothing outside this folder imports `mongoose`, `@nestjs/mongoose` or a collection. The rules are in [CODING_STANDARDS.md](../../../CODING_STANDARDS.md) ("Three doors", "Secrets").
+
+## Layout
+
+```
+database/
+├── persistence.module.ts   # PersistenceModule: the connection, every collection, every repository
+├── collections/            # one <entity>.collection.ts per MongoDB collection: AGENTS.md there
+└── repositories/           # one <entity>.repository.ts per question asked of it: AGENTS.md there
+```
 
 ## Where does this file belong?
 
-1. A Mongoose schema and model for a collection -> `<entity>.model.ts` here, registered in `database.module.ts` with `MongooseModule.forFeature`.
-2. A query or a write, for any caller -> a method on `<entity>.repository.ts` here, named for what the caller needs (`findByEmail`), returning plain data rather than a Mongoose document.
-3. An index (the unique email, the Session expiry) -> declared on the model's schema.
-4. A decision about the data (is this Session still live?) -> a handler or a `*.rules.ts` in its feature, not here.
+1. A collection's document type, Mongoose schema or index -> [collections/AGENTS.md](collections/AGENTS.md).
+2. A query or a write, for any caller -> [repositories/AGENTS.md](repositories/AGENTS.md).
+3. A decision about the data (is this Session still live?) -> a handler or a `*.rules.ts` in its module, not here.
 
 ## Conventions
 
-- A repository is an `@Injectable()` class that injects its model (or the connection) and nothing else: no `AppConfigService`, no `Clock`, no other repository. Values such as `now` arrive as arguments.
-- Secret fields (`passwordHash`, `secretHash`) are excluded from the schema's default projection; the one method that needs one selects it explicitly.
-- `database.module.ts` provides and exports every repository; a feature module imports `DatabaseModule` to inject them.
-- Canonical example: `database-health.repository.ts` (injects the connection, answers one question, hides the driver); `user.model.ts` with `user.repository.ts` for a collection.
-- A repository returns its own plain type (`User`, `Session`), never with a secret hash unless the method name says so (`findWithPasswordHashByEmail`). It waits for its indexes in `onModuleInit`, so a unique index holds from the first request.
+- `persistence.module.ts` registers every collection with `MongooseModule.forFeature` and provides and exports every repository; a module imports `PersistenceModule` to inject them.
+- No other file sits at this level.
 
 ## Inventory
 
-- `database.module.ts`: the connection (URI from `AppConfigService`, a fast server-selection timeout) and the exported repositories.
-- `database-health.repository.ts`: `DatabaseHealthRepository.isReachable()`, a bounded ping for the health check.
-- `user.model.ts`, `user.repository.ts`: the User record (unique email, `passwordHash` unselected); `create` returns `null` for a taken email.
-- `session.model.ts`, `session.repository.ts`: the Session record of ADR 0001 (secret hashes unselected, a TTL index on `idleExpiresAt`); `newId`, `create`, `findById`, `findWithSecretHashesById` (for refresh), `rotateSecret` (one conditional update on the current hash, so one of two concurrent rotations wins) and `revoke`.
+- `persistence.module.ts`: `PersistenceModule`; the URI comes from `AppConfigService`, with a 2 s server-selection timeout so boot and queries answer promptly when the database is down.

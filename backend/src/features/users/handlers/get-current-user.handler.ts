@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { type User, UserRepository } from "../../../database/user.repository";
-import { ApiError } from "../../../errors/api-error";
+import { ApiError } from "../../../common/errors/api-error";
+import { type User, UserRepository } from "../../../database/repositories/user.repository";
 
 /** Get current User: the User the signed-in Session belongs to. */
 @Injectable()

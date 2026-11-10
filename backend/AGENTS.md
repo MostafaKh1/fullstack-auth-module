@@ -4,37 +4,47 @@ The API: NestJS 11 on Express 5, MongoDB through Mongoose, Zod, pino. Architectu
 
 ## The shape in one screen
 
-- **Module tiers**, lowest first; a module imports only from a lower tier, and `AppModule` (`src/app.module.ts`) lists them in this order:
-  1. `src/config/`, `src/logging/`, `src/clock/`: global modules, injectable everywhere without an import.
-  2. `src/database/`: the connection, models and repositories.
-  3. `src/auth/`: authentication infrastructure (password hashing, the access token, Session issuing, the deny-by-default guard): [src/auth/AGENTS.md](src/auth/AGENTS.md).
-  4. `src/features/<feature>/`: one module per feature; it exports nothing and never imports another feature.
-- **Three doors**: the database only through a repository, configuration only through `AppConfigService`, the current time only through `Clock`. Each door's folder is the only place its library or global is touched.
-- **One handler per operation**: `src/features/<feature>/handlers/<operation>.handler.ts`, one `execute`, no HTTP.
+```
+src/
+├── main.ts           # parses configuration, then boots
+├── app.setup.ts      # global wiring shared with the test harness (prefix, logger, shutdown hooks)
+├── app.module.ts     # every module, lowest tier first, and the global filter
+├── config/           # tier 1, global: the environment, read only through AppConfigService
+├── logging/          # tier 1, global: pino, the request id, the redact list
+├── core/             # tier 1, global: injectable providers of outside things (the clock)
+├── common/           # no module: the filter, the pipe, the decorators, the Origin guard, the cookie service, errors/
+├── database/         # tier 2: PersistenceModule over collections/ and repositories/
+├── auth/             # tier 3: AuthModule, the auth routes and the authentication services under them
+├── features/<name>/  # tier 4: one module per feature (users)
+├── health/           # tier 4: the health check
+└── test/             # the HTTP-seam suites and their harness; never built into dist/
+```
+
+- **Module tiers**: a module imports only from a lower tier, and `AppModule` lists them lowest first. A tier-4 module exports nothing and never imports another tier-4 module. `AuthModule` exports its services for tier 4 to inject. `common/` has no module: its files are imported one by one.
+- **Three doors**: the database only through a repository, configuration only through `AppConfigService`, the current time only through `ClockService`. Each door's folder is the only place its library or global is touched.
+- **One handler per operation**: `handlers/<operation>.handler.ts` beside its controller, one `execute`, no HTTP.
 - **Controllers are transport**: extract the request, call one handler, shape the response, own the cookie.
-- **The error envelope**: code throws `ApiError(code)` from `src/errors/`; the one global filter writes the envelope of [ADR 0002](../docs/adr/0002-api-errors-carry-codes-not-copy.md).
-- `src/main.ts` parses configuration, then boots; `src/app.setup.ts` is the wiring shared with the test harness. Global wiring (prefix, pipes, middleware) goes in `app.setup.ts`, so tests run it too.
+- **The error envelope**: code throws `ApiError(code)` from `src/common/errors/`; the one global filter writes the envelope of [ADR 0002](../docs/adr/0002-api-errors-carry-codes-not-copy.md).
+- Global wiring (prefix, pipes, middleware) goes in `app.setup.ts`, so tests run it too.
 
 ## Where does this file belong?
 
 The first match wins:
 
-1. A business operation (Sign up, refresh, check health) -> a handler in its feature: [src/features/AGENTS.md](src/features/AGENTS.md).
-2. A route, or a request body's Zod schema -> the feature's controller and folder: [src/features/AGENTS.md](src/features/AGENTS.md).
-3. A query, a model, a collection index -> [src/database/AGENTS.md](src/database/AGENTS.md).
+1. A route, operation or request schema of Sign up, Sign in, refresh or Sign out -> [src/auth/AGENTS.md](src/auth/AGENTS.md).
+2. Any other route or operation -> its feature: [src/features/AGENTS.md](src/features/AGENTS.md); the health check is [src/health/AGENTS.md](src/health/AGENTS.md).
+3. A collection's schema or index -> [src/database/collections/AGENTS.md](src/database/collections/AGENTS.md); a query or a write -> [src/database/repositories/AGENTS.md](src/database/repositories/AGENTS.md).
 4. An environment variable -> [src/config/AGENTS.md](src/config/AGENTS.md).
-5. An error code -> [src/errors/AGENTS.md](src/errors/AGENTS.md).
+5. An error code, or a decorator, guard, pipe or filter that routes share -> [src/common/AGENTS.md](src/common/AGENTS.md).
 6. A log field that carries a secret, or request-id behaviour -> [src/logging/AGENTS.md](src/logging/AGENTS.md).
-7. Anything that reads the current time -> inject `Clock`: [src/clock/AGENTS.md](src/clock/AGENTS.md).
-8. A test -> [test/AGENTS.md](test/AGENTS.md).
-9. Turning a request body into `{ path, code }` issues -> [src/validation/AGENTS.md](src/validation/AGENTS.md).
-10. Hashing, tokens, the guard, `@Public()` -> [src/auth/AGENTS.md](src/auth/AGENTS.md).
+7. A provider of something outside the process (the time, a future external client) -> [src/core/AGENTS.md](src/core/AGENTS.md).
+8. A test -> [src/test/AGENTS.md](src/test/AGENTS.md).
 
-Pure logic shared by a feature's handlers is a sibling `*.rules.ts` of module-level functions, not a new folder.
+Pure logic shared by a module's handlers is a sibling `*.rules.ts` of module-level functions, not a new folder.
 
 ## Naming and exports
 
-- Files are kebab-case with a role suffix, and the class carries the matching suffix: `check-health.handler.ts` -> `CheckHealthHandler`, `database-health.repository.ts` -> `DatabaseHealthRepository`, `health.controller.ts`, `health.module.ts`, `api-exception.filter.ts`, `app-config.service.ts`, `config.schema.ts` (a Zod schema).
+- Files and folders are kebab-case. A file carries its role as a suffix, and its class is the file name in PascalCase: `check-health.handler.ts` -> `CheckHealthHandler`, `clock.service.ts` -> `ClockService`, `persistence.module.ts` -> `PersistenceModule`, `origin-csrf.guard.ts` -> `OriginCsrfGuard`. The suffixes in use: `.module`, `.controller`, `.handler`, `.service`, `.repository`, `.collection`, `.guard`, `.pipe`, `.filter`, `.decorator`, `.rules`, `.types`, `.spec`.
 - One class per file, as a named export. No default exports, no `index.ts` barrels: import the file that defines the thing.
 - Injected classes are imported as values, not `import type`: Nest reads constructor types at runtime ([ADR 0005](../docs/adr/0005-backend-architecture.md), "Consequences").
 - Domain names come from [GLOSSARY.md](../GLOSSARY.md): `signUp`, never `register`.

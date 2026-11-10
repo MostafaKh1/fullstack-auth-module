@@ -1,9 +1,9 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { PinoLogger } from "nestjs-pino";
-import { Clock } from "../clock/clock";
 import { AppConfigService } from "../config/app-config.service";
-import { SessionRepository } from "../database/session.repository";
+import { ClockService } from "../core/clock.service";
+import { SessionRepository } from "../database/repositories/session.repository";
 import { AccessTokenService } from "./access-token.service";
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
@@ -22,7 +22,7 @@ export class SessionIssuerService {
   constructor(
     private readonly sessions: SessionRepository,
     private readonly accessTokens: AccessTokenService,
-    private readonly clock: Clock,
+    private readonly clock: ClockService,
     private readonly config: AppConfigService,
     private readonly logger: PinoLogger,
   ) {

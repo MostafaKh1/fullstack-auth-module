@@ -16,6 +16,7 @@ export const REDACTED_PATHS = [
   "*.passwordHash",
   "*.accessToken",
   "*.refreshToken",
+  "*.refreshCredential",
   "*.secret",
   "*.secretHash",
   "*.jwtAccessSecret",

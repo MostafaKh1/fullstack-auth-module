@@ -7,7 +7,7 @@ The API: NestJS 11 on Express 5, MongoDB through Mongoose, Zod, pino. Architectu
 - **Module tiers**, lowest first; a module imports only from a lower tier, and `AppModule` (`src/app.module.ts`) lists them in this order:
   1. `src/config/`, `src/logging/`, `src/clock/`: global modules, injectable everywhere without an import.
   2. `src/database/`: the connection, models and repositories.
-  3. Authentication infrastructure (token service, password hasher, global guard): arrives with the Sign up and Sign in ticket, which creates its folder and its `AGENTS.md`.
+  3. `src/auth/`: authentication infrastructure (password hashing, the access token, Session issuing, the deny-by-default guard): [src/auth/AGENTS.md](src/auth/AGENTS.md).
   4. `src/features/<feature>/`: one module per feature; it exports nothing and never imports another feature.
 - **Three doors**: the database only through a repository, configuration only through `AppConfigService`, the current time only through `Clock`. Each door's folder is the only place its library or global is touched.
 - **One handler per operation**: `src/features/<feature>/handlers/<operation>.handler.ts`, one `execute`, no HTTP.
@@ -27,6 +27,8 @@ The first match wins:
 6. A log field that carries a secret, or request-id behaviour -> [src/logging/AGENTS.md](src/logging/AGENTS.md).
 7. Anything that reads the current time -> inject `Clock`: [src/clock/AGENTS.md](src/clock/AGENTS.md).
 8. A test -> [test/AGENTS.md](test/AGENTS.md).
+9. Turning a request body into `{ path, code }` issues -> [src/validation/AGENTS.md](src/validation/AGENTS.md).
+10. Hashing, tokens, the guard, `@Public()` -> [src/auth/AGENTS.md](src/auth/AGENTS.md).
 
 Pure logic shared by a feature's handlers is a sibling `*.rules.ts` of module-level functions, not a new folder.
 

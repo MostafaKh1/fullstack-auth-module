@@ -21,7 +21,8 @@ The apps share no code; HTTP is the only contract between them.
 
 ## Where things are
 
-- [backend/AGENTS.md](backend/AGENTS.md) and [frontend/AGENTS.md](frontend/AGENTS.md): each app's architecture, and a pointer to every folder-level `AGENTS.md` in it.
+- [backend/AGENTS.md](backend/AGENTS.md) and [frontend/AGENTS.md](frontend/AGENTS.md): each app's architecture, its naming rule, and a pointer to every folder-level `AGENTS.md` in it.
+- **Naming**: a file's name alone says where it lives and what it holds. The back end is kebab-case with a role suffix (`sign-up.handler.ts`); the front end is PascalCase for components, pages and providers (`SignInPage.tsx`), `useX.ts` for hooks, and kebab-case for everything else, and a component with children becomes a folder of its name whose children share its prefix. Both apps: named exports, no barrels. Each folder's `AGENTS.md` names the file to copy.
 - `docs/requirements.md` (the rules), `docs/spec/` (the spec, mirrored from its issue), `docs/adr/` (decisions and their reasons), `docs/agents/` (how agents use the tracker and the domain docs).
 - [AI.md](AI.md): one entry per ticket of what was AI-generated, what was verified, what was fixed.
 - The root `package.json` only delegates into the apps; lint (`npm run lint`) and format (`npm run format:check`) run from the root over both ([ADR 0004](docs/adr/0004-quality-gates-and-test-seams.md)).

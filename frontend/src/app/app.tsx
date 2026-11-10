@@ -1,0 +1,17 @@
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { DataRouter } from "react-router";
+import { RouterProvider } from "react-router";
+
+type Props = {
+  router: DataRouter;
+  queryClient: QueryClient;
+};
+
+/** The whole app: its providers around the router. The browser and the test harness pass their own router. */
+export function App({ router, queryClient }: Props) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
+}

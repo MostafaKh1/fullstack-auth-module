@@ -16,6 +16,7 @@ export const expectedCopy: Record<string, string> = {
   "password.missing_number": "Password must contain at least one number.",
   "password.missing_special": "Password must contain at least one special character, such as ! or €.",
   "auth.invalid_credentials": "Invalid email or password",
+  "auth.unauthenticated": "Your session has ended. Please sign in again.",
   "user.email_taken": "An account with this email already exists",
   "request.rate_limited": "Too many attempts. Wait a minute, then try again.",
   "server.internal": "Something went wrong on our side. Please try again.",

@@ -24,7 +24,7 @@ function signInButton() {
 describe("Sign in page", () => {
   it("signs a returning User in and lands on the Application page", async () => {
     let body: unknown;
-    const { user, router } = renderApp("/sign-in", {
+    const { user, router } = await renderApp("/sign-in", {
       handlers: [
         http.post("/api/auth/sign-in", async ({ request }) => {
           body = await request.json();
@@ -53,7 +53,7 @@ describe("Sign in page", () => {
 
       if (example.valid) {
         it(`accepts ${example.field} ${shown} (${example.note})`, async () => {
-          const { user } = renderApp("/sign-in");
+          const { user } = await renderApp("/sign-in");
           const field = await enterField(user, label, "");
           await waitFor(() => expect(field).toHaveAccessibleDescription(expectedCopy["field.required"]));
 
@@ -65,7 +65,7 @@ describe("Sign in page", () => {
       } else {
         const [firstCode] = example.codes;
         it(`rejects ${example.field} ${shown} (${example.note}) with ${firstCode}`, async () => {
-          const { user } = renderApp("/sign-in");
+          const { user } = await renderApp("/sign-in");
 
           const field = await enterField(user, label, example.input);
 
@@ -77,7 +77,7 @@ describe("Sign in page", () => {
   });
 
   it("shows the one generic message for wrong credentials", async () => {
-    const { user } = renderApp("/sign-in", {
+    const { user } = await renderApp("/sign-in", {
       handlers: [http.post("/api/auth/sign-in", () => envelope("auth.invalid_credentials", 401))],
     });
 
@@ -90,7 +90,7 @@ describe("Sign in page", () => {
   });
 
   it("asks the User to wait when attempts are slowed down", async () => {
-    const { user } = renderApp("/sign-in", {
+    const { user } = await renderApp("/sign-in", {
       handlers: [http.post("/api/auth/sign-in", () => envelope("request.rate_limited", 429))],
     });
 
@@ -103,7 +103,7 @@ describe("Sign in page", () => {
   });
 
   it("shows a readable message when the server cannot be reached", async () => {
-    const { user } = renderApp("/sign-in", {
+    const { user } = await renderApp("/sign-in", {
       handlers: [http.post("/api/auth/sign-in", () => HttpResponse.error())],
     });
 
@@ -114,7 +114,7 @@ describe("Sign in page", () => {
   });
 
   it("shows a readable message when a proxy answers without the error envelope", async () => {
-    const { user } = renderApp("/sign-in", {
+    const { user } = await renderApp("/sign-in", {
       handlers: [http.post("/api/auth/sign-in", () => new HttpResponse("Bad Gateway", { status: 502 }))],
     });
 
@@ -126,7 +126,7 @@ describe("Sign in page", () => {
 
   it("clears the form alert when the User tries again", async () => {
     let attempts = 0;
-    const { user } = renderApp("/sign-in", {
+    const { user } = await renderApp("/sign-in", {
       handlers: [
         http.post("/api/auth/sign-in", () => {
           attempts += 1;
@@ -148,7 +148,7 @@ describe("Sign in page", () => {
     const held = heldUntilReleased("post", "/api/auth/sign-in", () =>
       envelope("auth.invalid_credentials", 401),
     );
-    const { user } = renderApp("/sign-in", { handlers: [held.handler] });
+    const { user } = await renderApp("/sign-in", { handlers: [held.handler] });
 
     await fillForm(user, validForm);
     await user.click(signInButton());
@@ -162,7 +162,7 @@ describe("Sign in page", () => {
   });
 
   it("links to Sign up", async () => {
-    const { user, router } = renderApp("/sign-in");
+    const { user, router } = await renderApp("/sign-in");
 
     await user.click(screen.getByRole("link", { name: "Sign up" }));
 

@@ -18,6 +18,8 @@ export type TestApp = {
   nest: INestApplication;
   /** A supertest client bound to the running application. */
   http: () => ReturnType<typeof request>;
+  /** Where the clock started: the real time the app booted, so Sessions it stores outlive MongoDB's TTL monitor. */
+  startedAt: Date;
   /** The clock the application reads; set or advance it to move time. */
   clock: FakeClock;
   /** The application's database, for seeding and inspecting raw collections. */
@@ -64,7 +66,9 @@ export async function startTestApp(env: Record<string, string> = {}): Promise<Te
     },
   });
 
-  const clock = new FakeClock(new Date("2026-01-01T00:00:00.000Z"));
+  // A date in the real past would let MongoDB's TTL monitor delete a test's Sessions mid-file: start at the real now.
+  const startedAt = new Date();
+  const clock = new FakeClock(startedAt);
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.forRoot(config, { logDestination })],
   })
@@ -82,6 +86,7 @@ export async function startTestApp(env: Record<string, string> = {}): Promise<Te
   return {
     nest: app,
     http: () => request(app.getHttpServer()),
+    startedAt,
     clock,
     db: client.db(),
     logs: () => [...lines],

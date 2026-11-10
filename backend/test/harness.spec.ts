@@ -21,6 +21,26 @@ describe("the HTTP test harness", () => {
     expect(app.nest.get(Clock).now().toISOString()).toBe("2030-05-06T07:08:10.000Z");
   });
 
+  it("starts the clock at the real current time, so MongoDB's TTL monitor never removes a test's Session", async () => {
+    // A fresh app, so its clock is where the harness starts it. MongoDB deletes documents whose expiry has passed
+    // in real time, every 60 s by default; the monitor is made to run every second here.
+    const fresh = await startTestApp({ PASSWORD_HASH_COST: "10" });
+    try {
+      await fresh.db.admin().command({ setParameter: 1, ttlMonitorSleepSecs: 1 });
+      await fresh
+        .http()
+        .post("/api/auth/sign-up")
+        .send({ email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" })
+        .expect(201);
+
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
+
+      expect(await fresh.db.collection("sessions").countDocuments()).toBe(1);
+    } finally {
+      await fresh.close();
+    }
+  });
+
   it("seeds and reads the same database the application is connected to", async () => {
     await app.db.collection("probes").insertOne({ seededBy: "harness" });
 

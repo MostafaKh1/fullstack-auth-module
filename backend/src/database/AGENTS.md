@@ -22,4 +22,4 @@ The database tier and the only door to MongoDB: nothing outside this folder impo
 - `database.module.ts`: the connection (URI from `AppConfigService`, a fast server-selection timeout) and the exported repositories.
 - `database-health.repository.ts`: `DatabaseHealthRepository.isReachable()`, a bounded ping for the health check.
 - `user.model.ts`, `user.repository.ts`: the User record (unique email, `passwordHash` unselected); `create` returns `null` for a taken email.
-- `session.model.ts`, `session.repository.ts`: the Session record of ADR 0001 (secret hashes unselected, a TTL index on `idleExpiresAt`); `newId`, `create`, `findById`.
+- `session.model.ts`, `session.repository.ts`: the Session record of ADR 0001 (secret hashes unselected, a TTL index on `idleExpiresAt`); `newId`, `create`, `findById`, `findWithSecretHashesById` (for refresh), `rotateSecret` (one conditional update on the current hash, so one of two concurrent rotations wins) and `revoke`.

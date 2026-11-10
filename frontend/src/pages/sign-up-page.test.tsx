@@ -32,7 +32,7 @@ function checklistItem(rule: string) {
 describe("Sign up page", () => {
   it("signs a new User up and lands on the Application page, signed in as them", async () => {
     let body: unknown;
-    const { user, router } = renderApp("/sign-up", {
+    const { user, router } = await renderApp("/sign-up", {
       handlers: [
         http.post("/api/auth/sign-up", async ({ request }) => {
           body = await request.json();
@@ -61,7 +61,7 @@ describe("Sign up page", () => {
 
       if (example.input?.includes("\n")) {
         it(`${example.field} ${shown} (${example.note}): an input cannot hold a line break, so it never reaches the rules`, async () => {
-          const { user } = renderApp("/sign-up");
+          const { user } = await renderApp("/sign-up");
           const field = await enterField(user, label, example.input);
           expect((field as HTMLInputElement).value).not.toContain("\n");
         });
@@ -70,7 +70,7 @@ describe("Sign up page", () => {
 
       if (example.valid) {
         it(`accepts ${example.field} ${shown} (${example.note})`, async () => {
-          const { user } = renderApp("/sign-up");
+          const { user } = await renderApp("/sign-up");
           const field = await enterField(user, label, "");
           await waitFor(() => expect(field).toHaveAccessibleDescription(expectedCopy["field.required"]));
 
@@ -82,7 +82,7 @@ describe("Sign up page", () => {
       } else {
         const [firstCode] = example.codes;
         it(`rejects ${example.field} ${shown} (${example.note}) with ${firstCode}`, async () => {
-          const { user } = renderApp("/sign-up");
+          const { user } = await renderApp("/sign-up");
 
           const field = await enterField(user, label, example.input);
 
@@ -96,7 +96,7 @@ describe("Sign up page", () => {
       const stored = example.valid ? example.stored : undefined;
       it(`sends ${example.field} ${JSON.stringify(example.input)} as ${JSON.stringify(stored)}`, async () => {
         let body: Record<string, unknown> = {};
-        const { user } = renderApp("/sign-up", {
+        const { user } = await renderApp("/sign-up", {
           handlers: [
             http.post("/api/auth/sign-up", async ({ request }) => {
               body = (await request.json()) as Record<string, unknown>;
@@ -115,7 +115,7 @@ describe("Sign up page", () => {
 
     it("sends the password exactly as typed, never trimmed", async () => {
       let body: Record<string, unknown> = {};
-      const { user } = renderApp("/sign-up", {
+      const { user } = await renderApp("/sign-up", {
         handlers: [
           http.post("/api/auth/sign-up", async ({ request }) => {
             body = (await request.json()) as Record<string, unknown>;
@@ -133,7 +133,7 @@ describe("Sign up page", () => {
   });
 
   it("ticks off each password rule in the checklist as it is met", async () => {
-    const { user } = renderApp("/sign-up");
+    const { user } = await renderApp("/sign-up");
     const password = screen.getByLabelText("Password");
     const rules = ["8 to 128 characters", "A letter", "A number", "A special character"];
     for (const rule of rules) expect(checklistItem(rule)).toHaveTextContent("Not yet");
@@ -158,7 +158,7 @@ describe("Sign up page", () => {
   });
 
   it("lets the visitor show and hide the password", async () => {
-    const { user } = renderApp("/sign-up");
+    const { user } = await renderApp("/sign-up");
     const password = screen.getByLabelText("Password");
     expect(password).toHaveAttribute("type", "password");
 
@@ -170,7 +170,7 @@ describe("Sign up page", () => {
   });
 
   it("does not send the request while a field breaks a rule", async () => {
-    const { user } = renderApp("/sign-up");
+    const { user } = await renderApp("/sign-up");
 
     await fillForm(user, { ...validForm, Password: "Password1" });
     await user.click(signUpButton());
@@ -183,7 +183,7 @@ describe("Sign up page", () => {
   });
 
   it("puts each validation issue from the server on the field it names", async () => {
-    const { user } = renderApp("/sign-up", {
+    const { user } = await renderApp("/sign-up", {
       handlers: [
         http.post("/api/auth/sign-up", () =>
           envelope("request.validation_failed", 400, {
@@ -211,7 +211,7 @@ describe("Sign up page", () => {
   });
 
   it("shows a validation issue on a field the form does not have as a form alert", async () => {
-    const { user } = renderApp("/sign-up", {
+    const { user } = await renderApp("/sign-up", {
       handlers: [
         http.post("/api/auth/sign-up", () =>
           envelope("request.validation_failed", 400, {
@@ -228,7 +228,7 @@ describe("Sign up page", () => {
   });
 
   it("puts a taken email on the email field", async () => {
-    const { user } = renderApp("/sign-up", {
+    const { user } = await renderApp("/sign-up", {
       handlers: [http.post("/api/auth/sign-up", () => envelope("user.email_taken", 409))],
     });
 
@@ -244,7 +244,7 @@ describe("Sign up page", () => {
   });
 
   it("shows a readable message when the server cannot be reached", async () => {
-    const { user } = renderApp("/sign-up", {
+    const { user } = await renderApp("/sign-up", {
       handlers: [http.post("/api/auth/sign-up", () => HttpResponse.error())],
     });
 
@@ -256,7 +256,7 @@ describe("Sign up page", () => {
   });
 
   it("shows a readable message when the server fails, and never the server's own message", async () => {
-    const { user } = renderApp("/sign-up", {
+    const { user } = await renderApp("/sign-up", {
       handlers: [
         http.post("/api/auth/sign-up", () => envelope("server.internal", 500, { message: "Mongo exploded" })),
       ],
@@ -271,7 +271,7 @@ describe("Sign up page", () => {
   });
 
   it("falls back to a generic message for an error code it has no copy for", async () => {
-    const { user } = renderApp("/sign-up", {
+    const { user } = await renderApp("/sign-up", {
       handlers: [http.post("/api/auth/sign-up", () => envelope("teapot.brewing", 418))],
     });
 
@@ -283,7 +283,7 @@ describe("Sign up page", () => {
 
   it("disables the submit button and shows progress while the request is in flight", async () => {
     const held = heldUntilReleased("post", "/api/auth/sign-up", () => envelope("user.email_taken", 409));
-    const { user } = renderApp("/sign-up", { handlers: [held.handler] });
+    const { user } = await renderApp("/sign-up", { handlers: [held.handler] });
 
     await fillForm(user, validForm);
     await user.click(signUpButton());
@@ -297,7 +297,7 @@ describe("Sign up page", () => {
   });
 
   it("links to Sign in", async () => {
-    const { user, router } = renderApp("/sign-up");
+    const { user, router } = await renderApp("/sign-up");
 
     await user.click(screen.getByRole("link", { name: "Sign in" }));
 

@@ -3,6 +3,8 @@ import { signUpExamples } from "./field-rules.examples";
 import { refreshCookie } from "./support/refresh-cookie";
 import { startTestApp, type TestApp } from "./support/test-app";
 
+const DAY = 24 * 60 * 60 * 1000;
+
 const valid = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
 
 describe("Sign up", () => {
@@ -32,7 +34,7 @@ describe("Sign up", () => {
         id: expect.any(String),
         email: "ada@example.com",
         name: "Ada Lovelace",
-        createdAt: "2026-01-01T00:00:00.000Z",
+        createdAt: app.startedAt.toISOString(),
       },
     });
     const users = await app.db.collection("users").find().toArray();
@@ -64,8 +66,8 @@ describe("Sign up", () => {
     expect(session?._id.toString()).toBe(sessionId);
     expect(JSON.stringify(session)).not.toContain(secret);
     expect(session?.secretHash).toMatch(/^[0-9a-f]{64}$/);
-    expect(session?.idleExpiresAt).toEqual(new Date("2026-01-08T00:00:00.000Z"));
-    expect(session?.absoluteExpiresAt).toEqual(new Date("2026-01-31T00:00:00.000Z"));
+    expect(session?.idleExpiresAt).toEqual(new Date(app.startedAt.getTime() + 7 * DAY));
+    expect(session?.absoluteExpiresAt).toEqual(new Date(app.startedAt.getTime() + 30 * DAY));
     expect(session?.userAgent).toBe("test-agent/1");
     expect(session?.revokedAt ?? null).toBeNull();
   });

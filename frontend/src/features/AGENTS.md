@@ -23,7 +23,7 @@ One folder per capability (`auth` first): the forms, Zod schemas, hooks and cont
 
 - `schemas.ts`: `signUpSchema`, `signInSchema`, and `passwordRule` (the predicates the checklist shares); errors are rule ids.
 - `field-rules.examples.ts`: the worked-examples table, identical to `backend/test/field-rules.examples.ts`.
-- `session-context.ts`, `session-provider.tsx`, `use-session.ts`: the `Session` (`restoring` / `signed-in` / `signed-out`), `SessionProvider` and `useSession()`, whose `startSession()` stores the access token in the API client.
+- `session-context.ts`, `session-provider.tsx`, `use-session.ts`: the `Session` (`restoring` / `signed-in` / `signed-out`), `SessionProvider` and `useSession()`, whose `startSession()` stores the access token in the API client. The provider boots `restoring` and calls `refreshSessionOnce()`; a failed refresh, at boot or on a `401`, makes it `signed-out`.
 - `require-session.tsx`, `require-signed-out.tsx`, `return-path.ts`: the two route guards and the return path they carry in location state.
 - `sign-up-form.tsx`, `sign-in-form.tsx`: the forms; `apply-api-failure.ts` puts a failed request's issues on fields or the form alert.
 - `password-field.tsx` (show/hide toggle), `password-checklist.tsx` (the live checklist), `auth-layout.tsx` (the frame of both forms), `auth-link.tsx` (a link between them that keeps the return path).

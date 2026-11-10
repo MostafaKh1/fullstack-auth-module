@@ -14,9 +14,10 @@ One screen per route. A page composes features and components, owns the screen's
 - A page renders one `<main>` with one `<h1>`; tests find the screen by that heading.
 - Named export (the router takes elements, so no page needs a default export).
 - A page reads server data through TanStack Query over `src/api/`, or through a feature hook once one owns that data.
-- Canonical example: `placeholder-page.tsx` with `placeholder-page.test.tsx`.
+- Canonical example: `sign-in-page.tsx` with `sign-in-page.test.tsx`.
 
 ## Inventory
 
-- `placeholder-page.tsx`: `/` until the Sign up, Sign in and Application pages replace it; reports `GET /api/health`.
+- `application-page.tsx`: `/`, the Application page (behind `RequireSession`): "Welcome to the application." and "Signed in as {name}" from `GET /api/users/me`.
+- `sign-in-page.tsx`: `/sign-in`, and `sign-up-page.tsx`: `/sign-up` (behind `RequireSignedOut`).
 - `not-found-page.tsx`: every path with no route.

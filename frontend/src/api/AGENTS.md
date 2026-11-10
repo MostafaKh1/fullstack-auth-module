@@ -20,5 +20,6 @@ The front end's side of the API contract (the "API contract" table in `docs/spec
 
 - `client.ts`: `apiClient`, axios with `baseURL: "/api"` and `withCredentials` so the refresh cookie travels; `setAccessToken()`, the in-memory access token it attaches as `Bearer` (ADR 0008).
 - `api-error.ts`: `ApiErrorEnvelope`, `ValidationIssue`, and `apiErrorEnvelope(error)`, which returns the envelope or `null` when none arrived.
-- `auth.ts`: `signUp()`, `signIn()`, and `SignedIn` (`{ accessToken, expiresIn, user }`).
+- `auth.ts`: `signUp()`, `signIn()`, `refreshSession()`, and `SignedIn` (`{ accessToken, expiresIn, user }`).
+- `session-refresh.ts`: `refreshSessionOnce()`, one refresh shared by every caller while in flight, and the response interceptor that answers a `401 auth.unauthenticated` with it and sends the request again once (never for `/auth/*`). The outcome reaches the Session context through the `SessionListener` it registers with `listenForSessionChanges()`, so the context stays the only writer of the token.
 - `users.ts`: `getCurrentUser()` (`GET /users/me`) and `User`.

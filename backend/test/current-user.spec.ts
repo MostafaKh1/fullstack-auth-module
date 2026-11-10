@@ -19,7 +19,7 @@ describe("the protected endpoint GET /api/users/me", () => {
   beforeEach(async () => {
     await app.db.collection("users").deleteMany({});
     await app.db.collection("sessions").deleteMany({});
-    app.clock.set(new Date("2026-01-01T00:00:00.000Z"));
+    app.clock.set(app.startedAt);
     const response = await app.http().post("/api/auth/sign-up").send(ada).expect(201);
     accessToken = response.body.accessToken;
     userId = response.body.user.id;
@@ -33,7 +33,7 @@ describe("the protected endpoint GET /api/users/me", () => {
       id: userId,
       email: ada.email,
       name: ada.name,
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: app.startedAt.toISOString(),
     });
   });
 
@@ -101,10 +101,7 @@ describe("the protected endpoint GET /api/users/me", () => {
   it("answers 401 auth.unauthenticated once the token's Session is revoked", async () => {
     await app.db
       .collection("sessions")
-      .updateMany(
-        {},
-        { $set: { revokedAt: new Date("2026-01-01T00:00:00.000Z"), revokedReason: "sign-out" } },
-      );
+      .updateMany({}, { $set: { revokedAt: app.startedAt, revokedReason: "sign-out" } });
 
     const response = await app.http().get("/api/users/me").set("Authorization", `Bearer ${accessToken}`);
 
@@ -122,9 +119,7 @@ describe("the protected endpoint GET /api/users/me", () => {
   });
 
   it("answers 401 auth.unauthenticated once the token's Session is past its idle expiry", async () => {
-    await app.db
-      .collection("sessions")
-      .updateMany({}, { $set: { idleExpiresAt: new Date("2026-01-01T00:00:00.000Z") } });
+    await app.db.collection("sessions").updateMany({}, { $set: { idleExpiresAt: app.startedAt } });
 
     const response = await app.http().get("/api/users/me").set("Authorization", `Bearer ${accessToken}`);
 

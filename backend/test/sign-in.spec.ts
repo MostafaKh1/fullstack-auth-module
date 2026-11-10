@@ -32,7 +32,7 @@ describe("Sign in", () => {
         id: expect.any(String),
         email: ada.email,
         name: ada.name,
-        createdAt: "2026-01-01T00:00:00.000Z",
+        createdAt: app.startedAt.toISOString(),
       },
     });
     expect(await app.db.collection("sessions").countDocuments()).toBe(sessionsBefore + 1);

@@ -53,3 +53,20 @@ export function heldUntilReleased(method: "post" | "get", path: string, answer: 
   });
   return { handler, release: () => release() };
 }
+
+/** The access token a refresh issues, distinct from the one Sign up, Sign in or the boot restore issued. */
+export const refreshedAccessToken = "refreshed-access-token-for-ada";
+
+/** `POST /api/auth/refresh` with no Session behind the refresh cookie: what a tab that never signed in gets. */
+export const noSessionToRestore = http.post("/api/auth/refresh", () => envelope("auth.unauthenticated", 401));
+
+/** `POST /api/auth/refresh` answering Ada with each of `tokens` in turn (the last one repeats), counting calls. */
+export function refreshAnswersAda(...tokens: string[]) {
+  const calls = { count: 0 };
+  const handler = http.post("/api/auth/refresh", () => {
+    const token = tokens[Math.min(calls.count, tokens.length - 1)] ?? accessToken;
+    calls.count += 1;
+    return HttpResponse.json({ accessToken: token, expiresIn: 900, user: ada });
+  });
+  return { handler, calls };
+}

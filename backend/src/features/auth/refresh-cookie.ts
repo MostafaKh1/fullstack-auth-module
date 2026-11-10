@@ -1,4 +1,4 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 
 export const REFRESH_COOKIE = "refresh_credential";
 
@@ -18,4 +18,18 @@ export function setRefreshCookie(
     path: REFRESH_COOKIE_PATH,
     maxAge: options.maxAgeMs,
   });
+}
+
+/** The refresh credential the request's `Cookie` header carries, or `null` when there is none. */
+export function readRefreshCookie(request: Request): string | null {
+  for (const pair of (request.headers.cookie ?? "").split(";")) {
+    const separator = pair.indexOf("=");
+    if (separator === -1 || pair.slice(0, separator).trim() !== REFRESH_COOKIE) continue;
+    try {
+      return decodeURIComponent(pair.slice(separator + 1).trim());
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }

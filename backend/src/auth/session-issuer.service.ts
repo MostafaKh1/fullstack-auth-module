@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { PinoLogger } from "nestjs-pino";
 import { Clock } from "../clock/clock";
@@ -6,7 +6,7 @@ import { AppConfigService } from "../config/app-config.service";
 import { SessionRepository } from "../database/session.repository";
 import { AccessTokenService } from "./access-token.service";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** The credentials of a freshly started Session. `refreshCredential` is `<sessionId>.<secret>` and goes only in the cookie. */
 export type StartedSession = {
@@ -32,7 +32,7 @@ export class SessionIssuerService {
   async start(userId: string, userAgent: string | null): Promise<StartedSession> {
     const now = this.clock.now();
     const sessionId = this.sessions.newId();
-    const secret = randomBytes(32).toString("base64url");
+    const secret = mintSecret();
     const idleExpiresAt = new Date(now.getTime() + this.config.get("sessionIdleTtlDays") * DAY_MS);
     await this.sessions.create({
       id: sessionId,
@@ -56,4 +56,17 @@ export class SessionIssuerService {
 /** Only this hash of a refresh secret is ever stored (ADR 0001). */
 export function hashSecret(secret: string): string {
   return createHash("sha256").update(secret).digest("hex");
+}
+
+/** A new refresh secret: 32 random bytes. */
+export function mintSecret(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+/** Whether `secret` hashes to `storedHash`, compared in constant time. */
+export function secretMatches(secret: string, storedHash: string | null): boolean {
+  if (storedHash === null) return false;
+  const actual = Buffer.from(hashSecret(secret), "hex");
+  const expected = Buffer.from(storedHash, "hex");
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

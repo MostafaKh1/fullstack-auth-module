@@ -31,5 +31,5 @@ features/<feature>/
 ## Inventory
 
 - `health/`: `GET /api/health` through `CheckHealthHandler`; `503 server.unavailable` while the database is unreachable.
-- `auth/`: `POST /api/auth/sign-up` and `sign-in` through `SignUpHandler` and `SignInHandler` (module `AuthFeatureModule`, named apart from the infrastructure tier's `AuthModule`); `auth.schema.ts` holds the field rules, mirrored by the front end; `refresh-cookie.ts` sets the refresh cookie.
+- `auth/`: `POST /api/auth/sign-up`, `sign-in` and `refresh` through `SignUpHandler`, `SignInHandler` and `RefreshHandler` (module `AuthFeatureModule`, named apart from the infrastructure tier's `AuthModule`); `auth.schema.ts` holds the field rules, mirrored by the front end; `refresh-cookie.ts` sets and reads the refresh cookie.
 - `users/`: the protected `GET /api/users/me` through `GetCurrentUserHandler`.

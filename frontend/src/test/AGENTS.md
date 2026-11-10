@@ -10,17 +10,18 @@ The rendered-app harness: the front end's only test seam, the whole app with its
 
 ## Writing a test
 
-- `renderApp(path, { handlers })` renders the app as if the browser opened `path`, and returns Testing Library's view plus `router` and a `user` from `user-event`.
+- `await renderApp(path, { handlers })` renders the app as if the browser opened `path`, waits for the boot restore to settle and a page to show, and returns Testing Library's view plus `router` and a `user` from `user-event`. `renderRestoringApp` returns at once, for tests of the loading state.
+- The boot restore's `POST /api/auth/refresh` answers "no Session" (`noSessionToRestore`) unless `handlers` declares its own.
 - Declare every request the test makes as an MSW handler in `handlers`; an undeclared request fails the test after it ends, with `Undeclared request: <METHOD> <path>`.
 - Query by role and visible text, as a User would; await what appears after a request with `findBy*`.
 - Canonical example: `src/pages/sign-in-page.test.tsx`.
 
 ## Inventory
 
-- `render-app.tsx`: `renderApp`.
+- `render-app.tsx`: `renderApp`, `renderRestoringApp`.
 - `server.ts`: the MSW `server`, and the undeclared-request check (`listenForDeclaredRequestsOnly`, `failOnUndeclaredRequests`).
 - `setup.ts`: Vitest's setup file (in `vitest.config.ts`): starts the server, and after each test cleans up, resets handlers and fails on undeclared requests.
 - `render-app.test.tsx`: pins the undeclared-request failure and the not-found page.
-- `auth-fixtures.ts`: Ada (a User and her password), `envelope()` for error responses, handlers for a successful Sign up / Sign in and for `/users/me` (which answers only Ada's access token), and `heldUntilReleased()` to observe a request in flight.
+- `auth-fixtures.ts`: Ada (a User and her password), `envelope()` for error responses, handlers for a successful Sign up / Sign in and for `/users/me` (which answers only Ada's access token), `heldUntilReleased()` to observe a request in flight, `noSessionToRestore`, `refreshAnswersAda(...tokens)` (counts its calls) and `refreshedAccessToken`.
 - `expected-copy.ts`: the sentences tests expect, written out apart from the app's copy map.
 - `fill-form.ts`: `enterField()` (focus, paste, leave) and `fillForm()`.

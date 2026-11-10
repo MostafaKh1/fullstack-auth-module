@@ -14,4 +14,5 @@ Only `sha256(secret)` is stored, every refresh replaces the secret in one condit
 
 - The guard checks that the access token's Session (`sid`) is not revoked, one indexed read per protected request, so Sign out takes effect immediately rather than after the token's remaining lifetime. Dropping that read is the lever if request volume ever makes it costly.
 - The access token lives in memory, so a reload has no token; the front end restores the Session by calling `POST /api/auth/refresh` on boot, which the cookie makes possible.
+- A refresh accepted within the grace window issues an access token but no new cookie: the cookie the rotating response set stays current, whichever of the two responses the browser applies last.
 - The cookie only travels to `/api/auth/*`, and those routes also check `Origin`, so the cookie cannot be used for cross-site request forgery against the rest of the API.

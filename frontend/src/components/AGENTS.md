@@ -10,12 +10,15 @@ Shared presentational components: UI that more than one page or feature renders,
 
 ## Conventions
 
-- One component per file: `status-badge.tsx` exports `StatusBadge`, named.
+- One component per file: `text-field.tsx` exports `TextField`, named.
 - Variants are a `cva(...)` declared above the component; `Props` is `VariantProps<typeof x> & { className?: string; ... }`, and the root's classes are `cn(x({ ...variants }), className)`.
 - A component imports only from `src/lib/` and its own libraries; text arrives as `children` or props, so copy stays with the page or feature.
 - Use the native element with the right role (`<button>`, `<p role="status">`) so tests and assistive tech find it by role.
-- Canonical example: `status-badge.tsx`.
+- Canonical example: `alert.tsx`.
 
 ## Inventory
 
-- `status-badge.tsx`: `StatusBadge`, a `role="status"` pill with `checking` / `up` / `down` variants.
+- `alert.tsx`: `Alert`, a `role="alert"` message (`tone`: `error`).
+- `button.tsx`: `Button` (`variant`: `primary` / `ghost`, `size`: `md` / `sm`); `pending` disables it, sets `aria-busy` and shows a spinner.
+- `text-field.tsx`: `TextField`, a labelled input whose `error` is linked by `aria-describedby` and sets `aria-invalid`; `trailing` sits inside the input, `children` below it.
+- `page-loader.tsx`: `PageLoader`, a full-page `role="status"` loading state.

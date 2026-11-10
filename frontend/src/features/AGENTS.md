@@ -1,6 +1,6 @@
 # frontend/src/features/AGENTS.md
 
-One folder per capability (`auth` first): the forms, Zod schemas, hooks and context that give a page its behaviour. No feature exists yet; the first front-end Sign up and Sign in ticket creates `auth/` and lists what it adds below.
+One folder per capability (`auth` first): the forms, Zod schemas, hooks and context that give a page its behaviour.
 
 ## Where does this file belong?
 
@@ -19,4 +19,12 @@ One folder per capability (`auth` first): the forms, Zod schemas, hooks and cont
 
 ## Inventory
 
-None yet.
+`auth/` ([ADR 0008](../../../docs/adr/0008-front-end-session-handling.md)):
+
+- `schemas.ts`: `signUpSchema`, `signInSchema`, and `passwordRule` (the predicates the checklist shares); errors are rule ids.
+- `field-rules.examples.ts`: the worked-examples table, identical to `backend/test/field-rules.examples.ts`.
+- `session-context.ts`, `session-provider.tsx`, `use-session.ts`: the `Session` (`restoring` / `signed-in` / `signed-out`), `SessionProvider` and `useSession()`, whose `startSession()` stores the access token in the API client.
+- `require-session.tsx`, `require-signed-out.tsx`, `return-path.ts`: the two route guards and the return path they carry in location state.
+- `sign-up-form.tsx`, `sign-in-form.tsx`: the forms; `apply-api-failure.ts` puts a failed request's issues on fields or the form alert.
+- `password-field.tsx` (show/hide toggle), `password-checklist.tsx` (the live checklist), `auth-layout.tsx` (the frame of both forms), `auth-link.tsx` (a link between them that keeps the return path).
+- `use-current-user.ts`: `useCurrentUser()`, the protected endpoint through TanStack Query (`["users", "me"]`).

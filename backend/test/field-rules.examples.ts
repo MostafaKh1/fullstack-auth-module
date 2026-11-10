@@ -1,9 +1,9 @@
 /**
  * The worked examples of the field rules in docs/requirements.md, one row per case.
  *
- * The front end keeps an identical copy of this table (`frontend/src/features/auth/field-rules.examples.ts`,
- * created by #16) and its tests run every row too. A rule changes in both copies, and in both apps' rules,
- * in the same commit (CODING_STANDARDS.md, "Validation rules").
+ * The front end keeps an identical copy of this table (`frontend/src/features/auth/field-rules.examples.ts`)
+ * and its tests run every row too. A rule changes in both copies, and in both apps' rules, in the same
+ * commit (CODING_STANDARDS.md, "Validation rules").
  *
  * `input: undefined` means the field is left out of the request.
  * A valid row may name `stored`: the value the User is saved with.

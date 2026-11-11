@@ -24,7 +24,7 @@ Compose needs a signing secret for the access tokens and a password for MongoDB;
 docker compose up --build
 ```
 
-Open http://localhost:8080. This builds both apps, starts MongoDB, the API and an nginx that serves the front end and proxies `/api`. The stack's MongoDB publishes no port and requires that password; the API reaches it over the stack's internal network, with the user `auth` (set `MONGO_USER` to change it). It uses its own volume, so a development database volume created without a password is untouched and needs no reset.
+Open http://localhost:8080. This builds both apps, starts MongoDB, the API and an nginx that serves the front end and proxies `/api`. The stack's MongoDB publishes no port and requires that password; the API reaches it over the stack's internal network, with the user `auth` (set `MONGO_USER` to change it). It uses its own volume, so a development database volume created without a password is untouched and needs no reset. MongoDB keeps the first password in its volume, so after changing `MONGO_PASSWORD` run `docker compose down --volumes` to start afresh (this deletes the stack's data).
 
 Deploying behind a reverse proxy: set `TRUST_PROXY` to the real number of proxy hops in front of the API, or throttling counts the proxy instead of the client.
 

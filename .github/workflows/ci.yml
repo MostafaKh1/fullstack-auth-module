@@ -16,7 +16,7 @@ env:
   # CI never commits, so it needs no git hooks.
   HUSKY: "0"
 
-# MongoDB is pinned to 8.2 (here and in compose.mongo.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
+# MongoDB is pinned to 8.2 (here and in compose.yaml and compose.mongo.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
 jobs:
   lint:
     name: Lint and format

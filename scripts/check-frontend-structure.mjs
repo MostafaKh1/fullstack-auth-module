@@ -234,12 +234,12 @@ for (const { rel } of items.filter((item) => item.isDir && item.rel.startsWith("
   for (const child of childrenOf.get(rel) ?? []) {
     if (child === entry || TEST.test(child) || child === `${name}.ts`) continue;
     const childPath = `${rel}/${child}`;
-    const unit = child;
+
     const own = files.filter((file) => file.startsWith(`${childPath}/`) || file === childPath);
     const importers = new Set();
     for (const file of own) {
       for (const importer of importersOf(file)) {
-        if (importer.startsWith(`${rel}/`) && unitOf(importer) !== unit) importers.add(unitOf(importer));
+        if (importer.startsWith(`${rel}/`) && unitOf(importer) !== child) importers.add(unitOf(importer));
       }
     }
     if (importers.size === 1 && ![entry, `${name}.ts`].includes([...importers][0])) {

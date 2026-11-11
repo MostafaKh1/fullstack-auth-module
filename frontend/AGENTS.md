@@ -89,6 +89,8 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 Each violation prints as `<rule> <path>`. `structure-baseline.json` lists today's violations in that form so the check lands green: a violation not listed fails, and so does a listed one that no longer occurs. The baseline only shrinks; never add a line to it.
 
+## Container
+
 `Dockerfile` builds the static files and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
 
 ## Commands

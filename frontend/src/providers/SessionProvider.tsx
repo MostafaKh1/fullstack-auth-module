@@ -1,9 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { type Session, SessionContext } from "@/providers/session-context";
-import { setAccessToken } from "@/utils/api-client";
-import { type SignedIn, signOut } from "@/utils/auth-api";
-import { listenForSessionChanges, refreshSessionOnce, type SessionListener } from "@/utils/session-refresh";
+import { setAccessToken } from "@/utils/api/api-client";
+import { type SignedIn, signOut } from "@/utils/api/auth-api";
+import {
+  listenForSessionChanges,
+  refreshSessionOnce,
+  type SessionListener,
+} from "@/utils/api/session-refresh";
 
 type Props = {
   children: ReactNode;

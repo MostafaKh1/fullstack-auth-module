@@ -12,7 +12,7 @@ import {
 } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules";
 import { AuthScreenPasswordField } from "@/components/composite/screens/AuthScreen/AuthScreenPasswordField";
 import { useSession } from "@/hooks/useSession";
-import { signUp } from "@/utils/auth-api";
+import { signUp } from "@/utils/api/auth-api";
 import { errorCopy } from "@/utils/error-copy";
 import { AuthScreenSignUpFormPasswordChecklist } from "./AuthScreenSignUpFormPasswordChecklist";
 

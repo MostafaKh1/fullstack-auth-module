@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Button } from "@/components/base/buttons/Button";
 import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { useSession } from "@/hooks/useSession";
-import { apiErrorEnvelope } from "@/utils/api-error";
+import { apiErrorEnvelope } from "@/utils/api/api-error";
+import { getCurrentUser } from "@/utils/api/users-api";
 import { errorCopy, unreachableCopy } from "@/utils/error-copy";
-import { getCurrentUser } from "@/utils/users-api";
 
 export function ApplicationPage() {
   const currentUser = useQuery({ queryKey: ["users", "me"], queryFn: getCurrentUser });

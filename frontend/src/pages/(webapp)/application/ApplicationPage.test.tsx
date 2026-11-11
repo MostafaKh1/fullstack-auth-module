@@ -17,8 +17,8 @@ import {
 import { expectedCopy } from "@/tests/support/expected-copy";
 import { fillForm } from "@/tests/support/fill-form";
 import { renderApp, renderRestoringApp } from "@/tests/support/render-app";
-import { returnToExamples } from "@/utils/return-to.examples";
-import { getCurrentUser } from "@/utils/users-api";
+import { getCurrentUser } from "@/utils/api/users-api";
+import { returnToExamples } from "@/utils/auth-url/return-to.examples";
 
 type Router = ReturnType<typeof renderRestoringApp>["router"];
 

@@ -1,7 +1,7 @@
 import { type AxiosError, type InternalAxiosRequestConfig, isAxiosError } from "axios";
-import { apiClient } from "@/utils/api-client";
-import { apiErrorEnvelope } from "@/utils/api-error";
-import { refreshSession, type SignedIn } from "@/utils/auth-api";
+import { apiClient } from "@/utils/api/api-client";
+import { apiErrorEnvelope } from "@/utils/api/api-error";
+import { refreshSession, type SignedIn } from "@/utils/api/auth-api";
 
 /** How a refresh's outcome reaches the Session context, which alone writes the access token (ADR 0008). */
 export type SessionListener = {

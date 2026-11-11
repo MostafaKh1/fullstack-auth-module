@@ -1,7 +1,7 @@
 # Front end: React and Vite, TanStack Query, React Hook Form with Zod, Tailwind with CVA, and all copy in the front end
 
 The front end is a React 19 single-page app built with Vite and TypeScript, routed by React Router.
-Server state goes through TanStack Query, and the only client state is the Session context; components call one function per endpoint in `src/utils/<resource>-api.ts`, never the HTTP client directly.
+Server state goes through TanStack Query, and the only client state is the Session context; components call one function per endpoint in `src/utils/api/<resource>-api.ts`, never the HTTP client directly.
 Forms use React Hook Form with Zod schemas as resolvers, so the field rules are one declarative schema per form that also drives the live password checklist.
 Styling is Tailwind 4; a component's variants are declared with CVA, and every class list goes through one `cn()` helper (`clsx` then `tailwind-merge`), so a caller's `className` overrides a component's own classes deterministically.
 Every sentence a User reads lives in the front end, looked up by error code or rule id with a generic fallback ([ADR 0002](0002-api-errors-carry-codes-not-copy.md)); the server's `message` is never shown.

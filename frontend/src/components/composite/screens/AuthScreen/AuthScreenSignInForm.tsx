@@ -6,7 +6,7 @@ import { Button } from "@/components/base/buttons/Button";
 import { TextField } from "@/components/base/inputs/TextField";
 import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { useSession } from "@/hooks/useSession";
-import { signIn } from "@/utils/auth-api";
+import { signIn } from "@/utils/api/auth-api";
 import { errorCopy } from "@/utils/error-copy";
 import { applyApiFailure } from "./AuthScreenApiFailure";
 import { type SignInFields, signInSchema } from "./AuthScreenFieldRules";

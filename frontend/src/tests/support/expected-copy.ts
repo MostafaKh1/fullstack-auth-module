@@ -1,4 +1,4 @@
-import type { components } from "@/utils/api-types.generated";
+import type { components } from "@/utils/api/api-types.generated";
 
 type ContractErrorCode = components["schemas"]["ErrorEnvelope"]["code"];
 

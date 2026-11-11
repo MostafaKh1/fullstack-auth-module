@@ -28,7 +28,7 @@ The first match wins:
 5. Anything built from base components, or that knows about the Session, a form schema or an endpoint -> `src/components/composite/`, either as a component folder (`AuthScreen/`) or in a kind group (`banners-and-notifications/`). UI one page alone uses still goes in `src/components/`: pages hold no components of their own.
 6. A hook more than one component uses -> `src/hooks/useX.ts`; a hook one component uses stays in its file.
 7. An app-wide context -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider), mounted in `src/app/App.tsx` inside the query client.
-8. A call to an endpoint -> a function in `src/utils/<resource>-api.ts` (`auth-api.ts` for `/auth/*`, `users-api.ts` for `/users/*`), next to the request and response types it uses. Any other pure helper two layers need -> a kebab-case module in `src/utils/`.
+8. A call to an endpoint -> a function in `src/utils/api/<resource>-api.ts` (`auth-api.ts` for `/auth/*`, `users-api.ts` for `/users/*`), next to the request and response types it uses. Any other pure helper two layers need -> a kebab-case module in `src/utils/`.
 
 Kind folders inside a section are kebab-case and plural (`buttons/`, `inputs/`, `route-guards/`, `route-switches/`).
 
@@ -54,14 +54,14 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 
 - **Server state** goes through TanStack Query: a page or hook calls `useQuery` / `useMutation` over one function from `src/utils/`. Query keys are arrays led by the resource (`["users", "me"]`).
 - **Client state** is the Session context only (restoring, signed in, signed out) ([ADR 0008](../docs/adr/0008-front-end-session-handling.md)). A component reads it through `useSession()`, never `use(SessionContext)`; a context hook throws when its provider is missing. Anything else is local `useState` or form state.
-- The access token lives only in `src/utils/api-client.ts`'s memory, and `SessionProvider` is its only writer. Attaching it, and refreshing once on a `401 auth.unauthenticated` (never for `/auth/*`), happen once as interceptors in `api-client.ts` and `session-refresh.ts`, never in a caller; the refresh outcome reaches the context through the listener it registers.
+- The access token lives only in `src/utils/api/api-client.ts`'s memory, and `SessionProvider` is its only writer. Attaching it, and refreshing once on a `401 auth.unauthenticated` (never for `/auth/*`), happen once as interceptors in `api-client.ts` and `session-refresh.ts`, never in a caller; the refresh outcome reaches the context through the listener it registers.
 
 ## The API side
 
 - Nothing outside `src/utils/` imports axios; nothing in `src/utils/` imports React or another app folder.
 - An API function is named verb-first (`getCurrentUser`, `signUp`), takes plain arguments and returns `response.data`; a failure rejects with the envelope. Paths are relative to the client's `/api` base URL (`"/users/me"`).
-- Request and response types are generated from `contract/openapi.json` into `src/utils/api-types.generated.ts` (`npm run generate:api`); the `*-api.ts` modules alias them (`components["schemas"]["User"]`), never restate a shape. The apps share no code, only that file ([contract/AGENTS.md](../contract/AGENTS.md)).
-- The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
+- Request and response types are generated from `contract/openapi.json` into `src/utils/api/api-types.generated.ts` (`npm run generate:api`); the `*-api.ts` modules alias them (`components["schemas"]["User"]`), never restate a shape. The apps share no code, only that file ([contract/AGENTS.md](../contract/AGENTS.md)).
+- The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/auth-url/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
 
 ## Copy and errors
 

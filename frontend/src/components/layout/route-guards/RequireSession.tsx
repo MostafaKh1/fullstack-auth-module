@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 import { PageLoader } from "@/components/utility/PageLoader";
 import { useSession } from "@/hooks/useSession";
-import { authUrl } from "@/utils/auth-url";
+import { authUrl } from "@/utils/auth-url/auth-url";
 
 type Props = {
   children: ReactNode;

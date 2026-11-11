@@ -32,6 +32,7 @@ const TEST = /\.test\.[tj]sx?$/;
 
 const stemOf = (name) => name.split(".")[0];
 const startsWithPrefix = (stem, prefix) => stem.startsWith(prefix) && /[A-Z]/.test(stem[prefix.length] ?? "");
+const isComponentFolder = (dir) => dir.startsWith("components/") && PASCAL.test(dir.split("/").at(-1));
 
 function walk(dir) {
   const items = [];
@@ -73,7 +74,6 @@ function resolveImport(from, spec) {
     fileSet.has(candidate),
   );
 }
-const isComponentFolder = (dir) => dir.startsWith("components/") && PASCAL.test(dir.split("/").at(-1));
 const imports = new Map();
 for (const file of files.filter((f) => SOURCE.test(f))) {
   const text = readFileSync(join(root, file), "utf8");
@@ -112,7 +112,7 @@ function checkComponents(item, segs) {
   const section = segs[1];
   if (!SECTIONS.includes(section)) return;
   const parent = segs[depth - 2];
-  const inComponentFolder = depth >= 4 && PASCAL.test(parent);
+  const inComponentFolder = isComponentFolder(segs.slice(0, -1).join("/"));
   const screenHome = "components/composite/screens/";
 
   if (isDir) {

@@ -19,7 +19,7 @@ Imports point down this table only. A layer may skip the ones between (a page ma
 
 ## Where does this file belong?
 
-Take the first that fits. Each line names the file to copy.
+Take the first that fits. Each line names the file to copy where one exists.
 
 1. **A screen at a URL** -> `src/pages/<group>/<route>/<Name>Page.tsx`, plus its entry in `src/app/routes.tsx` (the only place a route is added; a route guard wraps elements there). A parenthesised group (`(auth)`, `(webapp)`) groups screens by who sees them and adds nothing to the URL; the route folder is named for the path or, for Sign in and Sign up (both at `/`), for their `auth` value ([ADR 0009](../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)). A protected screen goes inside `RequireSession`. Copy `src/pages/(auth)/sign-in/SignInPage.tsx`.
 2. **A component** -> `src/components/`, in the first section that fits, in this order:
@@ -34,8 +34,8 @@ Take the first that fits. Each line names the file to copy.
 3. **A hook** used by two or more components or pages -> `src/hooks/useX.ts` (copy `useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file).
 4. **An app-wide context** -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider), mounted in `src/app/App.tsx` inside the query client. Copy `SessionProvider.tsx`.
 5. **A call to an endpoint** -> a function in `src/utils/api/<resource>-api.ts` (`auth-api.ts` for `/auth/*`, `users-api.ts` for `/users/*`), next to the request and response types it uses. Copy `users-api.ts`.
-6. **Any other helper** -> a kebab-case module in `src/utils/`. Once three helpers share a concern (a first word), they move into `src/utils/<concern>/` together, as `api/` and `auth-url/` did; `cn.ts` and `error-copy.ts` stay at the top.
-7. **A test** -> beside the file it covers, named after it (see "Tests").
+6. **Any other helper** -> a kebab-case module in `src/utils/` (copy `cn.ts`), or in the concern folder it belongs to. Three helpers at the top of `src/utils/` that start with the same word make a concern: they move into `src/utils/<concern>/`, which then holds every helper of that concern, as `api/` holds the resource modules and the refresh interceptor and `auth-url/` holds the `returnTo` rule. `cn.ts` and `error-copy.ts` stay at the top.
+7. **A test** -> beside the file it covers, named after it (see "Tests"). Copy `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
 
 ### Sections import in one direction
 
@@ -58,8 +58,7 @@ The case of a file name says what it holds:
 - **A component, page, provider or the app shell** is PascalCase, named after the one component it exports: `Button.tsx` exports `Button`, `SignInPage.tsx` exports `SignInPage`. A page is `<Name>Page.tsx`.
 - **A hook** is `useX.ts` in camelCase: `useSession.ts` exports `useSession`.
 - **Everything else outside component folders** is kebab-case: helpers, contexts, test support (`api-client.ts`, `session-context.ts`, `render-app.tsx`). Folders outside `components/` are kebab-case.
-- One public component or hook per file, as a named export; no default exports.
-- Props are `type Props = { ... }`; a styleable root takes `className` and merges it through `cn()`. Variants are a `cva(...)` above the component, `Props` is `VariantProps<typeof x> & { className?: string; ... }`, and the root's classes are `cn(x({ ...variants }), className)`.
+- One public component or hook per file. Exports, `Props`, `className` and variants follow [CODING_STANDARDS.md](../CODING_STANDARDS.md) ("Architecture: front end"); for variants copy `Button.tsx`.
 - Use the native element with the right role (`<button>`, `<p role="status">`) so tests and assistive tech find it by role.
 - `.tsx` for files with JSX, `.ts` otherwise.
 - Domain names come from [GLOSSARY.md](../GLOSSARY.md): `signIn`, never `login`.

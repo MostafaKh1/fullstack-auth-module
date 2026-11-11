@@ -175,6 +175,47 @@ describe("Sign out: POST /api/auth/sign-out", () => {
     });
   });
 
+  describe("more than one refresh cookie", () => {
+    let planted: SignedIn;
+
+    beforeEach(async () => {
+      // Another site on a shared parent domain can set a cookie of the same name with a more specific path, which
+      // the browser then sends first: here, a credential for a Session of the attacker's own.
+      const mallory = { email: "mallory@example.com", name: "Mallory", password: "Passw0rd!" };
+      planted = signedInFrom(await app.http().post("/api/auth/sign-up").send(mallory).expect(201));
+    });
+
+    function withTwoCookies(path: string) {
+      const cookies = [planted.credential, device.credential].map(
+        (credential) => `refresh_credential=${encodeURIComponent(credential)}`,
+      );
+      return app.http().post(path).set("Cookie", cookies.join("; "));
+    }
+
+    async function secretHashes() {
+      return (await app.db.collection("sessions").find({}).sort({ _id: 1 }).toArray()).map(
+        (session) => session.secretHash,
+      );
+    }
+
+    it.each([
+      ["refresh", "/api/auth/refresh"],
+      ["Sign out", "/api/auth/sign-out"],
+    ])("%s answers 401 auth.unauthenticated and changes nothing", async (_route, path) => {
+      const before = await secretHashes();
+
+      const response = await withTwoCookies(path);
+
+      expect(response.status).toBe(401);
+      expect(response.body).toMatchObject({ code: "auth.unauthenticated", status: 401 });
+      expect(response.headers["set-cookie"]).toBeUndefined();
+      expect(await secretHashes()).toEqual(before);
+      expect((await storedSession(device.sessionId))?.revokedAt).toBeNull();
+      expect((await storedSession(planted.sessionId))?.revokedAt).toBeNull();
+      expect((await currentUser(device.accessToken)).status).toBe(200);
+    });
+  });
+
   describe("the Origin check", () => {
     it("refuses a foreign Origin with 403 auth.origin_rejected, leaving the Session live", async () => {
       const response = await signOut().set("Origin", "https://evil.example");

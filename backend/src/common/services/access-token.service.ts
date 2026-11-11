@@ -1,7 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { AppConfigService } from "../config/app-config.service";
-import type { AccessClaims } from "./auth.types";
+import { AppConfigService } from "../../config/app-config.service";
+
+/** Who a request is from: the User (`sub`) and the Session (`sid`) its access token was issued for. */
+export type AuthContext = { userId: string; sessionId: string };
 
 type Payload = { sub: string; sid: string; iat: number; exp: number };
 
@@ -17,7 +19,7 @@ export class AccessTokenService {
     return this.config.get("accessTokenTtlSeconds");
   }
 
-  sign(claims: AccessClaims, now: Date): Promise<string> {
+  sign(claims: AuthContext, now: Date): Promise<string> {
     const iat = Math.floor(now.getTime() / 1000);
     const payload: Payload = {
       sub: claims.userId,
@@ -29,7 +31,7 @@ export class AccessTokenService {
   }
 
   /** The token's claims, or `null` when it is malformed, forged or expired at `now`. */
-  async verify(token: string, now: Date): Promise<AccessClaims | null> {
+  async verify(token: string, now: Date): Promise<AuthContext | null> {
     try {
       const payload = await this.jwt.verifyAsync<Payload>(token, {
         algorithms: ["HS256"],

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import type { User } from "../../auth/auth.types";
 import { ApiError } from "../../common/errors/api-error";
 import { UserRepository } from "../../database/repositories/user.repository";
+import type { User } from "../auth/auth.types";
 
 /** The signed-in User's own record. */
 @Injectable()

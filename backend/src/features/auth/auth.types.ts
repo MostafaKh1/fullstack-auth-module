@@ -16,9 +16,6 @@ export type Session = {
   revokedReason: RevokedReason | null;
 };
 
-/** What an access token says: the User (`sub`) and the Session (`sid`) it was issued for. */
-export type AccessClaims = { userId: string; sessionId: string };
-
 /*
  * The field rules of docs/requirements.md. The front end enforces the same rules in
  * `frontend/src/components/composite/auth/AuthScreen/AuthScreenFieldRules.ts`; change both in the same commit, and both copies of the

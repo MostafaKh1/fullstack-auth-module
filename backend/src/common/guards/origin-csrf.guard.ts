@@ -1,7 +1,7 @@
 import { type CanActivate, type ExecutionContext, Injectable } from "@nestjs/common";
 import type { Request } from "express";
-import { AppConfigService } from "../config/app-config.service";
-import { ApiError } from "./errors/api-error";
+import { AppConfigService } from "../../config/app-config.service";
+import { ApiError } from "../errors/api-error";
 
 /**
  * The `Origin` check of the cookie routes (refresh, Sign out), applied with `@UseGuards(OriginCsrfGuard)`.

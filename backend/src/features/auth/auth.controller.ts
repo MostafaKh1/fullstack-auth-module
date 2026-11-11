@@ -1,11 +1,11 @@
 import { Body, Controller, Headers, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { Public } from "../common/auth.decorator";
-import { AuthCookiesService } from "../common/auth-cookies.service";
-import { OriginCsrfGuard } from "../common/origin-csrf.guard";
-import { RouteValidationPipe } from "../common/route-validation.pipe";
-import { AuthService, type SignedIn } from "./auth.service";
+import { Public } from "../../common/decorators/auth.decorator";
+import { OriginCsrfGuard } from "../../common/guards/origin-csrf.guard";
+import { RouteValidationPipe } from "../../common/pipes/route-validation.pipe";
+import { AuthCookiesService } from "../../common/services/auth-cookies.service";
 import { type SignInBody, type SignUpBody, signInSchema, signUpSchema, type User } from "./auth.types";
+import { AuthService, type SignedIn } from "./services/auth.service";
 
 export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 

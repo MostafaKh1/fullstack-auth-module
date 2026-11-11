@@ -1,6 +1,6 @@
 import type { PipeTransform } from "@nestjs/common";
 import type { z } from "zod";
-import { ApiError } from "./errors/api-error";
+import { ApiError } from "../errors/api-error";
 
 /**
  * Parses a request body with a Zod schema whose every check carries a rule id as its error (ADR 0002),

@@ -1,16 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { PinoLogger } from "nestjs-pino";
-import { ApiError } from "../common/errors/api-error";
-import { AppConfigService } from "../config/app-config.service";
-import { ClockService } from "../core/clock.service";
-import { SessionRepository } from "../database/repositories/session.repository";
-import type { AccessClaims, RevokedReason, Session } from "./auth.types";
+import { ApiError } from "../../../common/errors/api-error";
+import { isSessionLive } from "../../../common/guards/access-token.guard";
+import type { AuthContext } from "../../../common/services/access-token.service";
+import { AppConfigService } from "../../../config/app-config.service";
+import { ClockService } from "../../../core/clock.service";
+import { SessionRepository } from "../../../database/repositories/session.repository";
+import type { RevokedReason } from "../auth.types";
 import {
   mintRefreshCredential,
   parseRefreshCredential,
   type RefreshCredential,
   secretMatches,
-} from "./refresh-credential";
+} from "../refresh-credential";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -18,17 +20,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export type IssuedRefreshCredential = { value: string; idleExpiresAt: Date };
 
 /** A Session just started: whose it is, and its first refresh credential. */
-export type StartedSession = { claims: AccessClaims; issued: IssuedRefreshCredential };
+export type StartedSession = { claims: AuthContext; issued: IssuedRefreshCredential };
 
 /**
  * What a refresh established: whose Session it is, and the new credential. `issued` is `null` when the immediately
  * previous credential was accepted within the grace window, so the credential the rotation issued stays current.
  */
-export type RefreshedSession = { claims: AccessClaims; issued: IssuedRefreshCredential | null };
+export type RefreshedSession = { claims: AuthContext; issued: IssuedRefreshCredential | null };
 
 /**
  * The Session's lifecycle (ADR 0001): starting one, rotating its refresh credential, revoking it, and the rules of
- * liveness, the sliding idle expiry and the grace window.
+ * the sliding idle expiry and the grace window. Liveness is the guard's rule (`isSessionLive`), applied here too.
  */
 @Injectable()
 export class SessionService {
@@ -58,12 +60,6 @@ export class SessionService {
     });
     this.logger.info({ userId, sessionId }, "session.started");
     return { claims: { userId, sessionId }, issued: { value: credential.value, idleExpiresAt } };
-  }
-
-  /** Whether the access token's Session still exists, belongs to its User, and is live. */
-  async isLive(claims: AccessClaims): Promise<boolean> {
-    const session = await this.sessions.findById(claims.sessionId);
-    return session !== null && session.userId === claims.userId && isLive(session, this.clock.now());
   }
 
   /**
@@ -100,7 +96,7 @@ export class SessionService {
     const { sessionId } = credential;
     const now = this.clock.now();
     const found = await this.sessions.findWithSecretHashesById(sessionId);
-    if (!found || !isLive(found.session, now)) throw sessionExpired();
+    if (!found || !isSessionLive(found.session, now)) throw sessionExpired();
     const claims = { userId: found.session.userId, sessionId };
 
     if (secretMatches(credential, found.secretHash)) {
@@ -134,15 +130,6 @@ export class SessionService {
     this.logger.warn(claims, "session.reuse_detected");
     throw sessionExpired();
   }
-}
-
-/** A Session is live while it is not revoked and has passed neither its idle nor its absolute expiry. */
-function isLive(session: Session, now: Date): boolean {
-  return (
-    session.revokedAt === null &&
-    session.idleExpiresAt.getTime() > now.getTime() &&
-    session.absoluteExpiresAt.getTime() > now.getTime()
-  );
 }
 
 /** The idle expiry a refresh at `now` gives: `idleTtlMs` ahead, but never past the absolute expiry. */

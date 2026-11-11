@@ -1,6 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
-import type { AccessClaims, User } from "../../auth/auth.types";
-import { CurrentUser } from "../../common/current-user.decorator";
+import { CurrentAuth } from "../../common/decorators/current-auth.decorator";
+import type { AuthContext } from "../../common/services/access-token.service";
+import type { User } from "../auth/auth.types";
 import { UsersService } from "./users.service";
 
 @Controller("users")
@@ -9,7 +10,7 @@ export class UsersController {
 
   /** The protected endpoint: the signed-in User. */
   @Get("me")
-  me(@CurrentUser() currentUser: AccessClaims): Promise<User> {
-    return this.usersService.getCurrentUser(currentUser.userId);
+  me(@CurrentAuth() auth: AuthContext): Promise<User> {
+    return this.usersService.getCurrentUser(auth.userId);
   }
 }

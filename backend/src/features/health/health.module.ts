@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { PersistenceModule } from "../database/persistence.module";
+import { PersistenceModule } from "../../database/persistence.module";
 import { HealthController } from "./health.controller";
 import { HealthService } from "./health.service";
 

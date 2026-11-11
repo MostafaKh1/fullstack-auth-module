@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { ApiError } from "../common/errors/api-error";
-import { ClockService } from "../core/clock.service";
-import { UserRepository } from "../database/repositories/user.repository";
-import { AccessTokenService } from "./access-token.service";
-import type { AccessClaims, SignInBody, SignUpBody, User } from "./auth.types";
-import { PasswordHashService } from "./password-hash.service";
+import { ApiError } from "../../../common/errors/api-error";
+import { AccessTokenService, type AuthContext } from "../../../common/services/access-token.service";
+import { PasswordHashService } from "../../../common/services/password-hash.service";
+import { ClockService } from "../../../core/clock.service";
+import { UserRepository } from "../../../database/repositories/user.repository";
+import type { SignInBody, SignUpBody, User } from "../auth.types";
 import { type IssuedRefreshCredential, SessionService } from "./session.service";
 
 /**
@@ -77,7 +77,7 @@ export class AuthService {
 
   private async signedIn(
     user: User,
-    claims: AccessClaims,
+    claims: AuthContext,
     refreshCredential: IssuedRefreshCredential | null,
   ): Promise<SignedIn> {
     return {

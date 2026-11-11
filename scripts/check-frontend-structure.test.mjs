@@ -257,7 +257,12 @@ describe("structure check", () => {
       "components/primitives/Slot.tsx",
     );
     fails(
-      { "components/base/buttons/Button.tsx": 'import { useSession } from "@/hooks/useSession";\n' },
+      { "components/primitives/Slot.tsx": 'import { useSession } from "@/hooks/useSession";\n' },
+      "section-imports",
+      "components/primitives/Slot.tsx",
+    );
+    fails(
+      { "components/base/buttons/Button.tsx": 'import { routes } from "@/app/routes";\n' },
       "section-imports",
       "components/base/buttons/Button.tsx",
     );
@@ -269,6 +274,14 @@ describe("structure check", () => {
       "section-imports",
       "components/base/buttons/Button.tsx",
     );
+  });
+
+  it("accepts a base component that reads a hook and a context from hooks/ and providers/", () => {
+    const { status, out } = check({
+      "components/base/buttons/Button.tsx":
+        'import { useSession } from "@/hooks/useSession";\nimport { SessionContext } from "@/providers/session-context";\n',
+    });
+    assert.equal(status, 0, out);
   });
 
   it("resolves the @/ alias to the source root", () => {

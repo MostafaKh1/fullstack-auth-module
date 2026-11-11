@@ -15,10 +15,10 @@ export const REDACTED_PATHS = [
   "*.password",
   "*.passwordHash",
   "*.accessToken",
-  "*.refreshToken",
   "*.refreshCredential",
   "*.secret",
   "*.secretHash",
+  "*.previousSecretHash",
   "*.jwtAccessSecret",
 ];
 

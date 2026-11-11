@@ -93,7 +93,7 @@ A comment earns its place by saying a _why_ the code cannot say. Where the code 
 A good comment gives the reason, and cites the ADR when it rests on one:
 
 ```ts
-// A known Session presented with a wrong secret: a stolen credential may be in use, so the Session ends (ADR 0001).
+// A replaced secret replayed after the grace window: two parties hold the credential, so the Session ends (ADR 0001).
 ```
 
 A good doc header is one line that says what the name cannot:

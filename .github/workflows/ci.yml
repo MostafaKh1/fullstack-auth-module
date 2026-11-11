@@ -140,15 +140,14 @@ jobs:
             e2e/playwright-report/
             e2e/test-results/
           retention-days: 7
-      # compose.yaml requires the signing secret; every later compose command reads it from the job's environment.
-      - name: Generate the stack's access-token secret
+      # compose.yaml requires the signing secret and the database password; every later compose command reads them from the job's environment.
+      - name: Generate the stack's secrets
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
-        run: echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "MONGO_PASSWORD=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Build the images and wait for the stack's health checks
         run: docker compose up --build --detach --wait
-        # The MongoDB service container already holds host port 27017.
-        env:
-          MONGO_PORT: "27117"
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
       - name: Stack logs
         if: ${{ failure() && steps.checkout.outcome == 'success' }}

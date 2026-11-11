@@ -9,6 +9,15 @@ const origin = z.url().refine((value) => new URL(value).origin === value, {
 // Public in the repository, so anyone could forge access tokens signed with it.
 const PUBLISHED_EXAMPLE_SECRET = "dev-only-access-secret-change-me-0123456789";
 
+function hasCredentials(uri: string): boolean {
+  try {
+    const { username, password } = new URL(uri);
+    return username !== "" && password !== "";
+  } catch {
+    return false;
+  }
+}
+
 /** `backend/.env.example` documents each variable. */
 const environmentSchema = z
   .object({
@@ -54,6 +63,13 @@ const environmentSchema = z
         code: "custom",
         path: ["JWT_ACCESS_SECRET"],
         message: "must not be the example value from backend/.env.example in production",
+      });
+    }
+    if (env.NODE_ENV === "production" && !hasCredentials(env.MONGODB_URI)) {
+      context.addIssue({
+        code: "custom",
+        path: ["MONGODB_URI"],
+        message: "must carry credentials (user and password) in production",
       });
     }
     if (env.NODE_ENV === "production" && env.PASSWORD_HASH_COST < 17) {

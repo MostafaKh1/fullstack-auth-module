@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { useFormField } from "@/hooks/useFormField";
 import { cn } from "@/utils/cn";
-import { errorCopy } from "@/utils/error-copy";
+import { clientErrorCode, errorCopy } from "@/utils/error-copy";
 
 type Props = Omit<ComponentProps<"p">, "children">;
 
@@ -12,7 +12,7 @@ export function FormMessage({ className, ...props }: Props) {
 
   return (
     <p id={formMessageId} className={cn("text-sm text-destructive", className)} {...props}>
-      {errorCopy(error.message ?? "")}
+      {errorCopy(error.message ?? clientErrorCode.unexpected)}
     </p>
   );
 }

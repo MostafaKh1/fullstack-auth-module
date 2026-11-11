@@ -1,11 +1,11 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { apiErrorEnvelope, type ValidationIssue } from "@/utils/api/api-error";
-import { errorCopy, fallbackCopy, unreachableCopy } from "@/utils/error-copy";
+import { clientErrorCode } from "@/utils/error-copy";
 
 /** The form-level alert's key in React Hook Form's errors. */
 export const FORM_ALERT = "root.server";
 
-/** A field error holds a code, as the schema's own errors do; the form-level alert holds its sentence. */
+/** Every error it sets, on a field or on the form-level alert, holds a code; `errorCopy()` turns it into a sentence where it is shown. */
 export function applyApiFailure<Fields extends FieldValues>(
   error: unknown,
   fields: readonly Path<Fields>[],
@@ -13,7 +13,7 @@ export function applyApiFailure<Fields extends FieldValues>(
 ) {
   const envelope = apiErrorEnvelope(error);
   if (!envelope) {
-    setError(FORM_ALERT, { message: unreachableCopy });
+    setError(FORM_ALERT, { type: "server", message: clientErrorCode.unreachable });
     return;
   }
 
@@ -36,10 +36,10 @@ export function applyApiFailure<Fields extends FieldValues>(
       shown.add(field);
     }
     if (envelope.issues.some(({ path }) => !isField(fieldOf(path)))) {
-      setError(FORM_ALERT, { message: fallbackCopy });
+      setError(FORM_ALERT, { type: "server", message: clientErrorCode.unexpected });
     }
     return;
   }
 
-  setError(FORM_ALERT, { message: errorCopy(envelope.code) });
+  setError(FORM_ALERT, { type: "server", message: envelope.code });
 }

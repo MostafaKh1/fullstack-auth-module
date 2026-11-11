@@ -1,6 +1,6 @@
 // Checks the front end's folder and file rules (frontend/AGENTS.md, "Where does this file belong?").
-// Usage: node scripts/check-frontend-structure.mjs [--root <src dir>] [--baseline <json file>]
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+// Usage: node scripts/check-frontend-structure.mjs [--root <src dir>]
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,8 +9,6 @@ const argv = process.argv.slice(2);
 const option = (name) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : undefined);
 
 const root = resolve(option("--root") ?? join(here, "../frontend/src"));
-const baselinePath =
-  option("--baseline") ?? (option("--root") ? undefined : join(here, "../frontend/structure-baseline.json"));
 
 const SECTIONS = ["primitives", "base", "composite", "layout", "utility"];
 const KINDED = ["base", "composite", "layout"];
@@ -75,12 +73,22 @@ function resolveImport(from, spec) {
     fileSet.has(candidate),
   );
 }
+const isComponentFolder = (dir) => dir.startsWith("components/") && PASCAL.test(dir.split("/").at(-1));
 const imports = new Map();
 for (const file of files.filter((f) => SOURCE.test(f))) {
   const text = readFileSync(join(root, file), "utf8");
   const targets = new Set();
+  const dir = file.includes("/") ? file.slice(0, file.lastIndexOf("/")) : "";
   for (const match of text.matchAll(IMPORT)) {
-    const target = resolveImport(file, match[1]);
+    const spec = match[1];
+    if (spec.startsWith(".") && !(isComponentFolder(dir) && spec.startsWith("./"))) {
+      violate(
+        "relative-import",
+        file,
+        "import through @/; only a component folder's child uses ./ for a sibling",
+      );
+    }
+    const target = resolveImport(file, spec);
     if (target) targets.add(target);
   }
   imports.set(file, targets);
@@ -271,16 +279,9 @@ for (const [file, targets] of imports) {
   }
 }
 
-const baseline =
-  baselinePath && existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, "utf8")) : [];
-const listed = new Set(baseline);
-const problems = [];
-for (const [key, message] of [...violations].sort(([a], [b]) => a.localeCompare(b))) {
-  if (!listed.has(key)) problems.push(`${key}: ${message}`);
-}
-for (const entry of baseline) {
-  if (!violations.has(entry)) problems.push(`stale baseline entry, remove it: ${entry}`);
-}
+const problems = [...violations]
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([key, message]) => `${key}: ${message}`);
 
 if (problems.length > 0) {
   process.stderr.write(
@@ -288,4 +289,4 @@ if (problems.length > 0) {
   );
   process.exit(1);
 }
-process.stdout.write(`Front-end structure check passed (${listed.size} baseline entries).\n`);
+process.stdout.write("Front-end structure check passed.\n");

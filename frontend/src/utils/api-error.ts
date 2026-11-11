@@ -18,3 +18,6 @@ export function apiErrorEnvelope(error: unknown): ApiErrorEnvelope | null {
   const { code } = body as { code?: unknown };
   return typeof code === "string" ? (body as ApiErrorEnvelope) : null;
 }
+
+/** The closed set of error codes, from the contract. */
+export type ApiErrorCode = ApiErrorEnvelope["code"];

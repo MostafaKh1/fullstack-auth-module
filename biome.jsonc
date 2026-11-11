@@ -6,7 +6,7 @@
   "files": {
     "ignoreUnknown": true,
     // Installed skills are vendored from upstream, not our code.
-    "includes": ["**", "!.claude/skills", "!.agents/skills", "!**/package-lock.json"],
+    "includes": ["**", "!.claude/skills", "!.agents/skills", "!**/package-lock.json", "!**/*.generated.ts"],
   },
   "linter": {
     "enabled": true,

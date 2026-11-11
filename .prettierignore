@@ -5,3 +5,7 @@ skills-lock.json
 # Installed skills are vendored from upstream, not our code.
 .claude/skills/
 .agents/skills/
+
+# Generated from contract/openapi.json.
+frontend/src/utils/api-types.generated.ts
+contract/openapi.json

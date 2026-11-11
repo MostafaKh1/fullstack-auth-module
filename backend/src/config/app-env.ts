@@ -23,6 +23,12 @@ const environmentSchema = z
     SESSION_ABSOLUTE_TTL_DAYS: positiveInt.default(30),
     REFRESH_GRACE_SECONDS: z.coerce.number().int().min(0).default(10),
     PASSWORD_HASH_COST: z.coerce.number().int().min(10).max(20).default(17),
+    THROTTLE_LIMIT: positiveInt.default(20),
+    THROTTLE_TTL_SECONDS: positiveInt.default(60),
+    REQUEST_BODY_LIMIT: z
+      .string()
+      .regex(/^[0-9]+(kb|mb)$/, "must be a size such as 16kb")
+      .default("16kb"),
     COOKIE_SECURE: z
       .enum(["true", "false"])
       .default("false")
@@ -61,6 +67,9 @@ export type AppConfig = {
   refreshGraceSeconds: number;
   passwordHashCost: number;
   cookieSecure: boolean;
+  throttleLimit: number;
+  throttleTtlSeconds: number;
+  requestBodyLimit: string;
 };
 
 /** One bad variable, named, with what is wrong. The value itself is never included: it may be a secret. */
@@ -98,6 +107,9 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     refreshGraceSeconds: e.REFRESH_GRACE_SECONDS,
     passwordHashCost: e.PASSWORD_HASH_COST,
     cookieSecure: e.COOKIE_SECURE,
+    throttleLimit: e.THROTTLE_LIMIT,
+    throttleTtlSeconds: e.THROTTLE_TTL_SECONDS,
+    requestBodyLimit: e.REQUEST_BODY_LIMIT,
   };
 }
 

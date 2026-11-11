@@ -44,6 +44,9 @@ export const testEnv: Record<string, string> = {
   REFRESH_GRACE_SECONDS: "10",
   PASSWORD_HASH_COST: "17",
   COOKIE_SECURE: "false",
+  THROTTLE_LIMIT: "10000",
+  THROTTLE_TTL_SECONDS: "60",
+  REQUEST_BODY_LIMIT: "16kb",
 };
 
 /**

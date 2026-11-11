@@ -10,6 +10,7 @@ common/
 ├── decorators/        # @Public() (auth.decorator.ts), @CurrentAuth()
 ├── errors/            # error-codes.ts (the closed set), api-error.ts (ApiError)
 ├── filters/           # the one global filter, registered in src/app.module.ts
+├── middleware/        # the JSON body parser with its size cap and its envelope errors
 ├── guards/            # the global AccessTokenGuard, the Origin check of the cookie routes
 ├── pipes/             # RouteValidationPipe(schema)
 └── services/          # the access token (and AuthContext), the password hasher, the refresh cookie

@@ -14,7 +14,7 @@ Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB
 
 The apps share no code; HTTP is the only contract between them.
 
-- **The API contract** is the "API contract" table in [docs/spec/auth-module.md](docs/spec/auth-module.md): every route under `/api`, every error as the envelope of [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md). A new error code or rule id lands in both apps in the same commit.
+- **The API contract** is the "API contract" table in [docs/spec/auth-module.md](docs/spec/auth-module.md) and its machine-readable form, the generated `contract/openapi.json` ([contract/AGENTS.md](contract/AGENTS.md)): every route under `/api`, every error as the envelope of [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md). The front end's API types are generated from it. A new error code or rule id lands in both apps in the same commit.
 - **The dev proxy**: Vite forwards `/api` to the back end (`API_PROXY_TARGET`, read in `frontend/vite.config.ts`), so the browser sees one origin in development, as it does behind a reverse proxy in production.
 - **The Session cookie**: the refresh credential travels in an `httpOnly` cookie scoped to `/api/auth`; the access token lives only in front-end memory ([ADR 0001](docs/adr/0001-session-record-with-short-lived-access-token.md)). The one-origin proxy is what makes the cookie and the `Origin` check behave the same in both environments.
 - **The field rules** exist once per app, each copy pointing at the other ([CODING_STANDARDS.md](CODING_STANDARDS.md), "Validation rules").

@@ -31,7 +31,7 @@ A parenthesised folder groups screens by who sees them and adds nothing to the U
 
 ## Inventory
 
-- `(webapp)/application/ApplicationPage.tsx`: `/` without `auth`, the Application page: "Welcome to the application." and "Signed in as {name}" from `GET /api/users/me`.
+- `(webapp)/application/ApplicationPage.tsx`: `/` without `auth`, the Application page: "Welcome to the application." and "Signed in as {name}" from `GET /api/users/me`, and the Sign out button (`useSession().endSession()`), which lands on Sign in.
 - `(auth)/sign-in/SignInPage.tsx`: `/?auth=sign-in` (and any unknown `auth` value); `(auth)/sign-up/SignUpPage.tsx`: `/?auth=sign-up`. Both frame their form in `AuthScreen`.
 - `(webapp)/application/ApplicationPage.test.tsx` also holds the addressing journeys: the redirects, the switch links, `returnTo`, and every row of `src/utils/return-to.examples.ts`.
 - `not-found/NotFoundPage.tsx`: every path with no route.

@@ -83,6 +83,19 @@ export class SessionService {
     await this.sessions.revoke(sessionId, reason, this.clock.now());
   }
 
+  /**
+   * Sign out: revokes the Session the presented credential holds. A credential that is missing, malformed, for no
+   * Session, or with a wrong secret changes nothing, so signing out is idempotent and a Session id alone ends nothing.
+   */
+  async revokeForCredential(presented: string | null): Promise<void> {
+    const credential = presented ? parseRefreshCredential(presented) : null;
+    if (!credential) return;
+    const found = await this.sessions.findWithSecretHashesById(credential.sessionId);
+    if (!found || !secretMatches(credential, found.secretHash)) return;
+    await this.revoke(credential.sessionId, "sign-out");
+    this.logger.info({ userId: found.session.userId, sessionId: credential.sessionId }, "session.signed_out");
+  }
+
   private async rotate(credential: RefreshCredential): Promise<RefreshedSession> {
     const { sessionId } = credential;
     const now = this.clock.now();

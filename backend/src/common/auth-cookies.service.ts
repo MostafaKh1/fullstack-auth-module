@@ -32,6 +32,20 @@ export class AuthCookiesService {
     response.append("Set-Cookie", attributes.join("; "));
   }
 
+  /** Clears the refresh cookie: the same name, path and attributes, already expired. */
+  clearRefreshCookie(response: Response): void {
+    const attributes = [
+      `${REFRESH_COOKIE}=`,
+      "Max-Age=0",
+      `Path=${REFRESH_COOKIE_PATH}`,
+      "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "HttpOnly",
+      ...(this.config.get("cookieSecure") ? ["Secure"] : []),
+      "SameSite=Lax",
+    ];
+    response.append("Set-Cookie", attributes.join("; "));
+  }
+
   /** The refresh credential the request's `Cookie` header carries, or `null` when there is none. */
   readRefreshCookie(request: Request): string | null {
     for (const pair of (request.headers.cookie ?? "").split(";")) {

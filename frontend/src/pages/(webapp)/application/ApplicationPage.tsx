@@ -1,11 +1,21 @@
+import { useState } from "react";
+import { Button } from "../../../components/base/buttons/Button";
 import { Alert } from "../../../components/composite/banners-and-notifications/Alert";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { useSession } from "../../../hooks/useSession";
 import { apiErrorEnvelope } from "../../../utils/api-error";
 import { errorCopy, unreachableCopy } from "../../../utils/error-copy";
 
 /** The page only a signed-in User sees: the welcome message and who they are signed in as. */
 export function ApplicationPage() {
   const currentUser = useCurrentUser();
+  const { endSession } = useSession();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function signOut() {
+    setSigningOut(true);
+    await endSession();
+  }
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -19,6 +29,9 @@ export function ApplicationPage() {
             ◆
           </span>
           The application
+          <Button variant="ghost" size="sm" className="ml-auto" pending={signingOut} onClick={signOut}>
+            {signingOut ? "Signing out…" : "Sign out"}
+          </Button>
         </div>
       </header>
 

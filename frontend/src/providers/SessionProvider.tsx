@@ -1,6 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { setAccessToken } from "../utils/api-client";
-import type { SignedIn } from "../utils/auth-api";
+import { type SignedIn, signOut } from "../utils/auth-api";
 import { listenForSessionChanges, refreshSessionOnce, type SessionListener } from "../utils/session-refresh";
 import { type Session, SessionContext } from "./session-context";
 
@@ -13,6 +14,7 @@ type Props = {
  * A tab boots `restoring` and asks the back end, through the refresh cookie, whether it still has a Session.
  */
 export function SessionProvider({ children }: Props) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session>({ status: "restoring" });
 
   const startSession = useCallback((signedIn: SignedIn) => {
@@ -20,14 +22,27 @@ export function SessionProvider({ children }: Props) {
     setSession({ status: "signed-in", user: signedIn.user });
   }, []);
 
+  // The Session is over in this tab: forget its token and everything fetched for its User.
+  const endLocally = useCallback(() => {
+    setAccessToken(null);
+    queryClient.clear();
+    setSession({ status: "signed-out" });
+  }, [queryClient]);
+
+  const endSession = useCallback(async () => {
+    try {
+      await signOut();
+    } catch {
+      // The tab is signed out anyway: the User asked to leave, and a failed request is not a reason to stay.
+    }
+    endLocally();
+  }, [endLocally]);
+
   // One listener for the provider's lifetime: StrictMode's second effect run then joins the boot refresh
   // the first run started instead of sending another.
   const [listener] = useState<SessionListener>(() => ({
     restored: startSession,
-    ended: () => {
-      setAccessToken(null);
-      setSession({ status: "signed-out" });
-    },
+    ended: endLocally,
   }));
 
   useEffect(() => {
@@ -40,6 +55,6 @@ export function SessionProvider({ children }: Props) {
     };
   }, [listener]);
 
-  const value = useMemo(() => ({ session, startSession }), [session, startSession]);
+  const value = useMemo(() => ({ session, startSession, endSession }), [session, startSession, endSession]);
   return <SessionContext value={value}>{children}</SessionContext>;
 }

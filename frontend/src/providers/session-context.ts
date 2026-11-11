@@ -13,6 +13,11 @@ export type SessionContextValue = {
   session: Session;
   /** Starts the Session that a successful Sign up or Sign in returned. */
   startSession: (signedIn: SignedIn) => void;
+  /**
+   * Sign out: asks the back end to end the Session, then ends it in this tab whether or not that call succeeded
+   * (ADR 0008). Never rejects.
+   */
+  endSession: () => Promise<void>;
 };
 
 export const SessionContext = createContext<SessionContextValue | null>(null);

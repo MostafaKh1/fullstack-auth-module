@@ -61,6 +61,127 @@ describe("Application page", () => {
   });
 });
 
+describe("Sign out", () => {
+  /** `POST /api/auth/sign-out` answering 204, counting calls. */
+  function signOutSucceeds() {
+    const calls = { count: 0 };
+    const handler = http.post("/api/auth/sign-out", () => {
+      calls.count += 1;
+      return new HttpResponse(null, { status: 204 });
+    });
+    return { handler, calls };
+  }
+
+  /** The boot restore finds Ada's Session until a sign-out has been answered, as the cleared cookie would. */
+  function sessionEndsWith(signOut: ReturnType<typeof signOutSucceeds>) {
+    return http.post("/api/auth/refresh", () =>
+      signOut.calls.count === 0 ? signedInAsAda() : envelope("auth.unauthenticated", 401),
+    );
+  }
+
+  it("ends the Session on the server and lands on Sign in", async () => {
+    const signOut = signOutSucceeds();
+    const { user, router } = await renderApp("/", {
+      handlers: [sessionEndsWith(signOut), currentUserIsAda, signOut.handler],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+    expect(signOut.calls.count).toBe(1);
+  });
+
+  it("stays signed out after a reload", async () => {
+    const signOut = signOutSucceeds();
+    const handlers = [sessionEndsWith(signOut), currentUserIsAda, signOut.handler];
+    const first = await renderApp("/", { handlers });
+    await screen.findByText("Signed in as Ada Lovelace");
+    await first.user.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    first.unmount();
+
+    const { router } = await renderApp("/", { handlers });
+
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+  });
+
+  it("sends no access token to a later protected request", async () => {
+    const signOut = signOutSucceeds();
+    const { user } = await renderApp("/", {
+      handlers: [sessionEndsWith(signOut), currentUserIsAda, signOut.handler],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+
+    await expect(getCurrentUser()).rejects.toMatchObject({ response: { status: 401 } });
+  });
+
+  it("does not show the previous User to the next one who signs in", async () => {
+    const signOut = signOutSucceeds();
+    const grace = {
+      id: "65f1c0ffee0000000000b22b",
+      email: "grace@example.com",
+      name: "Grace Hopper",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    };
+    const signInAsGrace = http.post("/api/auth/sign-in", () =>
+      HttpResponse.json({ accessToken: "access-token-for-grace", expiresIn: 900, user: grace }),
+    );
+    const currentUser = http.get("/api/users/me", ({ request }) =>
+      HttpResponse.json(
+        request.headers.get("Authorization") === "Bearer access-token-for-grace" ? grace : ada,
+      ),
+    );
+    const { user } = await renderApp("/", {
+      handlers: [sessionEndsWith(signOut), currentUser, signOut.handler, signInAsGrace],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+
+    await fillForm(user, { Email: grace.email, Password: adaPassword });
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByText("Signed in as Grace Hopper")).toBeInTheDocument();
+    expect(screen.queryByText("Signed in as Ada Lovelace")).not.toBeInTheDocument();
+  });
+
+  it("signs the tab out locally even when the sign-out request fails", async () => {
+    const { user, router } = await renderApp("/", {
+      handlers: [
+        refreshAnswersAda(accessToken).handler,
+        currentUserIsAda,
+        http.post("/api/auth/sign-out", () => envelope("server.internal", 500)),
+      ],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+  });
+
+  it("shows the button as busy while the request is in flight", async () => {
+    const held = heldUntilReleased("post", "/api/auth/sign-out", () => new Response(null, { status: 204 }));
+    const { user } = await renderApp("/", {
+      handlers: [refreshAnswersAda(accessToken).handler, currentUserIsAda, held.handler],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(await screen.findByRole("button", { name: "Signing out…" })).toBeDisabled();
+    held.release();
+    expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+  });
+});
+
 describe("the Session survives reloads", () => {
   /** `/users/me` answering Ada only for `token`, `401 auth.unauthenticated` otherwise, recording each token sent. */
   function currentUserIsAdaWith(token: string) {

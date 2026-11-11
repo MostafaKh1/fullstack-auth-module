@@ -7,6 +7,10 @@ Whether the tab has a Session is one React context (`src/providers/SessionProvid
 Two route guards read it: `RequireSession` sends a signed-out visitor to Sign in carrying the path, query and hash they asked for in the router's location state, and `RequireSignedOut` sends a signed-in User away from Sign in and Sign up, to that carried path or the Application page; both show a full-page loading state while `restoring`, so the wrong page never flashes.
 Because `RequireSignedOut` does the redirect, a successful Sign up or Sign in only starts the Session; the forms never navigate themselves.
 
+Sign out is `endSession()` on the same context: it calls `POST /api/auth/sign-out`, then clears the token and the query cache and sets `signed-out`, and `RequireSession` sends the tab to Sign in.
+A failed sign-out call (network down, a `5xx`) still signs the tab out: the User asked to leave, often on a shared computer, so the tab must not stay signed in.
+The price is that the server Session then lives until its idle expiry and the cookie remains, so a reload can restore it; that is accepted, the alternative being a signed-in screen the User cannot leave.
+
 ## Considered options
 
 - **The token in `localStorage` or `sessionStorage`.** Survives a reload without a refresh call, but any script on the page can read it ([ADR 0001](0001-session-record-with-short-lived-access-token.md)). A reload instead restores the Session through the `httpOnly` refresh cookie.

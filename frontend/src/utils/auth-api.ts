@@ -32,3 +32,8 @@ export async function refreshSession(): Promise<SignedIn> {
   const response = await apiClient.post<SignedIn>("/auth/refresh");
   return response.data;
 }
+
+/** `POST /api/auth/sign-out`: ends the Session on the server and clears the refresh cookie (`204`). */
+export async function signOut(): Promise<void> {
+  await apiClient.post("/auth/sign-out");
+}

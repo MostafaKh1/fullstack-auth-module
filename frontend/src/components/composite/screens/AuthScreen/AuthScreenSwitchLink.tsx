@@ -14,7 +14,7 @@ export function AuthScreenSwitchLink({ to, children }: Props) {
     <Link
       to={{ pathname: "/", search: withAuthForm(search, to) }}
       replace
-      className="rounded font-semibold text-indigo-600 hover:text-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+      className="rounded font-semibold text-primary hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       {children}
     </Link>

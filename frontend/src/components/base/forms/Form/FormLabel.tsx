@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { Label } from "@/components/base/labels/Label";
+import { useFormField } from "@/hooks/useFormField";
 import { cn } from "@/utils/cn";
-import { useFormField } from "./FormUseFormField";
 
 type Props = ComponentProps<typeof Label>;
 

@@ -179,6 +179,44 @@ describe("structure check", () => {
     fails({ "utils/useThing.ts": stub }, "hook-location", "utils/useThing.ts");
   });
 
+  it("hook-location: a <Folder>UseX file is a hook, so it sits in the folder it is named for", () => {
+    fails({ "utils/FormUseThing.ts": stub }, "hook-location", "utils/FormUseThing.ts");
+    fails(
+      { "components/composite/screens/AuthScreen/OtherUseThing.ts": stub },
+      "hook-location",
+      "components/composite/screens/AuthScreen/OtherUseThing.ts",
+    );
+    fails({ "hooks/FormUseThing.ts": stub }, "hook-name", "hooks/FormUseThing.ts");
+  });
+
+  it("accepts a component whose name merely contains Use", () => {
+    const { status, out } = check({ "components/base/buttons/ButtonUseCase.tsx": stub });
+    assert.equal(status, 0, out);
+  });
+
+  it("hook-shared: a <Folder>UseX hook used by two or more files moves to hooks/", () => {
+    fails(
+      {
+        "components/composite/screens/AuthScreen/AuthScreenUseThing.ts": stub,
+        "components/composite/screens/AuthScreen/AuthScreen.tsx":
+          'import { AuthScreenUseThing } from "./AuthScreenUseThing";\nimport { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
+        "components/composite/screens/AuthScreen/AuthScreenForm.tsx":
+          'import { AuthScreenFieldRules } from "./AuthScreenFieldRules";\nimport { AuthScreenUseThing } from "./AuthScreenUseThing";\n',
+      },
+      "hook-shared",
+      "components/composite/screens/AuthScreen/AuthScreenUseThing.ts",
+    );
+  });
+
+  it("accepts a <Folder>UseX hook used by one file of its folder", () => {
+    const { status, out } = check({
+      "components/composite/screens/AuthScreen/AuthScreenUseThing.ts": stub,
+      "components/composite/screens/AuthScreen/AuthScreen.tsx":
+        'import { AuthScreenUseThing } from "./AuthScreenUseThing";\nimport { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
+    });
+    assert.equal(status, 0, out);
+  });
+
   it("hook-single-use: a hook in hooks/ is used by two or more files", () => {
     fails(
       {
@@ -224,7 +262,12 @@ describe("structure check", () => {
       "components/primitives/Slot.tsx",
     );
     fails(
-      { "components/base/buttons/Button.tsx": 'import { useSession } from "@/hooks/useSession";\n' },
+      { "components/primitives/Slot.tsx": 'import { useSession } from "@/hooks/useSession";\n' },
+      "section-imports",
+      "components/primitives/Slot.tsx",
+    );
+    fails(
+      { "components/base/buttons/Button.tsx": 'import { routes } from "@/app/routes";\n' },
       "section-imports",
       "components/base/buttons/Button.tsx",
     );
@@ -238,12 +281,59 @@ describe("structure check", () => {
     );
   });
 
+  it("accepts a base component that reads a hook and a context from hooks/ and providers/", () => {
+    const { status, out } = check({
+      "components/base/buttons/Button.tsx":
+        'import { useSession } from "@/hooks/useSession";\nimport { SessionContext } from "@/providers/session-context";\n',
+    });
+    assert.equal(status, 0, out);
+  });
+
   it("resolves the @/ alias to the source root", () => {
     fails(
       { "components/primitives/Slot.tsx": 'import { Button } from "@/components/base/buttons/Button";\n' },
       "section-imports",
       "components/primitives/Slot.tsx",
     );
+  });
+
+  it("palette-colour: components, pages and the app use theme tokens, never a Tailwind palette colour", () => {
+    const withClass = (className) => `export const a = <p className="${className}" />;
+`;
+    for (const className of [
+      "text-indigo-600",
+      "hover:bg-slate-100",
+      "dark:text-indigo-400",
+      "bg-fuchsia-500/25",
+      "focus-visible:outline-indigo-500",
+      "from-rose-50",
+      "bg-white/10",
+      "ring-black",
+    ]) {
+      fails(
+        { "components/composite/screens/AuthScreen/AuthScreen.tsx": withClass(className) },
+        "palette-colour",
+        "components/composite/screens/AuthScreen/AuthScreen.tsx",
+      );
+    }
+    fails(
+      { "pages/not-found/NotFoundPage.tsx": withClass("border-red-500") },
+      "palette-colour",
+      "pages/not-found/NotFoundPage.tsx",
+    );
+    fails({ "app/App.tsx": withClass("fill-blue-600") }, "palette-colour", "app/App.tsx");
+  });
+
+  it("accepts theme tokens, and palette-like words that are not classes", () => {
+    const { status, out } = check({
+      "components/composite/screens/AuthScreen/AuthScreen.tsx": `import { AuthScreenForm } from "./AuthScreenForm";
+import { AuthScreenFieldRules } from "./AuthScreenFieldRules";
+export const a = <p className="bg-primary text-muted-foreground border-input ring-ring/50 text-destructive" title="red-1 text-red" />;
+`,
+      "pages/not-found/NotFoundPage.tsx": `export const notRed = "agreen-5 whitespace-nowrap text-whiteish";
+`,
+    });
+    assert.equal(status, 0, out);
   });
 
   it("relative-import: ./ only between children of a component folder, never ../", () => {

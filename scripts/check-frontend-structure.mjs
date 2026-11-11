@@ -21,14 +21,24 @@ const MAY_IMPORT = {
   utility: [],
 };
 const NEVER_IMPORTED_BY_COMPONENTS = ["pages", "app", "tests"];
-const ONLY_UTILS = ["primitives", "base", "utility"];
+const OUTSIDE_COMPONENTS = {
+  primitives: ["utils"],
+  base: ["utils", "hooks", "providers"],
+  utility: ["utils"],
+};
 
 const PASCAL = /^[A-Z][A-Za-z0-9]*$/;
 const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 const KIND = /^[a-z][a-z0-9]*(-[a-z0-9]+)*s$/;
 const HOOK = /^use[A-Z][A-Za-z0-9]*$/;
+const PREFIXED_HOOK = /^[A-Z][A-Za-z0-9]*?Use[A-Z][A-Za-z0-9]*$/;
 const SOURCE = /\.(ts|tsx|js|jsx)$/;
 const TEST = /\.test\.[tj]sx?$/;
+
+// A Tailwind palette colour utility (`text-indigo-600`, `hover:bg-slate-100`): colours come from the theme tokens in index.css.
+const PALETTE_COLOUR =
+  /(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|outline|ring|ring-offset|fill|stroke|from|to|via|divide|decoration|accent|caret|shadow|placeholder)-(?:(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+|(?:white|black)(?![\w-]))/;
+const THEMED = ["components", "pages", "app"];
 
 const stemOf = (name) => name.split(".")[0];
 const startsWithPrefix = (stem, prefix) => stem.startsWith(prefix) && /[A-Z]/.test(stem[prefix.length] ?? "");
@@ -193,6 +203,26 @@ for (const item of items) {
   const name = segs.at(-1);
   if (
     !item.isDir &&
+    name.endsWith(".ts") &&
+    segs[0] !== "hooks" &&
+    !TEST.test(name) &&
+    PREFIXED_HOOK.test(stemOf(name))
+  ) {
+    const folder = segs.slice(0, -1).join("/");
+    if (!isComponentFolder(folder) || !startsWithPrefix(stemOf(name), `${segs.at(-2)}Use`)) {
+      violate(
+        "hook-location",
+        item.rel,
+        "a hook is useX in hooks/, or <Folder>UseX in its single component's folder",
+      );
+      continue;
+    }
+    if (importersOf(item.rel).length >= 2) {
+      violate("hook-shared", item.rel, "a hook used by two or more files lives in hooks/ as useX");
+    }
+  }
+  if (
+    !item.isDir &&
     SOURCE.test(name) &&
     segs[0] !== "hooks" &&
     HOOK.test(stemOf(name)) &&
@@ -209,6 +239,17 @@ for (const item of items) {
   else checkOther(item, segs);
   if (!item.isDir && /^index\.(ts|tsx|js|jsx|mjs)$/.test(name))
     violate("no-barrel", item.rel, "no index files");
+}
+
+for (const file of files.filter((f) => SOURCE.test(f) && !TEST.test(f) && THEMED.includes(f.split("/")[0]))) {
+  const match = PALETTE_COLOUR.exec(readFileSync(join(root, file), "utf8"));
+  if (match) {
+    violate(
+      "palette-colour",
+      file,
+      `${match[0]} is a palette colour: use a theme token from index.css (bg-primary, text-muted-foreground)`,
+    );
+  }
 }
 
 // Barrels that are not named index.
@@ -273,8 +314,12 @@ for (const [file, targets] of imports) {
       }
     } else if (NEVER_IMPORTED_BY_COMPONENTS.includes(tsegs[0])) {
       violate("section-imports", file, `components may not import ${tsegs[0]}/`);
-    } else if (ONLY_UTILS.includes(section) && tsegs[0] !== "utils") {
-      violate("section-imports", file, `${section} may import only utils/ outside components/`);
+    } else if (OUTSIDE_COMPONENTS[section] && !OUTSIDE_COMPONENTS[section].includes(tsegs[0])) {
+      violate(
+        "section-imports",
+        file,
+        `${section} may import only ${OUTSIDE_COMPONENTS[section].join(", ")} outside components/`,
+      );
     }
   }
 }

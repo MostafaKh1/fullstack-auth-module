@@ -10,7 +10,7 @@ import { CardTitle } from "@/components/base/cards/Card/CardTitle";
 import { useSession } from "@/hooks/useSession";
 import { apiErrorEnvelope } from "@/utils/api/api-error";
 import { getCurrentUser } from "@/utils/api/users-api";
-import { errorCopy, unreachableCopy } from "@/utils/error-copy";
+import { clientErrorCode, errorCopy } from "@/utils/error-copy";
 
 export function ApplicationPage() {
   const currentUser = useQuery({ queryKey: ["users", "me"], queryFn: getCurrentUser });
@@ -72,5 +72,5 @@ export function ApplicationPage() {
 
 function describeFailure(error: unknown) {
   const envelope = apiErrorEnvelope(error);
-  return envelope ? errorCopy(envelope.code) : unreachableCopy;
+  return errorCopy(envelope?.code ?? clientErrorCode.unreachable);
 }

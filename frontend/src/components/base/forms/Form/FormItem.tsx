@@ -1,6 +1,6 @@
 import { type ComponentProps, useId } from "react";
+import { FormItemContext } from "@/providers/form-item-context";
 import { cn } from "@/utils/cn";
-import { FormItemContext } from "./FormItemContext";
 
 type Props = ComponentProps<"div">;
 

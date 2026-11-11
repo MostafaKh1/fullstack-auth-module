@@ -118,6 +118,28 @@
         },
       },
     },
+    // src/database/ is the one place that reaches Mongoose and the collections, so the rules above leave it out;
+    // it still imports across folders through @/.
+    {
+      "includes": ["backend/src/database/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
     {
       "includes": ["backend/src/**/*.service.ts", "!backend/src/common/services/auth-cookies.service.ts"],
       "linter": {

@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { Slot } from "@/components/primitives/Slot";
-import { useFormField } from "./FormUseFormField";
+import { useFormField } from "@/hooks/useFormField";
 
 type Props = ComponentProps<typeof Slot>;
 

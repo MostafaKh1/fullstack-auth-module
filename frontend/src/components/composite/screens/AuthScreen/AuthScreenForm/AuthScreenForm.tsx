@@ -1,0 +1,55 @@
+import { useMutation } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
+import { Alert } from "@/components/base/alerts/Alert";
+import { Button } from "@/components/base/buttons/Button";
+import { Form } from "@/components/base/forms/Form/Form";
+import { useSession } from "@/hooks/useSession";
+import type { SignedIn } from "@/utils/api/auth-api";
+import { errorCopy } from "@/utils/error-copy";
+import { applyApiFailure } from "./AuthScreenFormApiFailure";
+
+type Props<Fields extends FieldValues, Values extends FieldValues> = {
+  form: UseFormReturn<Fields, unknown, Values>;
+  /** The fields a server error may be set on; any other failure becomes the form-level alert. */
+  fields: readonly Path<Fields>[];
+  submit: (values: Values) => Promise<SignedIn>;
+  submitLabel: string;
+  pendingLabel: string;
+  children: ReactNode;
+};
+
+/** The form, its submit, its failure alert and its submit button; `children` are the fields. */
+export function AuthScreenForm<Fields extends FieldValues, Values extends FieldValues>({
+  form,
+  fields,
+  submit,
+  submitLabel,
+  pendingLabel,
+  children,
+}: Props<Fields, Values>) {
+  const { startSession } = useSession();
+  const mutation = useMutation({ mutationFn: submit, onSuccess: startSession });
+  const { errors, isSubmitting } = form.formState;
+  const failure = errors.root?.server?.message;
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    try {
+      await mutation.mutateAsync(values);
+    } catch (error) {
+      applyApiFailure(error, fields, form.setError);
+    }
+  });
+
+  return (
+    <Form {...form}>
+      <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+        {failure && <Alert>{errorCopy(failure)}</Alert>}
+        {children}
+        <Button type="submit" size="lg" pending={isSubmitting} className="mt-1 w-full">
+          {isSubmitting ? pendingLabel : submitLabel}
+        </Button>
+      </form>
+    </Form>
+  );
+}

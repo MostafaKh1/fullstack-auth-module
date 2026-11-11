@@ -58,7 +58,7 @@
                 "patterns": [
                   {
                     "group": ["**/database/collections/**"],
-                    "message": "Only repositories read collections; import the domain type from src/auth/auth.types.ts.",
+                    "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
                   },
                 ],
               },
@@ -68,7 +68,7 @@
       },
     },
     {
-      "includes": ["backend/src/**/*.service.ts", "!backend/src/common/**"],
+      "includes": ["backend/src/**/*.service.ts", "!backend/src/common/services/auth-cookies.service.ts"],
       "linter": {
         "rules": {
           "style": {
@@ -83,7 +83,7 @@
                 "patterns": [
                   {
                     "group": ["**/database/collections/**"],
-                    "message": "Only repositories read collections; import the domain type from src/auth/auth.types.ts.",
+                    "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
                   },
                   {
                     "group": ["**/auth-cookies.service"],

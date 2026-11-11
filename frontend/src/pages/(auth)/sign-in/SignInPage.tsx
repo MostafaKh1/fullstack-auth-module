@@ -1,6 +1,6 @@
-import { AuthScreen } from "../../../components/composite/auth/AuthScreen/AuthScreen";
-import { AuthScreenSignInForm } from "../../../components/composite/auth/AuthScreen/AuthScreenSignInForm";
-import { AuthScreenSwitchLink } from "../../../components/composite/auth/AuthScreen/AuthScreenSwitchLink";
+import { AuthScreen } from "../../../components/composite/AuthScreen/AuthScreen";
+import { AuthScreenSignInForm } from "../../../components/composite/AuthScreen/AuthScreenSignInForm";
+import { AuthScreenSwitchLink } from "../../../components/composite/AuthScreen/AuthScreenSwitchLink";
 
 export function SignInPage() {
   return (

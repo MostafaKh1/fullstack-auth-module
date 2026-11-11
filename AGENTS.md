@@ -7,7 +7,7 @@ Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB
 - Read [GLOSSARY.md](GLOSSARY.md) and name things with its terms.
 - Read the ADRs in [docs/adr/](docs/adr/) that touch the area you are in; surface a contradiction instead of overriding it.
 - The brief and its clarified rules are [docs/requirements.md](docs/requirements.md); they win over anything else.
-- Read the `AGENTS.md` of the app you are editing, then the one in the folder you are editing: each names what belongs there and where a new file goes.
+- Read the `AGENTS.md` of the app you are editing, and in the back end the one of `src/common/` or `src/database/` when you work there: each names what belongs where and where a new file goes.
 - Write and review code against [CODING_STANDARDS.md](CODING_STANDARDS.md): architecture, errors, logging, secrets, tests.
 
 ## How the two apps meet
@@ -21,8 +21,8 @@ The apps share no code; HTTP is the only contract between them.
 
 ## Where things are
 
-- [backend/AGENTS.md](backend/AGENTS.md) and [frontend/AGENTS.md](frontend/AGENTS.md): each app's architecture, its naming rule, and a pointer to every folder-level `AGENTS.md` in it.
-- **Naming**: a file's name alone says where it lives and what it holds. The back end is kebab-case with a role suffix (`auth.service.ts`); the front end is PascalCase for components, pages and providers (`SignInPage.tsx`), `useX.ts` for hooks, and kebab-case for everything else, and a component with children becomes a folder of its name whose children share its prefix. Both apps: named exports, no barrels. Each folder's `AGENTS.md` names the file to copy.
+- [backend/AGENTS.md](backend/AGENTS.md) and [frontend/AGENTS.md](frontend/AGENTS.md): each app's architecture: its layout, what belongs where, its naming rule and its tests. The back end's `src/common/` (shared by every feature) and `src/database/` (the only door to MongoDB) have their own.
+- **Naming**: a file's name alone says where it lives and what it holds. The back end is kebab-case with a role suffix (`auth.service.ts`); the front end is PascalCase for components, pages and providers (`SignInPage.tsx`), `useX.ts` for hooks, and kebab-case for everything else, and a component with children becomes a folder of its name whose children share its prefix. Both apps: named exports, no barrels. Each app's `AGENTS.md` names the file to copy.
 - `docs/requirements.md` (the rules), `docs/spec/` (the spec, mirrored from its issue), `docs/adr/` (decisions and their reasons), `docs/agents/` (how agents use the tracker and the domain docs).
 - [AI.md](AI.md): one entry per ticket of what was AI-generated, what was verified, what was fixed.
 - The root `package.json` only delegates into the apps; lint (`npm run lint`) and format (`npm run format:check`) run from the root over both ([ADR 0004](docs/adr/0004-quality-gates-and-test-seams.md)).
@@ -37,8 +37,9 @@ A ticket is done when lint, typecheck, tests and build are green for every app i
 
 ## Keeping these docs true
 
-- A ticket that adds a folder or a convention updates the nearest `AGENTS.md` (root, app or folder) in the same commit; a new architecturally significant folder gets its own `AGENTS.md`, linked from its app's.
-- An `AGENTS.md` is navigation: what belongs here, where a new file goes, how it is named, which file to copy. It points at code and at `CODING_STANDARDS.md` rather than restating them.
+- A ticket that adds a folder or a convention updates the nearest `AGENTS.md` (root, app, or `common/` / `database/`) in the same commit.
+- An `AGENTS.md` is architecture: what belongs where, the rules that cross files, which file to copy, and what to read next. It points at code and at `CODING_STANDARDS.md` rather than restating them, and lists no files: the folder itself is the inventory.
+- A folder gets its own `AGENTS.md` only when it holds architecture the app's file cannot carry in a few lines, as `common/` (shared by every feature) and `database/` (the only door to MongoDB) do; everything else lives in the app's `AGENTS.md`.
 - Every `AGENTS.md` has a `CLAUDE.md` beside it containing only `@AGENTS.md`.
 
 ## Commits

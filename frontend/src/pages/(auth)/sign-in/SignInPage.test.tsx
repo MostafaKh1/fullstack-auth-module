@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { signInExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
+import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   ada,
   adaPassword,
@@ -181,6 +182,24 @@ describe("Sign in page", () => {
 
     held.release();
     await waitFor(() => expect(signInButton()).toBeEnabled());
+  });
+
+  it("has no accessibility violations when empty", async () => {
+    const { container } = await renderApp("/?auth=sign-in");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
+  it("has no accessibility violations while showing the generic failure", async () => {
+    const { user, container } = await renderApp("/?auth=sign-in", {
+      handlers: [http.post("/api/auth/sign-in", () => envelope("auth.invalid_credentials", 401))],
+    });
+
+    await fillForm(user, validForm);
+    await user.click(signInButton());
+    await screen.findByRole("alert");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
   });
 
   it("links to Sign up", async () => {

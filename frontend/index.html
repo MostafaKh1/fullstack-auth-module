@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Applies the remembered theme before the first paint so a dark-mode User sees no light flash. Same key as ThemeProvider.
+      try {
+        if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+      } catch {}
+    </script>
     <title>Sign up / Sign in</title>
   </head>
   <body>

@@ -7,6 +7,8 @@ beforeAll(() => listenForDeclaredRequestsOnly());
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
+  document.documentElement.classList.remove("dark");
   server.resetHandlers();
   failOnUndeclaredRequests();
 });

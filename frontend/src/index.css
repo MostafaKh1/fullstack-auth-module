@@ -2,8 +2,9 @@
 
 /*
  * shadcn/ui's slate theme (style new-york) with the brand indigo as the primary colour (ADR 0011). The dark values
- * switch on prefers-color-scheme, as Tailwind's dark: variant does, because the app follows the system and has no
- * toggle. The brand panel beside the forms stays dark in both schemes, so its tokens have no dark values. Dark primary is indigo-400 under near-black text: white on indigo-500 falls short of 4.5:1.
+ * apply under the .dark class on the document root, which the theme toggle sets; the system's preference is ignored.
+ * The brand panel beside the forms stays dark in both themes, so its tokens have no dark values. Dark primary is
+ * indigo-400 under near-black text: white on indigo-500 falls short of 4.5:1.
  */
 :root {
   --radius: 0.625rem;
@@ -27,23 +28,24 @@
   --brand-accent: oklch(0.667 0.295 322.15);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.129 0.042 264.695);
-    --foreground: oklch(0.984 0.003 247.858);
-    --card: oklch(0.208 0.042 265.755);
-    --card-foreground: oklch(0.984 0.003 247.858);
-    --primary: oklch(0.673 0.182 276.935);
-    --primary-foreground: oklch(0.129 0.042 264.695);
-    --muted: oklch(0.279 0.041 260.031);
-    --muted-foreground: oklch(0.704 0.04 256.788);
-    --accent: oklch(0.279 0.041 260.031);
-    --accent-foreground: oklch(0.984 0.003 247.858);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.673 0.182 276.935);
-  }
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.673 0.182 276.935);
+  --primary-foreground: oklch(0.129 0.042 264.695);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.673 0.182 276.935);
 }
 
 @theme inline {

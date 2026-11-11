@@ -12,6 +12,7 @@ const button = cva(
       },
       size: {
         sm: "h-8 gap-1.5 rounded-md px-3",
+        icon: "size-9",
         lg: "h-10 rounded-md px-6",
       },
     },

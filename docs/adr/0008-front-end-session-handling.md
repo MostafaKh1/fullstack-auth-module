@@ -8,6 +8,7 @@ Two route guards read it: `RequireSession` sends a signed-out visitor to Sign in
 Because `RequireSignedOut` does the redirect, a successful Sign up or Sign in only starts the Session; the forms never navigate themselves.
 
 Sign out is `endSession()` on the same context: it calls `POST /api/auth/sign-out`, then clears the token and the query cache and sets `signed-out`, and `RequireSession` sends the tab to Sign in.
+Before the call it stops refreshing (`stopRefreshing()` in `src/utils/api/session-refresh.ts`): the refresh in flight restores nothing when it is answered, no refused request is sent again, and no refresh starts until a Session starts again; a refresh answered after Sign out would otherwise sign the tab back in ([ADR 0001](0001-session-record-with-short-lived-access-token.md)).
 A failed sign-out call (network down, a `5xx`) still signs the tab out: the User asked to leave, often on a shared computer, so the tab must not stay signed in.
 The price is that the server Session then lives until its idle expiry and the cookie remains, so a reload can restore it; that is accepted, the alternative being a signed-in screen the User cannot leave.
 

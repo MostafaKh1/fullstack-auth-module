@@ -375,6 +375,31 @@
           "204": {
             "description": "The Session ended and the refresh cookie is cleared."
           },
+          "401": {
+            "description": "Error codes: auth.unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "auth.unauthenticated"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "403": {
             "description": "Error codes: auth.origin_rejected",
             "content": {

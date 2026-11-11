@@ -151,6 +151,71 @@ describe("Sign out: POST /api/auth/sign-out", () => {
     expect(response.status).toBe(204);
   });
 
+  describe("racing a refresh", () => {
+    it("ends the Session when Sign out carries the secret a refresh replaced moments before", async () => {
+      // The browser sent Sign out with its cookie before applying the cookie the refresh's response set.
+      const rotated = credentialOf(await refresh(device.credential).expect(200));
+      app.clock.advance(5 * SECOND);
+
+      const response = await signOut(device.credential);
+
+      expect(response.status).toBe(204);
+      expectCookieCleared(response);
+      expect((await storedSession(device.sessionId))?.revokedReason).toBe("sign-out");
+      expect((await refresh(rotated)).status).toBe(401);
+      expect((await currentUser(device.accessToken)).status).toBe(401);
+    });
+
+    it("ends the Session whichever of a concurrent refresh and Sign out is handled first", async () => {
+      const [, signedOut] = await Promise.all([refresh(device.credential), signOut(device.credential)]);
+
+      expect(signedOut.status).toBe(204);
+      expect((await storedSession(device.sessionId))?.revokedReason).toBe("sign-out");
+      expect((await currentUser(device.accessToken)).status).toBe(401);
+    });
+  });
+
+  describe("more than one refresh cookie", () => {
+    let planted: SignedIn;
+
+    beforeEach(async () => {
+      // Another site on a shared parent domain can set a cookie of the same name with a more specific path, which
+      // the browser then sends first: here, a credential for a Session of the attacker's own.
+      const mallory = { email: "mallory@example.com", name: "Mallory", password: "Passw0rd!" };
+      planted = signedInFrom(await app.http().post("/api/auth/sign-up").send(mallory).expect(201));
+    });
+
+    function withTwoCookies(path: string) {
+      const cookies = [planted.credential, device.credential].map(
+        (credential) => `refresh_credential=${encodeURIComponent(credential)}`,
+      );
+      return app.http().post(path).set("Cookie", cookies.join("; "));
+    }
+
+    async function secretHashes() {
+      return (await app.db.collection("sessions").find({}).sort({ _id: 1 }).toArray()).map(
+        (session) => session.secretHash,
+      );
+    }
+
+    it.each([
+      ["refresh", "/api/auth/refresh"],
+      ["Sign out", "/api/auth/sign-out"],
+    ])("%s answers 401 auth.unauthenticated and changes nothing", async (_route, path) => {
+      const before = await secretHashes();
+
+      const response = await withTwoCookies(path);
+
+      expect(response.status).toBe(401);
+      expect(response.body).toMatchObject({ code: "auth.unauthenticated", status: 401 });
+      expect(response.headers["set-cookie"]).toBeUndefined();
+      expect(await secretHashes()).toEqual(before);
+      expect((await storedSession(device.sessionId))?.revokedAt).toBeNull();
+      expect((await storedSession(planted.sessionId))?.revokedAt).toBeNull();
+      expect((await currentUser(device.accessToken)).status).toBe(200);
+    });
+  });
+
   describe("the Origin check", () => {
     it("refuses a foreign Origin with 403 auth.origin_rejected, leaving the Session live", async () => {
       const response = await signOut().set("Origin", "https://evil.example");

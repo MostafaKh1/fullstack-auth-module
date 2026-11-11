@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { Request, Response } from "express";
+import { ApiError } from "@/common/errors/api-error";
 import { AppConfigService } from "@/config/app-config.service";
 import { ClockService } from "@/core/clock.service";
 
@@ -26,16 +27,22 @@ export class AuthCookiesService {
   }
 
   readRefreshCookie(request: Request): string | null {
-    for (const pair of (request.headers.cookie ?? "").split(";")) {
+    const values = (request.headers.cookie ?? "").split(";").flatMap((pair) => {
       const separator = pair.indexOf("=");
-      if (separator === -1 || pair.slice(0, separator).trim() !== REFRESH_COOKIE) continue;
-      try {
-        return decodeURIComponent(pair.slice(separator + 1).trim());
-      } catch {
-        return null;
-      }
+      if (separator === -1 || pair.slice(0, separator).trim() !== REFRESH_COOKIE) return [];
+      return [pair.slice(separator + 1).trim()];
+    });
+    // A site on a shared parent domain can plant a second one with a more specific path, which the browser sends
+    // first, and nothing in the header tells ours apart from it (ADR 0001).
+    if (values.length > 1) {
+      throw new ApiError("auth.unauthenticated", { message: "More than one refresh cookie was sent." });
     }
-    return null;
+    if (values.length === 0) return null;
+    try {
+      return decodeURIComponent(values[0]);
+    } catch {
+      return null;
+    }
   }
 
   // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.

@@ -89,12 +89,12 @@ export class AuthController {
     return this.respond(response, signedIn);
   }
 
-  /** Idempotent: the cookie is cleared whether or not it held a live Session. */
+  /** Idempotent: the cookie is cleared whether or not it held a live Session, unless it was sent twice (ADR 0001). */
   @Public()
   @UseGuards(OriginCsrfGuard)
   @ApiCookieAuth()
   @ApiResponse({ status: 204, description: "The Session ended and the refresh cookie is cleared." })
-  @ApiErrors("auth.origin_rejected")
+  @ApiErrors("auth.unauthenticated", "auth.origin_rejected")
   @Post("sign-out")
   @HttpCode(204)
   async signOut(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<void> {

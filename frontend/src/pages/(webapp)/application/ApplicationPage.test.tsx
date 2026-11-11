@@ -33,6 +33,47 @@ async function signInThroughTheForm(user: Awaited<ReturnType<typeof renderApp>>[
   await user.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
+function currentUserIsAdaWith(token: string) {
+  const seen: (string | null)[] = [];
+  const handler = http.get("/api/users/me", ({ request }) => {
+    const authorization = request.headers.get("Authorization");
+    seen.push(authorization);
+    return authorization === `Bearer ${token}`
+      ? HttpResponse.json(ada)
+      : envelope("auth.unauthenticated", 401);
+  });
+  return { handler, seen };
+}
+
+function signal() {
+  let fire: () => void = () => {};
+  const fired = new Promise<void>((resolve) => {
+    fire = resolve;
+  });
+  return { fired, fire: () => fire() };
+}
+
+// The boot restore answers Ada at once; every later refresh is held until `release()`, then answers Ada with
+// `refreshedAccessToken`.
+function laterRefreshesHeld() {
+  const calls = { count: 0 };
+  const [reached, released, answered] = [signal(), signal(), signal()];
+  const handler = http.post("/api/auth/refresh", async () => {
+    calls.count += 1;
+    if (calls.count === 1) return signedInAsAda();
+    reached.fire();
+    await released.fired;
+    answered.fire();
+    return HttpResponse.json({ accessToken: refreshedAccessToken, expiresIn: 900, user: ada });
+  });
+  return { handler, calls, reached: reached.fired, answered: answered.fired, release: released.fire };
+}
+
+// A test proving that a response changed nothing must let every reaction to it run first; there is no event to await.
+async function settle() {
+  await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+}
+
 describe("Application page", () => {
   it("welcomes the signed-in User with the exact heading and their name from the protected endpoint", async () => {
     const { user } = await renderApp("/?auth=sign-up", { handlers: [signUpSucceeds, currentUserIsAda] });
@@ -221,21 +262,64 @@ describe("Sign out", () => {
     held.release();
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
   });
+
+  it("discards a refresh answered after Sign out began: the tab stays signed out and retries nothing", async () => {
+    const signOut = signOutSucceeds();
+    const refresh = laterRefreshesHeld();
+    const currentUser = currentUserIsAdaWith(refreshedAccessToken);
+    const { user, router } = await renderApp("/", {
+      handlers: [refresh.handler, currentUser.handler, signOut.handler],
+    });
+    // The page's request is refused, and the refresh it starts is answered only after the User signed out.
+    await refresh.reached;
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+
+    refresh.release();
+    await refresh.answered;
+    await settle();
+
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+    expect(currentUser.seen).toEqual([`Bearer ${accessToken}`]);
+  });
+
+  it("does not let a request refused while signing out restore the Session", async () => {
+    const signOut = heldUntilReleased(
+      "post",
+      "/api/auth/sign-out",
+      () => new Response(null, { status: 204 }),
+    );
+    const refresh = laterRefreshesHeld();
+    const seen: (string | null)[] = [];
+    // The access token expires once the page has shown Ada.
+    const currentUser = http.get("/api/users/me", ({ request }) => {
+      seen.push(request.headers.get("Authorization"));
+      return seen.length === 1 ? HttpResponse.json(ada) : envelope("auth.unauthenticated", 401);
+    });
+    const { user, router } = await renderApp("/", {
+      handlers: [refresh.handler, currentUser, signOut.handler],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    const refused = expect(getCurrentUser()).rejects.toThrow();
+    await waitFor(() => expect(seen).toHaveLength(2));
+    await settle();
+    signOut.release();
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    refresh.release();
+    await settle();
+
+    await refused;
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+    expect(seen).toHaveLength(2);
+    expect(refresh.calls.count).toBe(1);
+  });
 });
 
 describe("the Session survives reloads", () => {
-  function currentUserIsAdaWith(token: string) {
-    const seen: (string | null)[] = [];
-    const handler = http.get("/api/users/me", ({ request }) => {
-      const authorization = request.headers.get("Authorization");
-      seen.push(authorization);
-      return authorization === `Bearer ${token}`
-        ? HttpResponse.json(ada)
-        : envelope("auth.unauthenticated", 401);
-    });
-    return { handler, seen };
-  }
-
   function visitedUrls(router: Router) {
     const urls = [urlOf(router)];
     router.subscribe(() => urls.push(urlOf(router)));

@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { signUpExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
+import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   ada,
   adaPassword,
@@ -294,6 +295,26 @@ describe("Sign up page", () => {
 
     held.release();
     await waitFor(() => expect(signUpButton()).toBeEnabled());
+  });
+
+  it("has no accessibility violations when empty", async () => {
+    const { container } = await renderApp("/?auth=sign-up");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
+  it("has no accessibility violations with every field in error", async () => {
+    const { user, container } = await renderApp("/?auth=sign-up");
+
+    await user.click(signUpButton());
+    await waitFor(() =>
+      expect(screen.getByLabelText("Password")).toHaveAccessibleDescription(expectedCopy["field.required"]),
+    );
+    for (const label of Object.values(labels)) {
+      expect(screen.getByLabelText(label)).toHaveAttribute("aria-invalid", "true");
+    }
+
+    expect(await accessibilityViolations(container)).toEqual([]);
   });
 
   it("links to Sign in", async () => {

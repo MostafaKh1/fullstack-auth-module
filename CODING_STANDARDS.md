@@ -24,14 +24,14 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 | Repository (`database/repositories/<entity>.repository.ts`) | queries and writes for one collection, mapping documents onto the domain types                                                                                  | business rules, other collections                                                            |
 
 - A module's business logic is one service named for its area (`AuthService`, `UsersService`, `HealthService`), with one public method per operation (`signUp`, `getCurrentUser`). A rule several operations share is a service of its own (`SessionService`) or a private function in the service's file, never a free-floating rules file.
-- A service throws `ApiError` with a code from the closed set and returns plain data typed with the domain types (`User`, `Session`, `AccessClaims` in `src/auth/auth.types.ts`), never a type from `src/database/`.
+- A service throws `ApiError` with a code from the closed set and returns plain data typed with the domain types (`User`, `Session` in `src/features/auth/auth.types.ts`, `AuthContext` in `src/common/services/access-token.service.ts`), never a type from `src/database/`.
 - Setting or reading the refresh cookie is transport: the controller calls `AuthCookiesService`, which owns the whole cookie policy. A service returns the credential and never sees the response.
 - A controller's field for an injected service is the class name in camelCase (`authService`).
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `AuthModule` (the auth routes, `AuthService`, the token, password and Session services, the global guard) -> feature modules (`users`, `health`). Shared transport pieces (the filter, the pipe, the decorators, the `Origin` guard, the cookie service) sit in `src/common/`, which has no module.
-- A repository imports the domain types from `src/auth/auth.types.ts` as types only, so no runtime edge points to a higher tier.
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the token, password and cookie services, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). `src/common/` holds what the global guard or more than one feature needs, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `pipes/`, `services/`), and imports nothing from a feature.
+- A repository imports the domain types from `src/features/auth/auth.types.ts` as types only, so no runtime edge points to a higher tier.
 - A module imports only from a lower tier. A feature module exports nothing and never imports another feature module. `forwardRef` is never needed and never used.
 
 ### Authentication is deny-by-default
@@ -65,7 +65,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
 - Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/<resource>-api.ts`.
-- Forms use React Hook Form with the Zod schema from `src/components/composite/auth/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Forms use React Hook Form with the Zod schema from `src/components/composite/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules

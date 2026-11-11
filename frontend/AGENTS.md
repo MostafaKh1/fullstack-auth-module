@@ -6,53 +6,75 @@ React 19 + Vite + TypeScript single-page app. Architecture and its reasons: [ADR
 
 Imports point down this table only. A layer may skip the ones between (a page may import `utils/`), never point up.
 
-| Layer      | Folder            | Owns                                                                                   |
-| ---------- | ----------------- | -------------------------------------------------------------------------------------- |
-| App        | `src/app/`        | the providers around the router (`App.tsx`), the one route table, the query client     |
-| Pages      | `src/pages/`      | one screen per route, composing components                                             |
-| Components | `src/components/` | every component that is not a page: `layout/`, `composite/`, `base/`, `utility/`       |
-| Hooks      | `src/hooks/`      | hooks more than one component or page uses: over server state and over a context       |
-| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session)                            |
-| Utils      | `src/utils/`      | framework-free modules: the HTTP client, one module per API resource, `cn()`, the copy |
+| Layer      | Folder            | Owns                                                                                                        |
+| ---------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| App        | `src/app/`        | the providers around the router (`App.tsx`), the one route table, the query client                          |
+| Pages      | `src/pages/`      | one screen per route, composing components                                                                  |
+| Components | `src/components/` | every component that is not a page, in five sections (see below)                                            |
+| Hooks      | `src/hooks/`      | hooks two or more components or pages use                                                                   |
+| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session)                                                 |
+| Utils      | `src/utils/`      | framework-free helpers: `api/` (the HTTP client and one module per resource), `auth-url/`, `cn()`, the copy |
 
 `src/tests/` is the rendered-app harness and sits outside the stack (see "Tests"). `src/main.tsx` is the browser entry; it and the harness build the app from the same `src/app/` files, so tests run the real providers and routes.
 
 ## Where does this file belong?
 
-The first match wins:
+Take the first that fits. Each line names the file to copy.
 
-1. A new screen at a URL -> `src/pages/<group>/<route>/<Name>Page.tsx`, plus its entry in `src/app/routes.tsx` (the only place a route is added; a route guard wraps elements there). A parenthesised group (`(auth)`, `(webapp)`) groups screens by who sees them and adds nothing to the URL; the route folder is named for the path or, for Sign in and Sign up (both at `/`), for their `auth` value ([ADR 0009](../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)). A protected screen goes inside `RequireSession`.
-2. A route guard, a switch that picks a page by URL, or other chrome around pages -> `src/components/layout/<group>/`. Pages arrive as props, so `layout/` never imports `pages/`.
-3. A loading state, fallback or other small cross-cutting piece with no design-system role -> `src/components/utility/`; it imports only `src/utils/`.
-4. A single-purpose control driven only by props (a button, an input) -> `src/components/base/<kind>/`; it imports `src/utils/cn.ts` and its own libraries, nothing else in the app.
-5. Anything built from base components, or that knows about the Session, a form schema or an endpoint -> `src/components/composite/`, either as a component folder (`AuthScreen/`) or in a kind group (`banners-and-notifications/`). UI one page alone uses still goes in `src/components/`: pages hold no components of their own.
-6. A hook more than one component uses -> `src/hooks/useX.ts`; a hook one component uses stays in its file.
-7. An app-wide context -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider), mounted in `src/app/App.tsx` inside the query client.
-8. A call to an endpoint -> a function in `src/utils/api/<resource>-api.ts` (`auth-api.ts` for `/auth/*`, `users-api.ts` for `/users/*`), next to the request and response types it uses. Any other pure helper two layers need -> a kebab-case module in `src/utils/`.
+1. **A screen at a URL** -> `src/pages/<group>/<route>/<Name>Page.tsx`, plus its entry in `src/app/routes.tsx` (the only place a route is added; a route guard wraps elements there). A parenthesised group (`(auth)`, `(webapp)`) groups screens by who sees them and adds nothing to the URL; the route folder is named for the path or, for Sign in and Sign up (both at `/`), for their `auth` value ([ADR 0009](../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)). A protected screen goes inside `RequireSession`. Copy `src/pages/(auth)/sign-in/SignInPage.tsx`.
+2. **A component** -> `src/components/`, in the first section that fits, in this order:
+   1. `primitives/`: an accessible, behaviour-only building block that owns roles, focus and keyboard handling and knows nothing of the app. Flat: `primitives/<Name>.tsx`, no folders. None exists yet.
+   2. `base/<kind>/`: a styled atom driven only by props, built on primitives. Copy `base/buttons/Button.tsx`.
+   3. `composite/<kind>/`: a compound component, or anything that knows about the Session, a form schema or an endpoint. Copy `composite/banners-and-notifications/Alert.tsx`. A screen (`<Name>Screen`) goes in `composite/screens/`: copy `composite/screens/AuthScreen/`.
+   4. `layout/<kind>/`: application chrome and routing pieces, such as route guards and route switches. Pages arrive as props. Copy `layout/route-guards/RequireSession.tsx`.
+   5. `utility/`: a small cross-cutting piece with no design role (a loading state, a fallback). Copy `utility/PageLoader.tsx`.
 
-Kind folders inside a section are kebab-case and plural (`buttons/`, `inputs/`, `route-guards/`, `route-switches/`).
+   UI one page alone uses still goes here: pages hold no components of their own. A feature module that two or more routes share has no section yet; agree its place in the spec before adding one.
 
-## Naming and exports
+3. **A hook** used by two or more components or pages -> `src/hooks/useX.ts` (copy `useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file).
+4. **An app-wide context** -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider), mounted in `src/app/App.tsx` inside the query client. Copy `SessionProvider.tsx`.
+5. **A call to an endpoint** -> a function in `src/utils/api/<resource>-api.ts` (`auth-api.ts` for `/auth/*`, `users-api.ts` for `/users/*`), next to the request and response types it uses. Copy `users-api.ts`.
+6. **Any other helper** -> a kebab-case module in `src/utils/`. Once three helpers share a concern (a first word), they move into `src/utils/<concern>/` together, as `api/` and `auth-url/` did; `cn.ts` and `error-copy.ts` stay at the top.
+7. **A test** -> beside the file it covers, named after it (see "Tests").
+
+### Sections import in one direction
+
+Dependencies point from app-aware toward behaviour-only: base imports primitives; composite imports primitives, base and utility; layout imports all four; primitives and utility import no other section. Primitives, base and utility import nothing in the app outside `components/` but `src/utils/`. No component imports `pages/`, `app/` or `tests/`.
+
+## Component folders
+
+A component that grows children becomes a folder named after it, holding an entry file of the same name: `composite/screens/AuthScreen/AuthScreen.tsx`.
+
+- Every child's name starts with its immediate folder's name: `AuthScreenSignInForm.tsx` in `AuthScreen/`.
+- A child used by only one sibling moves inside that sibling, which becomes a folder in turn, and the child takes the sibling's prefix: `AuthScreen/AuthScreenSignUpForm/AuthScreenSignUpFormPasswordChecklist.tsx`. A child the entry or two siblings use stays where it is.
+- The outside world imports the entry, or the child it needs, by its own path. No barrel files.
+- Kind folders (`buttons/`, `screens/`, `route-guards/`) are plural kebab-case; base, composite and layout hold only kind folders.
+
+## Naming
 
 The case of a file name says what it holds:
 
-- **PascalCase** for a component, layout, page or provider; the file is named after the one component it exports: `Button.tsx` exports `Button`, `SessionProvider.tsx` exports `SessionProvider`.
-- **`useX.ts`** for a hook: `useSession.ts` exports `useSession`.
-- **kebab-case** for everything else (utilities, contexts, helpers, test support): `api-client.ts`, `session-context.ts`, `render-app.tsx`. Folders are kebab-case too, except a component folder, which takes its entry component's name.
-- **A component that grows children becomes a folder** named after it, holding the entry file of the same name and children that share its prefix: `AuthScreen/AuthScreen.tsx`, `AuthScreen/AuthScreenSignInForm.tsx`. A non-component helper inside such a folder is kebab-case with the same prefix (`AuthScreenApiFailure.ts`). Children import each other relatively; the outside world imports the entry, or the child it needs, by its own path.
-- One public component or hook per file, as a named export; no default exports and no `index.ts` barrels.
+- **Inside a component folder**, every file is PascalCase with the folder's prefix, whatever it holds: a component, a non-component module (`AuthScreenApiFailure.ts`), a worked-examples table (`AuthScreenFieldRules.examples.ts`), a test.
+- **A component, page, provider or the app shell** is PascalCase, named after the one component it exports: `Button.tsx` exports `Button`, `SignInPage.tsx` exports `SignInPage`. A page is `<Name>Page.tsx`.
+- **A hook** is `useX.ts` in camelCase: `useSession.ts` exports `useSession`.
+- **Everything else outside component folders** is kebab-case: helpers, contexts, test support (`api-client.ts`, `session-context.ts`, `render-app.tsx`). Folders outside `components/` are kebab-case.
+- One public component or hook per file, as a named export; no default exports.
 - Props are `type Props = { ... }`; a styleable root takes `className` and merges it through `cn()`. Variants are a `cva(...)` above the component, `Props` is `VariantProps<typeof x> & { className?: string; ... }`, and the root's classes are `cn(x({ ...variants }), className)`.
 - Use the native element with the right role (`<button>`, `<p role="status">`) so tests and assistive tech find it by role.
-- `.tsx` for files with JSX, `.ts` otherwise. A test sits beside the file it covers as `<File>.test.tsx`.
+- `.tsx` for files with JSX, `.ts` otherwise.
 - Domain names come from [GLOSSARY.md](../GLOSSARY.md): `signIn`, never `login`.
+
+## Imports
+
+`@/` is `src/` (`paths` in `tsconfig.app.json`, `resolve.alias` in `vite.config.ts`, which Vitest inherits). Every import names its target from the root, `@/utils/cn`, so a file reads the same wherever it sits and a move rewrites one string. The one exception is a child of a component folder importing inside that folder with `./` (`./AuthScreenFieldRules`, `./AuthScreenSignUpForm/AuthScreenSignUpForm`). Biome rejects `../`; the structure check rejects `./` anywhere else.
 
 ## Pages
 
-A page renders one `<main>` with one `<h1>` (tests find the screen by that heading) and a `<title>` naming the screen. It owns the screen's layout and its non-error copy, reads server data through a hook or TanStack Query over `src/utils/`, and is the only thing the route table imports. Canonical example: `src/pages/(auth)/sign-in/SignInPage.tsx` with its test.
+A page renders one `<main>` with one `<h1>` (tests find the screen by that heading) and a `<title>` naming the screen. It owns the screen's layout and its non-error copy, reads server data through a hook or TanStack Query over `src/utils/api/`, and is the only thing the route table imports. Canonical example: `src/pages/(auth)/sign-in/SignInPage.tsx` with its test.
 
 ## State
 
-- **Server state** goes through TanStack Query: a page or hook calls `useQuery` / `useMutation` over one function from `src/utils/`. Query keys are arrays led by the resource (`["users", "me"]`).
+- **Server state** goes through TanStack Query: a page or hook calls `useQuery` / `useMutation` over one function from `src/utils/api/`. Query keys are arrays led by the resource (`["users", "me"]`).
 - **Client state** is the Session context only (restoring, signed in, signed out) ([ADR 0008](../docs/adr/0008-front-end-session-handling.md)). A component reads it through `useSession()`, never `use(SessionContext)`; a context hook throws when its provider is missing. Anything else is local `useState` or form state.
 - The access token lives only in `src/utils/api/api-client.ts`'s memory, and `SessionProvider` is its only writer. Attaching it, and refreshing once on a `401 auth.unauthenticated` (never for `/auth/*`), happen once as interceptors in `api-client.ts` and `session-refresh.ts`, never in a caller; the refresh outcome reaches the context through the listener it registers.
 
@@ -77,7 +99,7 @@ Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/
 
 The only seam is the whole rendered app with its real router and providers, the network faked by MSW ([ADR 0004](../docs/adr/0004-quality-gates-and-test-seams.md)).
 
-- A test of a screen or a journey -> `<Name>Page.test.tsx` beside the page; of a component, beside that component. `src/tests/setup/` is what Vitest runs before every file; a helper several tests share (a fixture, a handler factory, a form helper) -> a kebab-case file in `src/tests/support/`; a test of the harness sits beside the helper it pins.
+- A test of a screen or a journey -> `<Name>Page.test.tsx` beside the page; of a component, beside that component with its folder's prefix. `src/tests/setup/` is what Vitest runs before every file; a helper several tests share (a fixture, a handler factory, a form helper) -> a kebab-case file in `src/tests/support/`; a test of the harness sits beside the helper it pins.
 - `await renderApp(path, { handlers })` renders the app as if the browser opened `path`, waits for the boot restore to settle and a page to show, and returns Testing Library's view plus `router` and a `user` from `user-event`. `renderRestoringApp` returns at once, for the loading state.
 - The boot restore's `POST /api/auth/refresh` answers "no Session" unless `handlers` declares its own. Declare every request a test makes; an undeclared request fails the test with `Undeclared request: <METHOD> <path>`.
 - Query by role and visible text, as a User would; await what appears after a request with `findBy*`. Expected sentences come from `src/tests/support/expected-copy.ts`, written apart from the app's copy map.
@@ -85,9 +107,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 ## Structure check
 
-`npm run check:structure` (from the repository root) enforces the folder and file rules of spec #29 over `src/`: the five sections of `components/` (`primitives`, `base`, `composite`, `layout`, `utility`) and the direction of imports between them, plural kebab-case kind folders in base, composite and layout, flat primitives, `Screen` components in `composite/screens/`, component folders with an entry file and the folder prefix on every child, a child used by one sibling nested inside it, casing per kind of file, `useX` hooks (`hooks/` only when two or more files use one), a folder once three helpers in `utils/` share a concern, and no barrel files. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job; its tests (`npm run test:structure`) run the script over example trees.
-
-Each violation prints as `<rule> <path>`. `structure-baseline.json` lists today's violations in that form so the check lands green: a violation not listed fails, and so does a listed one that no longer occurs. The baseline only shrinks; never add a line to it.
+`npm run check:structure` (from the repository root, `scripts/check-frontend-structure.mjs`) enforces every rule in "Where does this file belong?", "Component folders", "Naming" and "Imports" over `src/`, and prints each violation as `<rule> <path>: <what to do>`. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job. A new rule lands in the script with a planted violation in its tests (`npm run test:structure`, which runs the script over example trees).
 
 ## Container
 

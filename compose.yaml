@@ -1,8 +1,23 @@
-# `docker compose up --build` serves the app at http://localhost:8080; it needs JWT_ACCESS_SECRET (see README.md).
-include:
-  - compose.mongo.yaml
-
+# `docker compose up --build` serves the app at http://localhost:8080; it needs JWT_ACCESS_SECRET and MONGO_PASSWORD (see README.md).
+# MongoDB here is not the development database of compose.mongo.yaml: it requires a password and publishes no port.
 services:
+  mongo:
+    image: mongo:8.2.6
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-auth}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?set MONGO_PASSWORD to a random value (see README.md)}
+    volumes:
+      - mongo-auth-data:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mongosh --quiet -u "$$MONGO_INITDB_ROOT_USERNAME" -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --eval "db.adminCommand('ping').ok"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   backend:
     build: ./backend
     restart: unless-stopped
@@ -12,7 +27,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      MONGODB_URI: mongodb://mongo:27017/auth
+      # A hex password needs no URL escaping; any other value must be percent-encoded here.
+      MONGODB_URI: mongodb://${MONGO_USER:-auth}:${MONGO_PASSWORD:?set MONGO_PASSWORD to a random value (see README.md)}@mongo:27017/auth?authSource=admin
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET to a random value of at least 32 characters (see README.md)}
       CORS_ORIGINS: http://localhost:8080
       # Production requires Secure cookies. Chrome and Firefox accept them on http://localhost; Safari does not,
@@ -31,3 +47,6 @@ services:
       BACKEND_URL: http://backend:3000
     ports:
       - "8080:8080"
+
+volumes:
+  mongo-auth-data:

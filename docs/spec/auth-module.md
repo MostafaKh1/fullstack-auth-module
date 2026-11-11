@@ -108,21 +108,21 @@ The back end keeps one Session per signed-in device, accepts only signed-in User
 
 All routes sit under `/api`.
 
-| Method | Path             | Auth                   | Request                     | Success                                                     |
-| ------ | ---------------- | ---------------------- | --------------------------- | ----------------------------------------------------------- |
-| POST   | `/auth/sign-up`  | Public, throttled      | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie             |
-| POST   | `/auth/sign-in`  | Public, throttled      | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie             |
-| POST   | `/auth/refresh`  | Refresh cookie, Origin | none                        | `200 { accessToken, expiresIn, user }` + new cookie         |
-| POST   | `/auth/sign-out` | Refresh cookie, Origin | none                        | `204`, cookie cleared                                       |
-| GET    | `/users/me`      | Access token           | none                        | `200 { id, email, name, createdAt }`                        |
-| GET    | `/health`        | Public                 | none                        | `200 { status, database }`; `503` when the database is down |
+| Method | Path             | Auth                              | Request                     | Success                                                     |
+| ------ | ---------------- | --------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| POST   | `/auth/sign-up`  | Public, throttled                 | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie             |
+| POST   | `/auth/sign-in`  | Public, throttled                 | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie             |
+| POST   | `/auth/refresh`  | Refresh cookie, Origin, throttled | none                        | `200 { accessToken, expiresIn, user }` + new cookie         |
+| POST   | `/auth/sign-out` | Refresh cookie, Origin            | none                        | `204`, cookie cleared                                       |
+| GET    | `/users/me`      | Access token                      | none                        | `200 { id, email, name, createdAt }`                        |
+| GET    | `/health`        | Public                            | none                        | `200 { status, database }`; `503` when the database is down |
 
 - `user` in auth responses has the same shape as `/users/me`.
 - Every error is the envelope of ADR 0002, `{ code, status, traceId, retryable, issues?, message? }`, produced by one global exception filter. `traceId` is the request id, also returned as the `X-Request-Id` header and reused when the caller supplies one. `message` is a developer hint omitted in production.
 - The closed set of codes: `request.validation_failed` (400), `request.malformed` (400), `request.too_large` (413), `request.rate_limited` (429), `auth.unauthenticated` (401), `auth.invalid_credentials` (401), `auth.session_expired` (401), `auth.origin_rejected` (403), `route.not_found` (404), `user.email_taken` (409), `server.internal` (500), `server.unavailable` (503).
 - Validation issues are `{ path, code }`, where `code` is a rule id: `field.required`, `email.invalid`, `email.too_long`, `name.too_short`, `name.too_long`, `name.invalid_characters`, `password.too_short`, `password.too_long`, `password.missing_letter`, `password.missing_number`, `password.missing_special`.
 - A taken email, including from two concurrent Sign ups, is caught by the unique index and answered `409 user.email_taken`.
-- Security: `helmet` headers, a CORS allowlist from configuration with credentials, throttling of Sign up and Sign in per IP, a small request body cap. Swagger UI documents every route, its schemas and its error codes, and can call the protected endpoint with a Bearer token.
+- Security: `helmet` headers, a CORS allowlist from configuration with credentials, throttling of Sign up, Sign in and refresh per IP, a small request body cap. Swagger UI documents every route, its schemas and its error codes, and can call the protected endpoint with a Bearer token.
 
 ### Field rules
 

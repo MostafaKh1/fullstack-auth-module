@@ -342,6 +342,18 @@ export interface operations {
                     };
                 };
             };
+            /** @description Error codes: request.rate_limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"] & {
+                        /** @enum {unknown} */
+                        code?: "request.rate_limited";
+                    };
+                };
+            };
         };
     };
     AuthController_signOut: {

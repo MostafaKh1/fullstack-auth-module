@@ -310,6 +310,29 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Error codes: request.rate_limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorEnvelope"
+                    },
+                    {
+                      "properties": {
+                        "code": {
+                          "enum": [
+                            "request.rate_limited"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [

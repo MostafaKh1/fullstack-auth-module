@@ -69,16 +69,16 @@ export class AuthController {
     return this.respond(response, await this.authService.signIn({ ...body, userAgent: userAgent ?? null }));
   }
 
-  /** Authenticated by the refresh cookie and the Origin check, not an access token. */
+  /** Authenticated by the refresh cookie and the Origin check, not an access token; throttled against secret guessing. */
   @Public()
-  @UseGuards(OriginCsrfGuard)
+  @UseGuards(ThrottlerGuard, OriginCsrfGuard)
   @ApiCookieAuth()
   @ApiResponse({
     status: 200,
     description: "A rotated Session; the refresh cookie is replaced.",
     schema: { $ref: "#/components/schemas/SignedIn" },
   })
-  @ApiErrors("auth.unauthenticated", "auth.session_expired", "auth.origin_rejected")
+  @ApiErrors("auth.unauthenticated", "auth.session_expired", "auth.origin_rejected", "request.rate_limited")
   @Post("refresh")
   @HttpCode(200)
   async refresh(

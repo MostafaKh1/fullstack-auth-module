@@ -22,7 +22,7 @@ const button = cva(
 
 type Props = ComponentProps<"button"> &
   VariantProps<typeof button> & {
-    /** Disables the button and marks it busy; `children` should say what is in progress. */
+    /** `children` should say what is in progress. */
     pending?: boolean;
   };
 
@@ -30,7 +30,6 @@ export function Button({ variant, size, pending = false, disabled, className, ch
   return (
     <button
       type="button"
-      data-slot="button"
       {...props}
       disabled={disabled || pending}
       aria-busy={pending || undefined}

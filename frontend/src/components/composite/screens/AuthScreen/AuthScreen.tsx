@@ -48,7 +48,7 @@ export function AuthScreen({ title, subtitle, children, footer }: Props) {
 
       <main className="flex items-center justify-center px-4 py-10 sm:px-6">
         <div className="w-full max-w-md">
-          <Card className="shadow-xl shadow-slate-200/50 dark:shadow-black/30">
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle asChild>
                 <h1 className="text-2xl tracking-tight">{title}</h1>

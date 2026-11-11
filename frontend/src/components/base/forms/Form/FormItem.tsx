@@ -9,7 +9,7 @@ export function FormItem({ className, ...props }: Props) {
 
   return (
     <FormItemContext value={{ id }}>
-      <div data-slot="form-item" className={cn("grid gap-2", className)} {...props} />
+      <div className={cn("grid gap-2", className)} {...props} />
     </FormItemContext>
   );
 }

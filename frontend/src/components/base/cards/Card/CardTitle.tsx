@@ -9,5 +9,5 @@ type Props = ComponentProps<"div"> & {
 
 export function CardTitle({ className, asChild = false, ...props }: Props) {
   const Root = asChild ? Slot : "div";
-  return <Root data-slot="card-title" className={cn("leading-none font-semibold", className)} {...props} />;
+  return <Root className={cn("leading-none font-semibold", className)} {...props} />;
 }

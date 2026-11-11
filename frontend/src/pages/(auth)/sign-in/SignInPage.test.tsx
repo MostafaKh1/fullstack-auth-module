@@ -202,6 +202,17 @@ describe("Sign in page", () => {
     expect(await accessibilityViolations(container)).toEqual([]);
   });
 
+  it("has no accessibility violations with every field in error", async () => {
+    const { user, container } = await renderApp("/?auth=sign-in");
+
+    await user.click(signInButton());
+    await waitFor(() =>
+      expect(screen.getByLabelText("Password")).toHaveAccessibleDescription(expectedCopy["field.required"]),
+    );
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
   it("links to Sign up", async () => {
     const { user, router } = await renderApp("/?auth=sign-in");
 

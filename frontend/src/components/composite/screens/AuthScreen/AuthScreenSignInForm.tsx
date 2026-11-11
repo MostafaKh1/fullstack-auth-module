@@ -14,7 +14,6 @@ import { PasswordInput } from "@/components/base/inputs/PasswordInput";
 import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { useSession } from "@/hooks/useSession";
 import { signIn } from "@/utils/api/auth-api";
-import { errorCopy } from "@/utils/error-copy";
 import { applyApiFailure } from "./AuthScreenApiFailure";
 import { type SignInFields, signInSchema } from "./AuthScreenFieldRules";
 
@@ -45,7 +44,7 @@ export function AuthScreenSignInForm() {
         <FormField
           control={form.control}
           name="email"
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
@@ -57,20 +56,20 @@ export function AuthScreenSignInForm() {
                   {...field}
                 />
               </FormControl>
-              <FormMessage>{fieldState.error?.message && errorCopy(fieldState.error.message)}</FormMessage>
+              <FormMessage />
             </FormItem>
           )}
         />
         <FormField
           control={form.control}
           name="password"
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <PasswordInput autoComplete="current-password" {...field} />
               </FormControl>
-              <FormMessage>{fieldState.error?.message && errorCopy(fieldState.error.message)}</FormMessage>
+              <FormMessage />
             </FormItem>
           )}
         />

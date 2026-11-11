@@ -10,7 +10,6 @@ export function FormControl(props: Props) {
 
   return (
     <Slot
-      data-slot="form-control"
       id={formItemId}
       aria-describedby={error ? formMessageId : undefined}
       aria-invalid={Boolean(error)}

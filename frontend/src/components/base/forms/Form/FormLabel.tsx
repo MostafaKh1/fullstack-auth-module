@@ -10,7 +10,6 @@ export function FormLabel({ className, ...props }: Props) {
 
   return (
     <Label
-      data-slot="form-label"
       data-error={Boolean(error)}
       className={cn("data-[error=true]:text-destructive", className)}
       htmlFor={formItemId}

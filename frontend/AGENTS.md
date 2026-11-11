@@ -43,7 +43,7 @@ Dependencies point from app-aware toward behaviour-only: base imports primitives
 
 ## shadcn/ui
 
-The building blocks come from shadcn/ui on Radix ([ADR 0011](../docs/adr/0011-shadcn-ui-on-radix-for-building-blocks.md)). Adopted so far: `Button`, `Input` (and `PasswordInput` on it), `Label`, `Form` and `Card`. A field is `FormField` > `FormItem` > `FormLabel`, `FormControl` around the input, and `FormMessage` with `errorCopy(code)` as its children: copy `composite/screens/AuthScreen/AuthScreenSignInForm.tsx`.
+The building blocks come from shadcn/ui on Radix ([ADR 0011](../docs/adr/0011-shadcn-ui-on-radix-for-building-blocks.md)). Adopted so far: `Button`, `Input` (and `PasswordInput` on it), `Label`, `Form` and `Card`. A field is `FormField` > `FormItem` > `FormLabel`, `FormControl` around the input, and `FormMessage`, which shows `errorCopy()` of the field's code: copy `composite/screens/AuthScreen/AuthScreenSignInForm.tsx`.
 
 - **Adding one**: `npx shadcn@latest add <name>` from `frontend/` (`components.json` holds style new-york, base colour slate, CSS variables). Then move it into its base kind folder, PascalCase with one export per file (a family becomes a component folder); point its `cn` import at `@/utils/cn`; replace its `radix-ui` import with a primitive (adding the `@radix-ui/react-<part>` package and its wrapper if none exists); uninstall the `cn` and `radix-ui` packages the CLI adds; drop the parts and variants no screen uses; hold it to the comment rule. Add only what a screen needs now.
 - **Colours** are the theme tokens in `src/index.css` (`bg-primary`, `text-muted-foreground`, `border-input`): shadcn's variables mapped through `@theme inline`. Dark values switch on `prefers-color-scheme`, so there is no `.dark` class and no toggle. Change a colour there, not in a component.
@@ -98,7 +98,7 @@ Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/
 
 - A failed request rejects with the envelope; the caller reads its `code`, never its `message`.
 - `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ApiErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
-- Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenApiFailure.ts`). A field error holds the code; the form renders `errorCopy(code)`, as `FormMessage`'s children.
+- Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenApiFailure.ts`). A field error holds the code; `FormMessage` renders `errorCopy(code)` (the hand-rolled forms pass it to `TextField`).
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
 - The field rules are `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`, the front end's copy; the back end's is `backend/src/features/auth/auth.types.ts`. Change both, and both worked-examples tables (`AuthScreenFieldRules.examples.ts` here), in the same commit.
 
@@ -109,7 +109,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 - A test of a screen or a journey -> `<Name>Page.test.tsx` beside the page; of a component, beside that component with its folder's prefix. `src/tests/setup/` is what Vitest runs before every file; a helper several tests share (a fixture, a handler factory, a form helper) -> a kebab-case file in `src/tests/support/`; a test of the harness sits beside the helper it pins.
 - `await renderApp(path, { handlers })` renders the app as if the browser opened `path`, waits for the boot restore to settle and a page to show, and returns Testing Library's view plus `router` and a `user` from `user-event`. `renderRestoringApp` returns at once, for the loading state.
 - The boot restore's `POST /api/auth/refresh` answers "no Session" unless `handlers` declares its own. Declare every request a test makes; an undeclared request fails the test with `Undeclared request: <METHOD> <path>`.
-- A screen's test asserts `await accessibilityViolations(container)` (`src/tests/support/accessibility.ts`, axe) is `[]`, empty and with its errors shown. jsdom computes no colours, so contrast is checked in the browser.
+- A migrated screen's test asserts `await accessibilityViolations(container)` (`src/tests/support/accessibility.ts`, axe) is `[]`, empty and with its errors shown. jsdom computes no colours, so contrast is checked in the browser.
 - Query by role and visible text, as a User would; await what appears after a request with `findBy*`. Expected sentences come from `src/tests/support/expected-copy.ts`, written apart from the app's copy map.
 - Canonical example: `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
 

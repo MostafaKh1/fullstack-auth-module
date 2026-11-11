@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@/components/base/buttons/Button";
+import { HandRolledButton } from "@/components/base/buttons/HandRolledButton";
 import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { useSession } from "@/hooks/useSession";
 import { apiErrorEnvelope } from "@/utils/api/api-error";
@@ -29,9 +29,15 @@ export function ApplicationPage() {
             ◆
           </span>
           The application
-          <Button variant="ghost" size="sm" className="ml-auto" pending={signingOut} onClick={signOut}>
+          <HandRolledButton
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            pending={signingOut}
+            onClick={signOut}
+          >
             {signingOut ? "Signing out…" : "Sign out"}
-          </Button>
+          </HandRolledButton>
         </div>
       </header>
 

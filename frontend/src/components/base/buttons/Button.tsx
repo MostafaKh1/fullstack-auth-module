@@ -3,34 +3,25 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/cn";
 
 const button = cva(
-  [
-    "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
-    "disabled:cursor-not-allowed disabled:opacity-70",
-  ],
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary: [
-          "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30 hover:bg-indigo-500",
-          "dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:shadow-indigo-950/50",
-        ],
-        ghost: [
-          "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-          "dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white",
-        ],
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
       },
       size: {
-        md: "h-11 px-5 text-sm",
-        sm: "h-8 px-3 text-xs",
+        default: "h-9 px-4 py-2",
+        sm: "h-8 gap-1.5 rounded-md px-3",
+        lg: "h-10 rounded-md px-6",
       },
     },
-    defaultVariants: { variant: "primary", size: "md" },
+    defaultVariants: { variant: "default", size: "default" },
   },
 );
 
-type Props = VariantProps<typeof button> &
-  ComponentProps<"button"> & {
+type Props = ComponentProps<"button"> &
+  VariantProps<typeof button> & {
     /** `children` should say what is in progress. */
     pending?: boolean;
   };

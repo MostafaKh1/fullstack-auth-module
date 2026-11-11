@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
-import { Button } from "@/components/base/buttons/Button";
+import { HandRolledButton } from "@/components/base/buttons/HandRolledButton";
 import { TextField } from "@/components/base/inputs/TextField";
 import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { applyApiFailure } from "@/components/composite/screens/AuthScreen/AuthScreenApiFailure";
@@ -10,11 +10,11 @@ import {
   type SignUpFields,
   signUpSchema,
 } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules";
-import { AuthScreenPasswordField } from "@/components/composite/screens/AuthScreen/AuthScreenPasswordField";
 import { useSession } from "@/hooks/useSession";
 import { signUp } from "@/utils/api/auth-api";
 import { errorCopy } from "@/utils/error-copy";
 import { AuthScreenSignUpFormPasswordChecklist } from "./AuthScreenSignUpFormPasswordChecklist";
+import { AuthScreenSignUpFormPasswordField } from "./AuthScreenSignUpFormPasswordField";
 
 const fields = ["email", "name", "password"] as const;
 
@@ -56,17 +56,17 @@ export function AuthScreenSignUpForm() {
         error={errors.name?.message && errorCopy(errors.name.message)}
         {...form.register("name")}
       />
-      <AuthScreenPasswordField
+      <AuthScreenSignUpFormPasswordField
         label="Password"
         autoComplete="new-password"
         error={errors.password?.message && errorCopy(errors.password.message)}
         {...form.register("password")}
       >
         <AuthScreenSignUpFormPasswordChecklist password={password} className="mt-1" />
-      </AuthScreenPasswordField>
-      <Button type="submit" pending={isSubmitting} className="mt-1 w-full">
+      </AuthScreenSignUpFormPasswordField>
+      <HandRolledButton type="submit" pending={isSubmitting} className="mt-1 w-full">
         {isSubmitting ? "Signing up…" : "Sign up"}
-      </Button>
+      </HandRolledButton>
     </form>
   );
 }

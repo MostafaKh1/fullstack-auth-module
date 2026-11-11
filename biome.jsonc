@@ -31,9 +31,34 @@
   },
   "overrides": [
     // The front end imports through @/; the structure check also confines ./ to component folders, which a glob
-    // cannot tell apart from kind folders.
+    // cannot tell apart from kind folders. Radix is reached only through primitives/, so the behaviour it provides
+    // lives in one layer (ADR 0011); the primitives override repeats the ../ ban, as the last match wins.
     {
       "includes": ["frontend/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["..", "../**", "**/../**", "**/.."],
+                    "message": "Import through @/ (the front end's src/), never a parent-relative path.",
+                  },
+                  {
+                    "group": ["@radix-ui/**"],
+                    "message": "Radix is wrapped once in src/components/primitives/: import the primitive.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      "includes": ["frontend/src/components/primitives/**"],
       "linter": {
         "rules": {
           "style": {

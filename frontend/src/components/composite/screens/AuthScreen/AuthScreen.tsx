@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/base/cards/Card/Card";
+import { CardContent } from "@/components/base/cards/Card/CardContent";
+import { CardDescription } from "@/components/base/cards/Card/CardDescription";
+import { CardHeader } from "@/components/base/cards/Card/CardHeader";
+import { CardTitle } from "@/components/base/cards/Card/CardTitle";
 
 type Props = {
   title: string;
@@ -43,12 +48,16 @@ export function AuthScreen({ title, subtitle, children, footer }: Props) {
 
       <main className="flex items-center justify-center px-4 py-10 sm:px-6">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-8 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{title}</h1>
-            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
-            <div className="mt-6">{children}</div>
-          </div>
-          <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">{footer}</p>
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle asChild>
+                <h1 className="text-2xl tracking-tight">{title}</h1>
+              </CardTitle>
+              <CardDescription>{subtitle}</CardDescription>
+            </CardHeader>
+            <CardContent>{children}</CardContent>
+          </Card>
+          <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p>
         </div>
       </main>
     </div>

@@ -16,6 +16,5 @@
     "utils": "@/utils/cn",
     "lib": "@/utils",
     "hooks": "@/hooks"
-  },
-  "iconLibrary": "lucide"
+  }
 }

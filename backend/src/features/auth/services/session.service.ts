@@ -64,12 +64,23 @@ export class SessionService {
     await this.sessions.revoke(sessionId, reason, this.clock.now());
   }
 
-  /** Idempotent; a Session id alone ends nothing, the secret must match. */
+  /**
+   * Idempotent; a Session id alone ends nothing, the secret must match. The secret a refresh replaced within the
+   * grace window matches too: a Sign out racing that refresh carries it, and must still end the Session (ADR 0001).
+   */
   async revokeForCredential(presented: string | null): Promise<void> {
     const credential = presented ? parseRefreshCredential(presented) : null;
     if (!credential) return;
     const found = await this.sessions.findWithSecretHashesById(credential.sessionId);
-    if (!found || !secretMatches(credential, found.secretHash)) return;
+    if (!found) return;
+    const justReplaced =
+      secretMatches(credential, found.previousSecretHash) &&
+      isWithinGrace(
+        found.previousReplacedAt,
+        this.clock.now(),
+        this.config.get("refreshGraceSeconds") * 1000,
+      );
+    if (!secretMatches(credential, found.secretHash) && !justReplaced) return;
     await this.revoke(credential.sessionId, "sign-out");
     this.logger.info({ userId: found.session.userId, sessionId: credential.sessionId }, "session.signed_out");
   }

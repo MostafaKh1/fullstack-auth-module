@@ -29,7 +29,7 @@ export function AuthScreen({ title, subtitle, children, footer }: Props) {
         <p className="relative flex items-center gap-2 text-lg font-semibold tracking-tight">
           <span
             aria-hidden="true"
-            className="grid size-8 place-items-center rounded-lg bg-white/10 ring-1 ring-white/20"
+            className="grid size-8 place-items-center rounded-lg bg-brand-foreground/10 ring-1 ring-brand-foreground/20"
           >
             ◆
           </span>

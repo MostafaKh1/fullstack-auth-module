@@ -2,8 +2,7 @@ import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { apiErrorEnvelope, type ValidationIssue } from "@/utils/api/api-error";
 import { clientErrorCode } from "@/utils/error-copy";
 
-/** The form-level alert's key in React Hook Form's errors. */
-export const FORM_ALERT = "root.server";
+const FORM_ALERT = "root.server";
 
 /** Every error it sets, on a field or on the form-level alert, holds a code; `errorCopy()` turns it into a sentence where it is shown. */
 export function applyApiFailure<Fields extends FieldValues>(

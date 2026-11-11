@@ -21,7 +21,6 @@ const MAY_IMPORT = {
   utility: [],
 };
 const NEVER_IMPORTED_BY_COMPONENTS = ["pages", "app", "tests"];
-// What a section may import outside components/: base reads form context through a hook and its contexts.
 const OUTSIDE_COMPONENTS = {
   primitives: ["utils"],
   base: ["utils", "hooks", "providers"],
@@ -32,14 +31,13 @@ const PASCAL = /^[A-Z][A-Za-z0-9]*$/;
 const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 const KIND = /^[a-z][a-z0-9]*(-[a-z0-9]+)*s$/;
 const HOOK = /^use[A-Z][A-Za-z0-9]*$/;
-// A hook of one component carries its folder's prefix: AuthScreenUseThing.ts.
 const PREFIXED_HOOK = /^[A-Z][A-Za-z0-9]*?Use[A-Z][A-Za-z0-9]*$/;
 const SOURCE = /\.(ts|tsx|js|jsx)$/;
 const TEST = /\.test\.[tj]sx?$/;
 
 // A Tailwind palette colour utility (`text-indigo-600`, `hover:bg-slate-100`): colours come from the theme tokens in index.css.
 const PALETTE_COLOUR =
-  /(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|outline|ring|ring-offset|fill|stroke|from|to|via|divide|decoration|accent|caret|shadow|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d/;
+  /(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|outline|ring|ring-offset|fill|stroke|from|to|via|divide|decoration|accent|caret|shadow|placeholder)-(?:(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+|(?:white|black)(?![\w-]))/;
 const THEMED = ["components", "pages", "app"];
 
 const stemOf = (name) => name.split(".")[0];
@@ -205,7 +203,7 @@ for (const item of items) {
   const name = segs.at(-1);
   if (
     !item.isDir &&
-    SOURCE.test(name) &&
+    name.endsWith(".ts") &&
     segs[0] !== "hooks" &&
     !TEST.test(name) &&
     PREFIXED_HOOK.test(stemOf(name))

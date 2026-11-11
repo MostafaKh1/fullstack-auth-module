@@ -3,8 +3,6 @@ import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { AccessTokenGuard } from "@/common/guards/access-token.guard";
 import { AccessTokenService } from "@/common/services/access-token.service";
-import { AuthCookiesService } from "@/common/services/auth-cookies.service";
-import { PasswordHashService } from "@/common/services/password-hash.service";
 import { AppConfigService } from "@/config/app-config.service";
 import { PersistenceModule } from "@/database/persistence.module";
 
@@ -19,12 +17,7 @@ import { PersistenceModule } from "@/database/persistence.module";
       }),
     }),
   ],
-  providers: [
-    AccessTokenService,
-    PasswordHashService,
-    AuthCookiesService,
-    { provide: APP_GUARD, useClass: AccessTokenGuard },
-  ],
-  exports: [AccessTokenService, PasswordHashService, AuthCookiesService],
+  providers: [AccessTokenService, { provide: APP_GUARD, useClass: AccessTokenGuard }],
+  exports: [AccessTokenService],
 })
 export class CommonModule {}

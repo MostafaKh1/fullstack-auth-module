@@ -3,10 +3,10 @@ import { PinoLogger } from "nestjs-pino";
 import { ApiError } from "@/common/errors/api-error";
 import { isSessionLive } from "@/common/guards/access-token.guard";
 import type { AuthContext } from "@/common/services/access-token.service";
+import type { RevokedReason } from "@/common/types/session.types";
 import { AppConfigService } from "@/config/app-config.service";
 import { ClockService } from "@/core/clock.service";
 import { SessionRepository } from "@/database/repositories/session.repository";
-import type { RevokedReason } from "@/features/auth/auth.types";
 import {
   mintRefreshCredential,
   parseRefreshCredential,

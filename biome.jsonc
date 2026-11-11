@@ -2,6 +2,20 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   // Biome lints; Prettier formats (ADR 0004). The formatter stays off so the two never fight.
   "formatter": { "enabled": false },
+  // The back end's layering rules that noRestrictedImports cannot express (ADR 0005).
+  "plugins": [
+    { "path": "./backend/lint/no-cross-feature-import.grit", "includes": ["backend/src/features/**"] },
+    {
+      "path": "./backend/lint/no-feature-import-below-features.grit",
+      "includes": [
+        "backend/src/config/**",
+        "backend/src/logging/**",
+        "backend/src/core/**",
+        "backend/src/database/**",
+        "backend/src/common/**",
+      ],
+    },
+  ],
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "ignoreUnknown": true,
@@ -109,7 +123,7 @@
                   },
                   {
                     "group": ["**/database/collections/**"],
-                    "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
+                    "message": "Only repositories read collections; import the domain type from src/common/types/.",
                   },
                 ],
               },
@@ -141,7 +155,10 @@
       },
     },
     {
-      "includes": ["backend/src/**/*.service.ts", "!backend/src/common/services/auth-cookies.service.ts"],
+      "includes": [
+        "backend/src/**/*.service.ts",
+        "!backend/src/features/auth/services/auth-cookies.service.ts",
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -160,7 +177,7 @@
                   },
                   {
                     "group": ["**/database/collections/**"],
-                    "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
+                    "message": "Only repositories read collections; import the domain type from src/common/types/.",
                   },
                   {
                     "group": ["**/auth-cookies.service"],

@@ -4,11 +4,12 @@ import { ThrottlerGuard } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 import { ApiErrors } from "@/common/decorators/api-errors.decorator";
 import { Public } from "@/common/decorators/auth.decorator";
-import { OriginCsrfGuard } from "@/common/guards/origin-csrf.guard";
-import { RouteValidationPipe } from "@/common/pipes/route-validation.pipe";
-import { AuthCookiesService } from "@/common/services/auth-cookies.service";
+import type { User } from "@/common/types/user.types";
 import { type AuthOutcome, AuthService } from "@/features/auth/services/auth.service";
-import { type SignInBody, type SignUpBody, signInSchema, signUpSchema, type User } from "./auth.types";
+import { AuthCookiesService } from "@/features/auth/services/auth-cookies.service";
+import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./auth.types";
+import { OriginCsrfGuard } from "./origin-csrf.guard";
+import { RouteValidationPipe } from "./route-validation.pipe";
 
 export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 

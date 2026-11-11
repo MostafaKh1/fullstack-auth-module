@@ -54,3 +54,15 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 - Specs are issues labelled `spec`; their tickets are sub-issues labelled `ready-for-agent`, linked with native "blocked by" dependencies.
 - The spec's full text, with its tables, is also committed at `docs/spec/<feature>.md`.
 - A ticket closes through the commit that completes it: the commit message carries `Closes #<n>`, and its acceptance criteria are ticked on the issue first.
+
+## Model and effort per ticket
+
+Every ticket says which model and reasoning effort its implementer runs on, so cheap work is not done by an expensive model.
+
+- **When publishing a ticket** (`/to-tickets`): apply exactly one `model:` label and one `effort:` label, and end the body with a `## Model` section naming them and the reason in one line. Show both in the breakdown the user approves.
+- **Choosing**:
+  - `model:opus` + `effort:high`: the ticket writes an ADR, touches security (credentials, sessions, redirects, input that reaches a query), refactors across many files, or has concurrency.
+  - `model:sonnet` + `effort:medium`: well-specified work that follows an existing pattern (a new endpoint like an existing one, tooling, containers, docs).
+  - `model:sonnet` + `effort:low`: mechanical work with no judgement.
+- **When implementing** (`/implement-spec`, `/implement`): start each ticket's implementer with the model and effort from its labels. Mergers run on `sonnet` at `low`. The code review runs on `opus` at `high`; the agent fixing its findings on `sonnet` at `high`.
+- No other model is used.

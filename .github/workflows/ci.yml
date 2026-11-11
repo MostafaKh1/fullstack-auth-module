@@ -16,11 +16,11 @@ env:
   # CI never commits, so it needs no git hooks.
   HUSKY: "0"
 
-# Pinned: ubuntu-latest moved to a kernel 6.19+ that mongo:8 cannot start on (SERVER-121912).
+# MongoDB is pinned to 8.2 (here and in compose.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
 jobs:
   lint:
     name: Lint and format
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,7 +35,7 @@ jobs:
 
   contract:
     name: Contract
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,7 +53,7 @@ jobs:
   app:
     name: ${{ matrix.app }}
     needs: lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -92,10 +92,10 @@ jobs:
   e2e:
     name: Browser journeys and containers
     needs: app
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     services:
       mongo:
-        image: mongo:8
+        image: mongo:8.2.6
         ports:
           - 27017:27017
         options: >-

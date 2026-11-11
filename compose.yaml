@@ -1,7 +1,7 @@
 # `docker compose up --build` serves the app at http://localhost:8080; `npm run db:up` starts MongoDB alone.
 services:
   mongo:
-    image: mongo:8.0
+    image: mongo:8.2.6
     restart: unless-stopped
     ports:
       - "${MONGO_PORT:-27017}:27017"

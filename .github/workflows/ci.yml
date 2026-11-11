@@ -32,6 +32,10 @@ jobs:
         run: npx biome ci .
       - name: Prettier
         run: npm run format:check
+      - name: Front-end structure check
+        run: npm run check:structure
+      - name: Structure check tests
+        run: npm run test:structure
 
   contract:
     name: Contract

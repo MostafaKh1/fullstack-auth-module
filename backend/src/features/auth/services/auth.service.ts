@@ -38,7 +38,7 @@ export class AuthService {
     return this.startSession(user, input.userAgent);
   }
 
-  /** An unknown email still pays for a hash verification, so it fails as a wrong password does, in time and code. */
+  /** An unknown email still pays for a hash verification and fails as a wrong password does, so neither reveals which emails have a User. */
   async signIn(input: SignInBody & { userAgent: string | null }): Promise<SignedIn> {
     const found = await this.users.findWithPasswordHashByEmail(input.email);
     const matches = found

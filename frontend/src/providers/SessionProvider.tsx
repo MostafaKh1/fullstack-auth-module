@@ -30,7 +30,7 @@ export function SessionProvider({ children }: Props) {
     try {
       await signOut();
     } catch {
-      // The tab is signed out anyway: the User asked to leave, and a failed request is not a reason to stay.
+      // The tab is signed out anyway: the User asked to leave, and a failed request is not a reason to stay (ADR 0008).
     }
     endLocally();
   }, [endLocally]);

@@ -1,10 +1,7 @@
 import { screen } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
 
-/**
- * Focuses the field labelled `label`, pastes `value` into it (nothing for an empty or missing value) and
- * leaves it, as a User tabbing through the form would. Returns the field.
- */
+/** Focuses, pastes and leaves the field, as a User tabbing through the form would, so blur validation runs. */
 export async function enterField(user: UserEvent, label: string, value: string | undefined) {
   const field = screen.getByLabelText(label);
   await user.clear(field);

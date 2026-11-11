@@ -17,7 +17,7 @@ export class PasswordHashService implements OnModuleInit {
 
   constructor(private readonly config: AppConfigService) {}
 
-  /** A real hash at the configured cost, so a Sign in with an unknown email costs what a wrong password costs. */
+  /** A real hash at the configured cost, so a Sign in with an unknown email costs what a wrong password costs (ADR 0007). */
   async onModuleInit(): Promise<void> {
     this.decoyHash = await this.hash(randomBytes(32).toString("base64"));
   }

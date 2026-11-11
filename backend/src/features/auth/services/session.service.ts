@@ -118,7 +118,7 @@ function slidIdleExpiry(now: Date, idleTtlMs: number, absoluteExpiresAt: Date): 
   return new Date(Math.min(now.getTime() + idleTtlMs, absoluteExpiresAt.getTime()));
 }
 
-/** Two tabs refreshing together must not read as replay. */
+/** Two tabs refreshing together must not read as replay (ADR 0001). */
 function isWithinGrace(replacedAt: Date | null, now: Date, graceMs: number): boolean {
   return replacedAt !== null && now.getTime() - replacedAt.getTime() <= graceMs;
 }

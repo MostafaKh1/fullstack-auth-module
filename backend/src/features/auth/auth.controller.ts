@@ -102,7 +102,7 @@ export class AuthController {
     this.authCookies.clearRefreshCookie(response);
   }
 
-  /** Within the grace window there is no new credential, so the cookie the rotation set is left in place. */
+  /** Within the grace window there is no new credential, so the cookie the rotation set is left in place (ADR 0001). */
   private respond(response: Response, signedIn: SignedIn): AuthResponse {
     if (signedIn.refreshCredential) {
       const { value, idleExpiresAt } = signedIn.refreshCredential;

@@ -26,10 +26,6 @@ export function withAuthForm(search: string, form: AuthForm): string {
   return `?${new URLSearchParams([["auth", form], ...params])}`;
 }
 
-/**
- * Where a signed-in User at an auth URL goes: its `returnTo` when safe, otherwise the same URL without `auth` and
- * `returnTo`, which is the Application page.
- */
 export function signedInDestination({ search, hash }: { search: string; hash: string }): string {
   const params = new URLSearchParams(search);
   const returnTo = params.get("returnTo");

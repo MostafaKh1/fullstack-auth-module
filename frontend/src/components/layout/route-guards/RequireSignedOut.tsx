@@ -9,8 +9,8 @@ type Props = {
 };
 
 /**
- * A successful Sign in or Sign up lands where it should by this guard alone: a signed-in User goes on to a safe
- * `returnTo`, otherwise to the Application page.
+ * The forms never navigate after a successful Sign in or Sign up: this guard sends the signed-in User on to a
+ * safe `returnTo`, otherwise to the Application page (ADR 0009).
  */
 export function RequireSignedOut({ children }: Props) {
   const { session } = useSession();

@@ -1,6 +1,6 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-import { apiErrorEnvelope, type ValidationIssue } from "../../../../utils/api-error";
-import { errorCopy, fallbackCopy, unreachableCopy } from "../../../../utils/error-copy";
+import { apiErrorEnvelope, type ValidationIssue } from "../../../utils/api-error";
+import { errorCopy, fallbackCopy, unreachableCopy } from "../../../utils/error-copy";
 
 /** The form-level alert's key in React Hook Form's errors. */
 export const FORM_ALERT = "root.server";

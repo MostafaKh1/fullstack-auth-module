@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /*
  * The field rules of docs/requirements.md. The back end enforces the same rules in
- * `backend/src/auth/auth.types.ts`; change both in the same commit, and both copies of the
+ * `backend/src/features/auth/auth.types.ts`; change both in the same commit, and both copies of the
  * worked-examples table (`AuthScreenFieldRules.examples.ts` beside this file). Every check's error is its rule id
  * (ADR 0002), which the form turns into a sentence through the copy map.
  */

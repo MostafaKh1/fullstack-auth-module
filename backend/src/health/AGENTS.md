@@ -5,10 +5,10 @@
 ## Conventions
 
 - The route is `@Public()`; it stays a liveness check and gains no business logic.
-- A new probe (another dependency) is a repository method or a `core/` provider called from `CheckHealthHandler`.
+- A new probe (another dependency) is a provider in `src/database/` (as `database-health.ts` is) or `src/core/`, called from `HealthService`.
 
 ## Inventory
 
 - `health.module.ts`: `HealthModule`, importing `PersistenceModule`.
 - `health.controller.ts`: `HealthController`, one route.
-- `handlers/check-health.handler.ts`: `CheckHealthHandler` and `Health`; `503 server.unavailable` while the database is unreachable.
+- `health.service.ts`: `HealthService.check()` and `Health`; `503 server.unavailable` while the database is unreachable.

@@ -4,6 +4,9 @@ import { refreshCookie } from "./support/refresh-cookie";
 
 const ada = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
 
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+
 describe("Sign in", () => {
   let app: TestApp;
 
@@ -50,6 +53,33 @@ describe("Sign in", () => {
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain(`Max-Age=${7 * 24 * 60 * 60}`);
+  });
+
+  it("sets the refresh cookie to expire at the Session's idle expiry", async () => {
+    app.clock.set(new Date(app.startedAt.getTime() + HOUR));
+
+    const response = await app
+      .http()
+      .post("/api/auth/sign-in")
+      .send({ email: ada.email, password: ada.password });
+    app.clock.set(app.startedAt);
+
+    const idleExpiry = new Date(app.startedAt.getTime() + HOUR + 7 * DAY);
+    expect(refreshCookie(response.headers["set-cookie"])).toContain(`Expires=${idleExpiry.toUTCString()}`);
+  });
+
+  it("signs in with a password typed in a different Unicode normalisation form than at Sign up", async () => {
+    // "é" as one code point at Sign up, as "e" plus a combining acute accent at Sign in.
+    const zoe = { email: "zoe@example.com", name: "Zoe Saldana", password: "Café-Passw0rd" };
+    await app.http().post("/api/auth/sign-up").send(zoe).expect(201);
+
+    const response = await app
+      .http()
+      .post("/api/auth/sign-in")
+      .send({ email: zoe.email, password: "Café-Passw0rd" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.email).toBe(zoe.email);
   });
 
   it("starts a separate Session on each Sign in", async () => {
@@ -140,7 +170,7 @@ describe("Sign in field rules: the worked examples", () => {
     } else {
       expect(response.status).toBe(400);
       expect(response.body).toMatchObject({ code: "request.validation_failed", status: 400 });
-      expect(response.body.issues).toEqual(example.codes.map((code) => ({ path: example.field, code })));
+      expect(response.body.issues).toEqual(example.codes.map((code) => ({ path: [example.field], code })));
     }
   });
 });

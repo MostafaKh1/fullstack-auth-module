@@ -21,7 +21,7 @@ export function signedInAsAda(status = 200) {
 export function envelope(
   code: string,
   status: number,
-  extra: { issues?: { path: string; code: string }[]; message?: string } = {},
+  extra: { issues?: { path: (string | number)[]; code: string }[]; message?: string } = {},
 ) {
   return HttpResponse.json(
     { code, status, traceId: "trace-1", retryable: status >= 500 || status === 429, ...extra },

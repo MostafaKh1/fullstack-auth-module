@@ -52,6 +52,9 @@ function derive(password: string, salt: Buffer, cost: number, r: number, p: numb
   // scrypt needs 128 * N * r bytes; Node's default cap (32 MiB) is below that at cost 17.
   const options: ScryptOptions = { N, r, p, maxmem: 256 * N * r };
   return new Promise((resolve, reject) => {
-    scrypt(password, salt, KEY_LENGTH, options, (error, key) => (error ? reject(error) : resolve(key)));
+    // The same characters can arrive composed (é) or decomposed (e + U+0301) depending on the keyboard or platform.
+    scrypt(password.normalize("NFC"), salt, KEY_LENGTH, options, (error, key) =>
+      error ? reject(error) : resolve(key),
+    );
   });
 }

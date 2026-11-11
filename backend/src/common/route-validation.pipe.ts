@@ -19,7 +19,10 @@ export class RouteValidationPipe<Schema extends z.ZodType> implements PipeTransf
     const result = this.schema.safeParse(body);
     if (!result.success) {
       throw new ApiError("request.validation_failed", {
-        issues: result.error.issues.map((issue) => ({ path: issue.path.join("."), code: issue.message })),
+        issues: result.error.issues.map((issue) => ({
+          path: issue.path.map((key) => (typeof key === "number" ? key : String(key))),
+          code: issue.message,
+        })),
       });
     }
     return result.data;

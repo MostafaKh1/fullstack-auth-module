@@ -41,5 +41,84 @@
         },
       },
     },
+    // The back end's layering (ADR 0010). A file matching several overrides takes the last one's options, so each
+    // repeats the restrictions of the ones before it. The test harness reaches the raw database on purpose.
+    {
+      "includes": ["backend/src/**", "!backend/src/database/**", "!backend/src/test/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "mongoose": "Only src/database/ talks to MongoDB: go through a repository.",
+                  "@nestjs/mongoose": "Only src/database/ talks to MongoDB: go through a repository.",
+                },
+                "patterns": [
+                  {
+                    "group": ["**/database/collections/**"],
+                    "message": "Only repositories read collections; import the domain type from src/auth/auth.types.ts.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      "includes": ["backend/src/**/*.service.ts", "!backend/src/common/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "mongoose": "Only src/database/ talks to MongoDB: go through a repository.",
+                  "@nestjs/mongoose": "Only src/database/ talks to MongoDB: go through a repository.",
+                  "express": "A service knows nothing about HTTP: the controller extracts the request and sets the cookie.",
+                },
+                "patterns": [
+                  {
+                    "group": ["**/database/collections/**"],
+                    "message": "Only repositories read collections; import the domain type from src/auth/auth.types.ts.",
+                  },
+                  {
+                    "group": ["**/auth-cookies.service"],
+                    "message": "A service never touches a cookie: the controller calls AuthCookiesService.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      "includes": ["backend/src/**/*.controller.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "mongoose": "Only src/database/ talks to MongoDB: go through a repository.",
+                  "@nestjs/mongoose": "Only src/database/ talks to MongoDB: go through a repository.",
+                },
+                "patterns": [
+                  {
+                    "group": ["**/database/**", "**/clock.service", "**/app-config.service"],
+                    "message": "A controller is the API only: the business rule, the time and the configuration belong in a service.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
   ],
 }

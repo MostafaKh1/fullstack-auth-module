@@ -188,9 +188,9 @@ describe("Sign up page", () => {
         http.post("/api/auth/sign-up", () =>
           envelope("request.validation_failed", 400, {
             issues: [
-              { path: "name", code: "name.too_short" },
-              { path: "password", code: "password.missing_number" },
-              { path: "password", code: "password.missing_special" },
+              { path: ["name"], code: "name.too_short" },
+              { path: ["password"], code: "password.missing_number" },
+              { path: ["password"], code: "password.missing_special" },
             ],
           }),
         ),
@@ -215,7 +215,7 @@ describe("Sign up page", () => {
       handlers: [
         http.post("/api/auth/sign-up", () =>
           envelope("request.validation_failed", 400, {
-            issues: [{ path: "nickname", code: "field.required" }],
+            issues: [{ path: ["nickname"], code: "field.required" }],
           }),
         ),
       ],

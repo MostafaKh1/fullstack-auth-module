@@ -1,5 +1,5 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-import { apiErrorEnvelope } from "../../../../utils/api-error";
+import { apiErrorEnvelope, type ValidationIssue } from "../../../../utils/api-error";
 import { errorCopy, fallbackCopy, unreachableCopy } from "../../../../utils/error-copy";
 
 /** The form-level alert's key in React Hook Form's errors. */
@@ -32,12 +32,16 @@ export function applyApiFailure<Fields extends FieldValues>(
   if (envelope.code === "request.validation_failed" && envelope.issues?.length) {
     // The server lists every broken rule; like the form's own check, each field shows its first.
     const shown = new Set<string>();
+    const fieldOf = (path: ValidationIssue["path"]) => path.join(".");
     for (const { path, code } of envelope.issues) {
-      if (!isField(path) || shown.has(path)) continue;
-      setError(path, { type: "server", message: code }, { shouldFocus: shown.size === 0 });
-      shown.add(path);
+      const field = fieldOf(path);
+      if (!isField(field) || shown.has(field)) continue;
+      setError(field, { type: "server", message: code }, { shouldFocus: shown.size === 0 });
+      shown.add(field);
     }
-    if (envelope.issues.some(({ path }) => !isField(path))) setError(FORM_ALERT, { message: fallbackCopy });
+    if (envelope.issues.some(({ path }) => !isField(fieldOf(path)))) {
+      setError(FORM_ALERT, { message: fallbackCopy });
+    }
     return;
   }
 

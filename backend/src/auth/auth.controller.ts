@@ -4,24 +4,15 @@ import { Public } from "../common/auth.decorator";
 import { AuthCookiesService } from "../common/auth-cookies.service";
 import { OriginCsrfGuard } from "../common/origin-csrf.guard";
 import { RouteValidationPipe } from "../common/route-validation.pipe";
-import { AppConfigService } from "../config/app-config.service";
-import { ClockService } from "../core/clock.service";
-import type { User } from "../database/repositories/user.repository";
-import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./auth.types";
-import { RefreshHandler } from "./handlers/refresh.handler";
-import { SignInHandler } from "./handlers/sign-in.handler";
-import { type SignedIn, SignUpHandler } from "./handlers/sign-up.handler";
+import { AuthService, type SignedIn } from "./auth.service";
+import { type SignInBody, type SignUpBody, signInSchema, signUpSchema, type User } from "./auth.types";
 
 export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
 @Controller("auth")
 export class AuthController {
   constructor(
-    private readonly signUpHandler: SignUpHandler,
-    private readonly signInHandler: SignInHandler,
-    private readonly refreshHandler: RefreshHandler,
-    private readonly clock: ClockService,
-    private readonly config: AppConfigService,
+    private readonly authService: AuthService,
     private readonly authCookies: AuthCookiesService,
   ) {}
 
@@ -32,8 +23,7 @@ export class AuthController {
     @Headers("user-agent") userAgent: string | undefined,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthResponse> {
-    const signedIn = await this.signUpHandler.execute({ ...body, userAgent: userAgent ?? null });
-    return this.respond(response, signedIn);
+    return this.respond(response, await this.authService.signUp({ ...body, userAgent: userAgent ?? null }));
   }
 
   @Public()
@@ -44,8 +34,7 @@ export class AuthController {
     @Headers("user-agent") userAgent: string | undefined,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthResponse> {
-    const signedIn = await this.signInHandler.execute({ ...body, userAgent: userAgent ?? null });
-    return this.respond(response, signedIn);
+    return this.respond(response, await this.authService.signIn({ ...body, userAgent: userAgent ?? null }));
   }
 
   /** Authenticated by the refresh cookie and the Origin check, not an access token. */
@@ -57,22 +46,16 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthResponse> {
-    const refreshed = await this.refreshHandler.execute(this.authCookies.readRefreshCookie(request));
-    // Within the grace window nothing was rotated, so the cookie the rotation set is left in place.
-    if (refreshed.rotated)
-      this.setCookie(response, refreshed.rotated.refreshCredential, refreshed.rotated.idleExpiresAt);
-    return { accessToken: refreshed.accessToken, expiresIn: refreshed.expiresIn, user: refreshed.user };
+    const signedIn = await this.authService.refresh(this.authCookies.readRefreshCookie(request));
+    return this.respond(response, signedIn);
   }
 
+  /** Within the grace window there is no new credential, so the cookie the rotation set is left in place. */
   private respond(response: Response, signedIn: SignedIn): AuthResponse {
-    this.setCookie(response, signedIn.refreshCredential, signedIn.idleExpiresAt);
+    if (signedIn.refreshCredential) {
+      const { value, idleExpiresAt } = signedIn.refreshCredential;
+      this.authCookies.setRefreshCookie(response, value, idleExpiresAt);
+    }
     return { accessToken: signedIn.accessToken, expiresIn: signedIn.expiresIn, user: signedIn.user };
-  }
-
-  private setCookie(response: Response, credential: string, idleExpiresAt: Date): void {
-    this.authCookies.setRefreshCookie(response, credential, {
-      maxAgeMs: idleExpiresAt.getTime() - this.clock.now().getTime(),
-      secure: this.config.get("cookieSecure"),
-    });
   }
 }

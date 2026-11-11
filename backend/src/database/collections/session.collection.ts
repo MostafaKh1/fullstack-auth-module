@@ -1,6 +1,5 @@
 import { Schema, type Types } from "mongoose";
-
-export type RevokedReason = "sign-out" | "reuse-detected";
+import type { RevokedReason } from "../../auth/auth.types";
 
 export type SessionDocument = {
   _id: Types.ObjectId;

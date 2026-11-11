@@ -16,10 +16,11 @@ env:
   # CI never commits, so it needs no git hooks.
   HUSKY: "0"
 
+# Pinned: ubuntu-latest moved to a kernel 6.19+ that mongo:8 cannot start on (SERVER-121912).
 jobs:
   lint:
     name: Lint and format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,7 +35,7 @@ jobs:
 
   contract:
     name: Contract
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,7 +53,7 @@ jobs:
   app:
     name: ${{ matrix.app }}
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +92,7 @@ jobs:
   e2e:
     name: Browser journeys and containers
     needs: app
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       mongo:
         image: mongo:8
@@ -106,6 +107,7 @@ jobs:
       E2E_MONGODB_URI: mongodb://localhost:27017/auth_e2e
     steps:
       - uses: actions/checkout@v4
+        id: checkout
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -138,9 +140,9 @@ jobs:
         # The MongoDB service container already holds host port 27017.
         env:
           MONGO_PORT: "27117"
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
       - name: Stack logs
-        if: failure()
+        if: ${{ failure() && steps.checkout.outcome == 'success' }}
         run: docker compose logs
       - run: docker compose down --volumes
-        if: always()
+        if: ${{ always() && steps.checkout.outcome == 'success' }}

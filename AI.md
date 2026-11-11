@@ -37,7 +37,7 @@ The assistant was Claude (Claude Code in VS Code). Every generated line was read
 - **Search-parameter auth**: Sign in and Sign up are `/?auth=sign-in` and `/?auth=sign-up`, with a checked `returnTo`, instead of separate routes with the return path in location state (ADR 0009).
 - **A full-screen form, not a dialog**, for Sign in and Sign up.
 - **Parameter values match the glossary** (`sign-in`, `sign-up`), so the URL uses the same words as the code and the docs.
-- **Architecture-level `AGENTS.md` only**: five files, not twenty-one folder-level ones that restated the code and drifted.
+- **Architecture-level `AGENTS.md` only**: seven files, not twenty-one folder-level ones that restated the code and drifted.
 - **The comment rule**: a comment explains a why the code cannot, and nothing else; a file-by-file pass cut 444 comment lines to 281.
 - **scrypt over argon2id, NestJS 11 over 12, and no Redis or asymmetric keys**, as recorded under "Corrections and decisions made differently" below.
 

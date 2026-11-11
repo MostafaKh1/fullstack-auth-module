@@ -3,20 +3,58 @@
 How AI assistance was used to build this repository, written as the work happened, one entry per ticket.
 The assistant was Claude (Claude Code in VS Code). Every generated line was read, run and owned before it was committed.
 
+## In short
+
+**What was AI-assisted: everything, by agents.** Every file in this repository, code, tests, configuration and documents, was written by Claude agents (Claude Code) under my direction. My part was the decisions, the review and the corrections below. Each ticket was built by a fresh agent, read, run and checked before it landed.
+
+**The method.**
+
+- **Skill flow.** Grill with docs, then spec, then tickets, then one ticket at a time: `tdd` (failing tests first at agreed seams), `code-review` against `CODING_STANDARDS.md` and the ticket, fixes, then one commit that closes the issue (behaviour tickets commit their failing tests first, as a red commit). The skill chain is grill-with-docs, to-spec, to-tickets, implement, code-review, retro, as written in `AGENTS.md`.
+- **One agent per ticket**, and tickets live on GitHub Issues as sub-issues of the spec with native "blocked by" links, so an agent always starts from a ticket with no open blocker.
+- **Model and effort per ticket.** Each ticket carries a `model:` and an `effort:` label. Opus at high effort took ADRs, security (credentials, sessions, redirects) and refactors across many files; Sonnet at medium took well-specified work that follows an existing pattern (tooling, containers, docs); mergers ran on Sonnet at low; the code review ran on Opus at high and its fixes on Sonnet at high. The rules are in `docs/agents/issue-tracker.md`.
+
+**Prompts and approaches that worked.**
+
+- Starting from the brief, not from technology: the clarified rules (what a "special character" is, whether a name is trimmed before counting, what Sign in reveals) became testable rules, each with a worked-examples table that both apps run.
+- "Answer from conventions you already have; ask me only what is left", then one numbered question per open decision with a recommended answer.
+- Tests first at three agreed seams only (back-end HTTP, rendered front end, browser journeys), then breaking the code on purpose to prove a test is not vacuous. This caught real bugs: a StrictMode double refresh, a vacuous request-id test, an emoji counted as two characters.
+- Writing the reason into an ADR when a decision is hard to reverse, and a short `AGENTS.md` per app for navigation, so an agent finds the right folder without re-deriving the architecture.
+
+**What had to be corrected or reworked.**
+
+- **The first attempt was discarded.** The early tickets were built in the main conversation, not by agents and not strictly test first. I had all of it deleted and restarted from issue #2 under the agreed flow; the earlier scaffold had also shipped a broken Jest config and a fabricated bcrypt decoy hash.
+- **Windows native-addon blocks.** Application Control blocks unsigned `.node` addons: `argon2` became scrypt from `node:crypto`, and Rollup's native binary became its WebAssembly build.
+- **Biome configuration.** A `"//"` comment key is invalid in `biome.jsonc`, CSS needed Tailwind directive parsing, and `useImportType` breaks Nest's dependency injection for the back end.
+- **Conflict markers left by a merge** ended up committed in `AI.md` and were removed in two follow-up commits; a merge result is now checked for markers.
+- **The MongoDB 8.0 kernel bug.** CI failed because MongoDB 8.0 cannot start on kernel 6.19 and later; it took two fixes to land the pin to 8.2 in CI and Compose.
+- **The test clock in the past versus the TTL index.** The fake clock started in 2026-01-01, so MongoDB's TTL monitor deleted test Sessions mid-test; time-based tests now start at the real current time, proven by a test that makes the monitor run every second.
+- **Emoji length counting.** The back end counts code points and the front end first counted UTF-16 units, so an emoji was two characters on one side; a worked-examples row pins it on both.
+- **Folder and layering refactors.** The first layout had one handler per operation and folders that did not follow the house conventions; two refactors (naming, then controller, service, repository by kind and feature) moved every file, with test counts compared before and after.
+
+**Decisions I made differently from the AI's suggestions.**
+
+- **Services, not handlers**: the AI's one-handler-per-operation design became controller, service, repository (ADR 0010).
+- **Search-parameter auth**: Sign in and Sign up are `/?auth=sign-in` and `/?auth=sign-up`, with a checked `returnTo`, instead of separate routes with the return path in location state (ADR 0009).
+- **A full-screen form, not a dialog**, for Sign in and Sign up.
+- **Parameter values match the glossary** (`sign-in`, `sign-up`), so the URL uses the same words as the code and the docs.
+- **Architecture-level `AGENTS.md` only**: five files, not twenty-one folder-level ones that restated the code and drifted.
+- **The comment rule**: a comment explains a why the code cannot, and nothing else; a file-by-file pass cut 444 comment lines to 281.
+- **scrypt over argon2id, NestJS 11 over 12, and no Redis or asymmetric keys**, as recorded under "Corrections and decisions made differently" below.
+
 ## Method
 
 The workflow was chosen up front and followed throughout:
 
 1. **Grill with docs.** Instead of prompting "build an auth module", the AI interviewed me in rounds about the design, one numbered question per open decision with its recommended answer. Decisions were written down as they settled: the clarified rules in `docs/requirements.md`, the vocabulary in `GLOSSARY.md`, and the two hard-to-reverse choices as ADRs in `docs/adr/`.
-2. **Spec, then tickets.** The conversation was synthesised into `docs/spec/auth-module.md`, then split into eight tracer-bullet tickets in `docs/tickets/`, each a thin end-to-end slice with explicit blocking edges.
+2. **Spec, then tickets.** The conversation was synthesised into `docs/spec/auth-module.md`, then split into tracer-bullet tickets, first committed under `docs/tickets/` and then moved onto GitHub Issues (see the log), each a thin end-to-end slice with explicit blocking edges.
 3. **Implement one ticket at a time, test first, at agreed seams only.** Three seams were agreed before any test was written: the back end's HTTP API (against a throwaway `mongod`), the front end's rendered app (network faked with MSW), and a small set of Playwright journeys.
 4. **Review against written standards.** `CODING_STANDARDS.md` holds the rules a reviewer checks; `AGENTS.md` files hold only navigation pointers.
 
 ## What worked
 
 - **Constraining scope with the brief first.** The first planning round jumped straight to technology. I redirected it to the brief's requirements, and the resulting clarifications (what counts as a "special character", whether a name is trimmed before counting, what sign-in reveals) became the testable rules everything else hangs on.
-- **"Answer from conventions you already have; ask me only what's left."** Pointing the AI at an existing codebase's conventions (one handler per operation, repositories as the only database door, a closed error-code set with front-end-owned copy) removed most of its questions and produced a more consistent design than open-ended prompting did.
-- **ADRs only for the hard-to-reverse.** Two ADRs, not ten: the Session model and the error contract.
+- **"Answer from conventions you already have; ask me only what's left."** Pointing the AI at an existing codebase's conventions (repositories as the only database door, a closed error-code set with front-end-owned copy) removed most of its questions and produced a more consistent design than open-ended prompting did.
+- **ADRs only for the hard-to-reverse.** Only the hard-to-reverse choices got an ADR: the Session model and the error contract first, the rest as the work met them.
 
 ## Corrections and decisions made differently
 
@@ -159,3 +197,10 @@ What survived from the discarded attempt, because it was learned rather than wri
 - **Fixed:** no comment named a ticket, but one in `ci.yml` narrated history ("until then its job passes") and was reworded. The `code-review` pass found a rewrite that had lost its reason (the Sign in decoy comment no longer said that neither failure reveals which emails have a User: restored), a dangling "Anyone else" on `RequireSession`, two multi-line headers that restated their function (`signedInDestination`, `enterField`), grace-window, decoy and Sign out comments missing their ADR, and four `.gitignore` section labels that restated their patterns; the standards section gained a one-line header example, an ADR-citing example and the narration rewritten as a reason.
 - **Decided:** the generated types file is not edited by hand. The `.env.example` and Compose comments document variables and commands for an operator, so they were kept except a bare "Runtime" label. A doc header stays when it says a security property, a concurrency reason, a deviation, or an ADR, and goes when it restates the name (`getCurrentUser`, the repositories' "only door").
 - **Not verified:** "earns its place" is a judgement, not a measurement: a reviewer may keep or cut a different handful of borderline one-line headers (for example the test-fixture handler descriptions in `auth-fixtures.ts`).
+
+### 11: README, traceability and AI.md (#21)
+
+- **AI-generated:** `README.md`, the filled traceability table in `docs/requirements.md`, the "In short" section at the top of this file, and the one-line pointer to the model-and-effort convention. No test-first step: nothing about behaviour changes, so `tdd` had nothing to drive.
+- **Verified:** every path in the traceability table was checked to exist. Run successfully on this machine: `npm run setup`, `npm test` (back end 13 suites / 153 tests, front end 4 files / 137 tests), `npm run e2e` (both journeys, after `npx playwright install chromium` in `e2e/`), `docker compose up --build --detach --wait` (all three containers healthy; `/api/health` and `/api/docs` answered on port 8080 through nginx), `npm run db:up`, `npm run db:down`, and `npm run dev` (both servers started and answered). `lint`, `format:check`, `typecheck`, `build` and `openapi:check` were run for the ticket's gates.
+- **Fixed:** port 27017 was held by another container on the development machine, so Compose and `db:up` were run with `MONGO_PORT`; the README names that variable.
+- **Not verified:** the exact development URLs on the default ports, because 3000 and 5173 were already in use by other processes while `npm run dev` ran; the Compose URLs were. No screenshots were produced.

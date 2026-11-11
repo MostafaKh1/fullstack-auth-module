@@ -25,7 +25,7 @@ Take the first that fits. Each line names the file to copy where one exists.
 2. **A component** -> `src/components/`, in the first section that fits, in this order:
    1. `primitives/`: an accessible, behaviour-only building block that owns roles, focus and keyboard handling and knows nothing of the app. Flat: `primitives/<Name>.tsx`, no folders. Each wraps one Radix part, and nothing else imports `@radix-ui` (Biome rejects it). Copy `primitives/Slot.tsx`.
    2. `base/<kind>/`: a styled atom driven only by props, built on primitives, usually from shadcn/ui (see "shadcn/ui"). Copy `base/buttons/Button.tsx`; a family of parts is a component folder with one part per file: copy `base/cards/Card/`.
-   3. `composite/<kind>/`: a compound component, or anything that knows about the Session, a form schema or an endpoint. Copy `composite/banners-and-notifications/Alert.tsx`. A screen (`<Name>Screen`) goes in `composite/screens/`: copy `composite/screens/AuthScreen/`.
+   3. `composite/<kind>/`: a compound component, or anything that knows about the Session, a form schema or an endpoint. A screen (`<Name>Screen`) goes in `composite/screens/`: copy `composite/screens/AuthScreen/`.
    4. `layout/<kind>/`: application chrome and routing pieces, such as route guards and route switches. Pages arrive as props. Copy `layout/route-guards/RequireSession.tsx`.
    5. `utility/`: a small cross-cutting piece with no design role (a loading state, a fallback). Copy `utility/PageLoader.tsx`.
 
@@ -43,11 +43,10 @@ Dependencies point from app-aware toward behaviour-only: base imports primitives
 
 ## shadcn/ui
 
-The building blocks come from shadcn/ui on Radix ([ADR 0011](../docs/adr/0011-shadcn-ui-on-radix-for-building-blocks.md)). Adopted so far: `Button`, `Input` (and `PasswordInput` on it), `Label`, `Form` and `Card`. A field is `FormField` > `FormItem` > `FormLabel`, `FormControl` around the input, and `FormMessage`, which shows `errorCopy()` of the field's code: copy `composite/screens/AuthScreen/AuthScreenSignInForm.tsx`.
+The building blocks come from shadcn/ui on Radix ([ADR 0011](../docs/adr/0011-shadcn-ui-on-radix-for-building-blocks.md)). Adopted so far: `Button`, `Input` (and `PasswordInput` on it), `Label`, `Form`, `Card` and `Alert`. They are the only way to build a button, a text field, a form field, a card, a failure message or the page loader (`utility/PageLoader.tsx`): no screen or component hand-rolls one. A field is `FormField` > `FormItem` > `FormLabel`, `FormControl` around the input, and `FormMessage`, which shows `errorCopy()` of the field's code: copy `composite/screens/AuthScreen/AuthScreenSignInForm.tsx`.
 
 - **Adding one**: `npx shadcn@latest add <name>` from `frontend/` (`components.json` holds style new-york, base colour slate, CSS variables). Then move it into its base kind folder, PascalCase with one export per file (a family becomes a component folder); point its `cn` import at `@/utils/cn`; replace its `radix-ui` import with a primitive (adding the `@radix-ui/react-<part>` package and its wrapper if none exists); uninstall the `cn` and `radix-ui` packages the CLI adds; drop the parts and variants no screen uses; hold it to the comment rule. Add only what a screen needs now.
 - **Colours** are the theme tokens in `src/index.css` (`bg-primary`, `text-muted-foreground`, `border-input`): shadcn's variables mapped through `@theme inline`. Dark values switch on `prefers-color-scheme`, so there is no `.dark` class and no toggle. Change a colour there, not in a component.
-- **Not migrated yet**: `base/inputs/TextField.tsx`, `base/buttons/HandRolledButton.tsx` and `composite/banners-and-notifications/Alert.tsx` are the hand-rolled components. Only the Application page uses `HandRolledButton` now; no screen uses `TextField`; both forms still use `Alert`. They go with the cleanup ticket.
 
 ## Component folders
 

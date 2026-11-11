@@ -10,7 +10,6 @@ export function authFormIn(search: string): AuthForm | null {
   return auth === "sign-up" ? "sign-up" : "sign-in";
 }
 
-/** The URL of Sign in or Sign up, carrying `returnTo` when given. */
 export function authUrl(form: AuthForm, returnTo?: string): string {
   const params = new URLSearchParams({ auth: form });
   if (returnTo !== undefined) params.set("returnTo", returnTo);

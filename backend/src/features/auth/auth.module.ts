@@ -7,7 +7,6 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./services/auth.service";
 import { SessionService } from "./services/session.service";
 
-/** Authentication: the routes (Sign up, Sign in, refresh, Sign out), `AuthService` behind them, and the Session lifecycle. */
 @Module({
   imports: [
     PersistenceModule,

@@ -82,9 +82,34 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ## Comments
 
-- Code is the documentation. A comment explains a _why_ the code cannot say: a security reason, a library gotcha, a deliberate deviation.
-- Doc headers stay short and say what the thing is for.
-- A comment never narrates a change ("changed X to Y"); that belongs in the commit message.
+A comment earns its place by saying a _why_ the code cannot say. Where the code can explain itself, there is no comment.
+
+- **Keep or write one** for a security property, a library or platform gotcha, a deliberate deviation from the obvious approach, a non-obvious trade-off, or a constraint from an ADR (cite it).
+- **Delete one that restates** the symbol's name or the next line.
+- **Delete or rewrite one that narrates** a change or history ("changed X to Y", "now", "no longer", "used to", a ticket number). That belongs in the commit message.
+- **Doc headers** only on exported symbols whose purpose is not obvious from their name and type, and one line.
+- **Tests**: the test's name says the behaviour. A comment in a test only explains a non-obvious setup.
+
+A good comment gives the reason, and cites the ADR when it rests on one:
+
+```ts
+// Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
+```
+
+A bad comment restates the code, or says what changed:
+
+```ts
+/** Gets the current user. */
+async getCurrentUser(userId: string) {}
+// Now uses scrypt instead of argon2 (ticket 12).
+```
+
+In a test, a good comment explains the setup, and a bad one repeats the name:
+
+```ts
+// Cheap hashing: these rows test the field rules, not the hash.
+// Signs the User in.
+```
 
 ## Naming
 

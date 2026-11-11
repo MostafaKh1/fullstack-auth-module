@@ -4,7 +4,6 @@
  * A code added to the back end's closed set gets its entry here in the same change.
  */
 const copyByCode: Record<string, string> = {
-  // Field rule ids (validation issues, and the front end's own schema checks)
   "field.required": "This field is required.",
   "email.invalid": "Enter a valid email address, like name@example.com.",
   "email.too_long": "Email must be at most 254 characters.",
@@ -17,7 +16,7 @@ const copyByCode: Record<string, string> = {
   "password.missing_number": "Password must contain at least one number.",
   "password.missing_special": "Password must contain at least one special character, such as ! or €.",
 
-  // API error codes. The two auth sentences are fixed by docs/requirements.md.
+  // The two auth sentences are fixed by docs/requirements.md.
   "auth.invalid_credentials": "Invalid email or password",
   "user.email_taken": "An account with this email already exists",
   "auth.unauthenticated": "Your session has ended. Please sign in again.",

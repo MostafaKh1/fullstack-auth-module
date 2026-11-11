@@ -2,10 +2,7 @@ import type { PipeTransform } from "@nestjs/common";
 import type { z } from "zod";
 import { ApiError } from "../errors/api-error";
 
-/**
- * Parses a request body with a Zod schema whose every check carries a rule id as its error (ADR 0002),
- * answering `400 request.validation_failed` with one `{ path, code }` issue per broken rule.
- */
+/** Every check of the schema carries a rule id as its error (ADR 0002), reported as one `{ path, code }` issue. */
 export class RouteValidationPipe<Schema extends z.ZodType> implements PipeTransform<
   unknown,
   z.output<Schema>

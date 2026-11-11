@@ -1,6 +1,5 @@
 import { delay, HttpResponse, http } from "msw";
 
-/** A User as the API returns it (`/users/me`, and `user` in an auth response). */
 export const ada = {
   id: "65f1c0ffee0000000000a11a",
   email: "ada@example.com",
@@ -12,12 +11,10 @@ export const adaPassword = "Passw0rd!";
 
 export const accessToken = "access-token-for-ada";
 
-/** The success answer of Sign up (201) and Sign in (200). */
 export function signedInAsAda(status = 200) {
   return HttpResponse.json({ accessToken, expiresIn: 900, user: ada }, { status });
 }
 
-/** An error response in the envelope of ADR 0002. */
 export function envelope(
   code: string,
   status: number,

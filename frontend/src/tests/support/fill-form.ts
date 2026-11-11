@@ -13,7 +13,6 @@ export async function enterField(user: UserEvent, label: string, value: string |
   return field;
 }
 
-/** Fills every field named in `values` (label -> value). */
 export async function fillForm(user: UserEvent, values: Record<string, string>) {
   for (const [label, value] of Object.entries(values)) {
     await enterField(user, label, value);

@@ -8,7 +8,6 @@ const frontEnd = "http://localhost:5173";
 
 type SignedIn = { credential: string; accessToken: string; sessionId: string };
 
-/** The `<sessionId>.<secret>` a response's refresh cookie carries. */
 function credentialOf(response: { headers: Record<string, unknown> }): string {
   const cookie = refreshCookie(response.headers["set-cookie"] as string[] | undefined);
   return decodeURIComponent(cookie.split(/[=;]/)[1]);
@@ -58,7 +57,6 @@ describe("Sign out: POST /api/auth/sign-out", () => {
     return sessions.find((session) => session._id.toString() === sessionId);
   }
 
-  /** Asserts the response clears the refresh cookie on the path it was set on. */
   function expectCookieCleared(response: { headers: Record<string, unknown> }) {
     const cookie = refreshCookie(response.headers["set-cookie"] as string[] | undefined);
     expect(cookie).toMatch(/^refresh_credential=;/);

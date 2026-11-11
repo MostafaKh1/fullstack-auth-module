@@ -6,7 +6,6 @@ type Props = Omit<ComponentProps<typeof TextField>, "type" | "trailing"> & {
   children?: ReactNode;
 };
 
-/** A password input with a toggle that shows what was typed. */
 export function AuthScreenPasswordField(props: Props) {
   const [visible, setVisible] = useState(false);
 

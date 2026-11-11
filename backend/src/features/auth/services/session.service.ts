@@ -16,22 +16,14 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** A refresh credential just issued: `value` (`<sessionId>.<secret>`) is valid until the Session's idle expiry. */
 export type IssuedRefreshCredential = { value: string; idleExpiresAt: Date };
 
-/** A Session just started: whose it is, and its first refresh credential. */
 export type StartedSession = { claims: AuthContext; issued: IssuedRefreshCredential };
 
-/**
- * What a refresh established: whose Session it is, and the new credential. `issued` is `null` when the immediately
- * previous credential was accepted within the grace window, so the credential the rotation issued stays current.
- */
+/** `issued` is `null` within the grace window: the credential the rotation issued stays current (ADR 0001). */
 export type RefreshedSession = { claims: AuthContext; issued: IssuedRefreshCredential | null };
 
-/**
- * The Session's lifecycle (ADR 0001): starting one, rotating its refresh credential, revoking it, and the rules of
- * the sliding idle expiry and the grace window. Liveness is the guard's rule (`isSessionLive`), applied here too.
- */
+/** The Session lifecycle (ADR 0001). Liveness is the guard's rule (`isSessionLive`), applied here too. */
 @Injectable()
 export class SessionService {
   constructor(
@@ -43,7 +35,6 @@ export class SessionService {
     this.logger.setContext(SessionService.name);
   }
 
-  /** Starts a new Session for a User, storing only its secret's hash. */
   async start(userId: string, userAgent: string | null): Promise<StartedSession> {
     const now = this.clock.now();
     const sessionId = this.sessions.newId();
@@ -62,11 +53,6 @@ export class SessionService {
     return { claims: { userId, sessionId }, issued: { value: credential.value, idleExpiresAt } };
   }
 
-  /**
-   * Refresh: a live Session's current secret is replaced in one conditional update and the idle expiry slides,
-   * never past the absolute cap. The immediately previous secret is accepted within the grace window; any other
-   * secret is a replay and revokes the Session.
-   */
   async refresh(presented: string | null): Promise<RefreshedSession> {
     if (!presented) throw new ApiError("auth.unauthenticated", { message: "No refresh cookie was sent." });
     const credential = parseRefreshCredential(presented);
@@ -74,15 +60,11 @@ export class SessionService {
     return this.rotate(credential);
   }
 
-  /** Revokes the Session; a Session already revoked keeps its first revocation. */
   async revoke(sessionId: string, reason: RevokedReason): Promise<void> {
     await this.sessions.revoke(sessionId, reason, this.clock.now());
   }
 
-  /**
-   * Sign out: revokes the Session the presented credential holds. A credential that is missing, malformed, for no
-   * Session, or with a wrong secret changes nothing, so signing out is idempotent and a Session id alone ends nothing.
-   */
+  /** Idempotent; a Session id alone ends nothing, the secret must match. */
   async revokeForCredential(presented: string | null): Promise<void> {
     const credential = presented ? parseRefreshCredential(presented) : null;
     if (!credential) return;
@@ -132,12 +114,11 @@ export class SessionService {
   }
 }
 
-/** The idle expiry a refresh at `now` gives: `idleTtlMs` ahead, but never past the absolute expiry. */
 function slidIdleExpiry(now: Date, idleTtlMs: number, absoluteExpiresAt: Date): Date {
   return new Date(Math.min(now.getTime() + idleTtlMs, absoluteExpiresAt.getTime()));
 }
 
-/** Whether a secret replaced at `replacedAt` is still accepted at `now`, so two tabs refreshing together are not replay. */
+/** Two tabs refreshing together must not read as replay. */
 function isWithinGrace(replacedAt: Date | null, now: Date, graceMs: number): boolean {
   return replacedAt !== null && now.getTime() - replacedAt.getTime() <= graceMs;
 }

@@ -11,19 +11,13 @@ import { server } from "../setup/server";
 import { noSessionToRestore } from "./auth-fixtures";
 
 type Options = {
-  /**
-   * The requests this test expects; any other request fails the test. The boot restore's `POST /api/auth/refresh`
-   * finds no Session unless a handler here answers it.
-   */
+  /** Any other request fails the test. The boot restore's `POST /api/auth/refresh` finds no Session unless a handler answers it. */
   handlers?: RequestHandler[];
   /** Render inside React's `StrictMode`, as the browser entry `src/main.tsx` does. */
   strictMode?: boolean;
 };
 
-/**
- * Renders the whole app, with its real router and providers, as if the browser had opened `path`, and returns at
- * once, while the boot restore is still asking the back end for a Session: for tests of that loading state.
- */
+/** Returns at once, while the boot restore is still asking the back end for a Session: for tests of that loading state. */
 export function renderRestoringApp(path: string, { handlers = [], strictMode = false }: Options = {}) {
   // Handlers declared first win, so a test's own refresh handler takes precedence over the default.
   server.use(...handlers, noSessionToRestore);
@@ -34,7 +28,7 @@ export function renderRestoringApp(path: string, { handlers = [], strictMode = f
   return { ...view, router, user };
 }
 
-/** `renderRestoringApp`, resolving once the boot restore has settled and a page (each has one `<h1>`) is showing. */
+/** Waits for the boot restore to settle: a page (each has one `<h1>`) is showing. */
 export async function renderApp(path: string, options: Options = {}) {
   const rendered = renderRestoringApp(path, options);
   await waitFor(() => {

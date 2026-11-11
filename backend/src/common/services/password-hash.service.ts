@@ -40,7 +40,6 @@ export class PasswordHashService implements OnModuleInit {
     return actual.length === expected.length && timingSafeEqual(actual, expected);
   }
 
-  /** Spends the time of a real verification and always fails. */
   async verifyAgainstDecoy(password: string): Promise<false> {
     await this.verify(password, this.decoyHash);
     return false;

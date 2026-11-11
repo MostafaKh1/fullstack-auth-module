@@ -1,20 +1,17 @@
 import { apiClient } from "./api-client";
 import type { components } from "./api-types.generated";
 
-/** What Sign up and Sign in answer: a new Session's access token, its lifetime in seconds, and the User. */
 export type SignedIn = components["schemas"]["SignedIn"];
 
 export type SignUpRequest = components["schemas"]["SignUpRequest"];
 
 export type SignInRequest = components["schemas"]["SignInRequest"];
 
-/** `POST /api/auth/sign-up`; the refresh cookie arrives with the response. */
 export async function signUp(request: SignUpRequest): Promise<SignedIn> {
   const response = await apiClient.post<SignedIn>("/auth/sign-up", request);
   return response.data;
 }
 
-/** `POST /api/auth/sign-in`; the refresh cookie arrives with the response. */
 export async function signIn(request: SignInRequest): Promise<SignedIn> {
   const response = await apiClient.post<SignedIn>("/auth/sign-in", request);
   return response.data;
@@ -29,7 +26,6 @@ export async function refreshSession(): Promise<SignedIn> {
   return response.data;
 }
 
-/** `POST /api/auth/sign-out`: ends the Session on the server and clears the refresh cookie (`204`). */
 export async function signOut(): Promise<void> {
   await apiClient.post("/auth/sign-out");
 }

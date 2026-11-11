@@ -8,7 +8,6 @@ export const REFRESH_COOKIE = "refresh_credential";
 // The cookie travels only to the auth routes, never to the rest of the API (ADR 0001).
 const REFRESH_COOKIE_PATH = "/api/auth";
 
-/** The refresh cookie's whole policy: its name, its attributes, and reading it back. */
 @Injectable()
 export class AuthCookiesService {
   constructor(
@@ -16,7 +15,6 @@ export class AuthCookiesService {
     private readonly clock: ClockService,
   ) {}
 
-  /** Sets the refresh cookie: script-unreadable, same-site, scoped to the auth routes, expiring with the Session's idle window. */
   setRefreshCookie(response: Response, credential: string, idleExpiresAt: Date): void {
     const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
     // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
@@ -32,7 +30,6 @@ export class AuthCookiesService {
     response.append("Set-Cookie", attributes.join("; "));
   }
 
-  /** Clears the refresh cookie: the same name, path and attributes, already expired. */
   clearRefreshCookie(response: Response): void {
     const attributes = [
       `${REFRESH_COOKIE}=`,
@@ -46,7 +43,6 @@ export class AuthCookiesService {
     response.append("Set-Cookie", attributes.join("; "));
   }
 
-  /** The refresh credential the request's `Cookie` header carries, or `null` when there is none. */
   readRefreshCookie(request: Request): string | null {
     for (const pair of (request.headers.cookie ?? "").split(";")) {
       const separator = pair.indexOf("=");

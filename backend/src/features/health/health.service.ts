@@ -4,7 +4,6 @@ import { DatabaseHealth } from "../../database/database-health";
 
 export type Health = { status: "ok"; database: "up" };
 
-/** The API is ready only while its database answers. */
 @Injectable()
 export class HealthService {
   constructor(private readonly databaseHealth: DatabaseHealth) {}

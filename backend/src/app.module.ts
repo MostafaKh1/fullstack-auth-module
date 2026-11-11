@@ -13,7 +13,6 @@ import { LoggingModule, type LoggingOptions } from "./logging/logging.module";
 
 @Module({})
 export class AppModule {
-  /** The whole application, from configuration already parsed at boot. */
   static forRoot(config: AppConfig, logging: LoggingOptions = {}): DynamicModule {
     return {
       module: AppModule,

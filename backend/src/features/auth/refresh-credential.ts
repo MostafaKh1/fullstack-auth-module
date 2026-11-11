@@ -8,7 +8,6 @@ export type MintedRefreshCredential = { value: string; secretHash: string };
 
 const FORMAT = /^([0-9a-f]{24})\.([A-Za-z0-9_-]+)$/;
 
-/** A new credential for the Session `sessionId`, with a fresh 32 random byte secret. */
 export function mintRefreshCredential(sessionId: string): MintedRefreshCredential {
   const secret = randomBytes(32).toString("base64url");
   return { value: `${sessionId}.${secret}`, secretHash: hashSecret(secret) };
@@ -20,7 +19,7 @@ export function parseRefreshCredential(value: string): RefreshCredential | null 
   return parsed ? { sessionId: parsed[1], secret: parsed[2] } : null;
 }
 
-/** Whether the credential's secret hashes to `storedHash`, compared in constant time. */
+/** Compared in constant time. */
 export function secretMatches(credential: RefreshCredential, storedHash: string | null): boolean {
   if (storedHash === null) return false;
   const actual = Buffer.from(hashSecret(credential.secret), "hex");

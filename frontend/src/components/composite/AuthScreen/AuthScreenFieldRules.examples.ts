@@ -19,7 +19,6 @@ const local64 = "a".repeat(64);
 const domain189 = `${"a".repeat(63)}.${"b".repeat(63)}.${"c".repeat(61)}`;
 
 export const signUpExamples: FieldExample[] = [
-  // Email
   {
     field: "email",
     input: "ada@example.com",
@@ -85,7 +84,6 @@ export const signUpExamples: FieldExample[] = [
   },
   { field: "email", input: "ada@@example.com", note: "two @", valid: false, codes: ["email.invalid"] },
 
-  // Name
   { field: "name", input: "Ada", note: "exactly 3 characters", valid: true, stored: "Ada" },
   {
     field: "name",
@@ -124,7 +122,6 @@ export const signUpExamples: FieldExample[] = [
     codes: ["name.invalid_characters"],
   },
 
-  // Password at Sign up
   { field: "password", input: "Passw0rd!", note: "the requirements' valid example", valid: true },
   {
     field: "password",

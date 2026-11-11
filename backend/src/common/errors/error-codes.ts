@@ -1,4 +1,4 @@
-/** The closed set of API error codes (ADR 0002), each with its HTTP status and whether retrying may succeed. */
+/** The closed set of API error codes (ADR 0002). */
 export const ERROR_CODES = {
   "request.validation_failed": { status: 400, retryable: false },
   "request.malformed": { status: 400, retryable: false },
@@ -16,13 +16,9 @@ export const ERROR_CODES = {
 
 export type ErrorCode = keyof typeof ERROR_CODES;
 
-/**
- * One field-level problem: `path` is the keys from the body down to the field (`["password"]`), `code` is a rule id
- * such as `password.missing_number`.
- */
+/** `path` is the keys from the body down to the field; `code` is a rule id such as `password.missing_number`. */
 export type ValidationIssue = { path: (string | number)[]; code: string };
 
-/** The body of every error response. */
 export type ErrorEnvelope = {
   code: ErrorCode;
   status: number;

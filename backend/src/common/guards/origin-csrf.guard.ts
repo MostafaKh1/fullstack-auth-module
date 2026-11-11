@@ -4,8 +4,7 @@ import { AppConfigService } from "../../config/app-config.service";
 import { ApiError } from "../errors/api-error";
 
 /**
- * The `Origin` check of the cookie routes (refresh, Sign out), applied with `@UseGuards(OriginCsrfGuard)`.
- * The refresh cookie is `SameSite=Lax`, so this is what stops another site from using it (ADR 0001).
+ * The `Origin` check is what stops another site from using the refresh cookie, which is `SameSite=Lax` (ADR 0001).
  * A request without `Origin` passes: browsers send one on every cross-site POST, so its absence means a
  * same-origin request or a non-browser client, which holds no victim's cookie.
  */

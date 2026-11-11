@@ -12,7 +12,6 @@ import { UsersService } from "./users.service";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  /** The protected endpoint: the signed-in User. */
   @ApiResponse({
     status: 200,
     description: "The signed-in User.",

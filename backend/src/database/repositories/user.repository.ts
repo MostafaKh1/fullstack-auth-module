@@ -6,7 +6,6 @@ import { USER_MODEL, type UserDocument } from "../collections/user.collection";
 
 const DUPLICATE_KEY = 11_000;
 
-/** The only door to the users collection. */
 @Injectable()
 export class UserRepository implements OnModuleInit {
   constructor(@InjectModel(USER_MODEL) private readonly model: Model<UserDocument>) {}

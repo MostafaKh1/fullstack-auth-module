@@ -8,10 +8,6 @@ import { AccessTokenService } from "./services/access-token.service";
 import { AuthCookiesService } from "./services/auth-cookies.service";
 import { PasswordHashService } from "./services/password-hash.service";
 
-/**
- * What the global guard and more than one feature share: the access token, the password hasher, the refresh
- * cookie, and the global deny-by-default guard. A feature module imports it to inject the services.
- */
 @Module({
   imports: [
     PersistenceModule,

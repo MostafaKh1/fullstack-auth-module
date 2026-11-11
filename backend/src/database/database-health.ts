@@ -4,7 +4,7 @@ import type { Connection } from "mongoose";
 
 const PING_TIMEOUT_MS = 1_500;
 
-/** Answers whether the database is reachable, within a bound, for the health check. Not a repository: it reads no collection. */
+/** Not a repository: it reads no collection. */
 @Injectable()
 export class DatabaseHealth {
   constructor(@InjectConnection() private readonly connection: Connection) {}

@@ -2,21 +2,14 @@ import { createContext } from "react";
 import type { SignedIn } from "../utils/auth-api";
 import type { User } from "../utils/users-api";
 
-/**
- * Whether this browser tab has a Session (ADR 0008). `restoring` lasts while the app asks the back end
- * whether the refresh cookie still holds one; the guards show a loading state until it settles.
- */
+/** `restoring` lasts while the app asks the back end whether the refresh cookie still holds a Session (ADR 0008). */
 export type Session =
   { status: "restoring" } | { status: "signed-out" } | { status: "signed-in"; user: User };
 
 export type SessionContextValue = {
   session: Session;
-  /** Starts the Session that a successful Sign up or Sign in returned. */
   startSession: (signedIn: SignedIn) => void;
-  /**
-   * Sign out: asks the back end to end the Session, then ends it in this tab whether or not that call succeeded
-   * (ADR 0008). Never rejects.
-   */
+  /** Ends the Session in this tab whether or not the back end call succeeded (ADR 0008). Never rejects. */
   endSession: () => Promise<void>;
 };
 

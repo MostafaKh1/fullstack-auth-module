@@ -8,10 +8,7 @@ import { SignUpPage } from "../pages/(auth)/sign-up/SignUpPage";
 import { ApplicationPage } from "../pages/(webapp)/application/ApplicationPage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 
-/**
- * The one route table, shared by the browser router and the test harness. Sign in and Sign up are addressed by
- * the `auth` search parameter on `/`, not by paths of their own (ADR 0009).
- */
+/** Shared by the browser router and the test harness. Sign in and Sign up have no paths of their own (ADR 0009). */
 export const routes: RouteObject[] = [
   {
     path: "/",

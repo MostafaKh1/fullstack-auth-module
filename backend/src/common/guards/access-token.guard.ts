@@ -9,12 +9,10 @@ import { AccessTokenService, type AuthContext } from "../services/access-token.s
 
 export type AuthenticatedRequest = Request & { authContext?: AuthContext };
 
-/** What liveness reads of a Session. */
 type SessionExpiry = { revokedAt: Date | null; idleExpiresAt: Date; absoluteExpiresAt: Date };
 
 const BEARER = /^Bearer ([A-Za-z0-9._-]+)$/;
 
-/** A Session is live while it is not revoked and has passed neither its idle nor its absolute expiry. */
 export function isSessionLive(session: SessionExpiry, now: Date): boolean {
   return (
     session.revokedAt === null &&
@@ -23,11 +21,7 @@ export function isSessionLive(session: SessionExpiry, now: Date): boolean {
   );
 }
 
-/**
- * The global guard: deny by default. A route needs a valid access token whose Session still exists, belongs to its
- * User and is live, one read by primary key per request, so Sign out takes effect at once (ADR 0001).
- * `@Public()` opts a route out.
- */
+/** Deny by default. One read of the Session by primary key per request, so Sign out takes effect at once (ADR 0001). */
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(

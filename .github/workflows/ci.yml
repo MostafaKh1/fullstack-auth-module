@@ -63,7 +63,7 @@ jobs:
         working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
-      # Each app gates CI from the commit that creates it; until then its job passes with nothing to check.
+      # An app without a package.json has nothing to gate, so its job passes.
       - name: Detect app
         id: detect
         working-directory: .

@@ -10,28 +10,22 @@ import { parseConfig } from "../config/app-env";
 import { ClockService } from "../core/clock.service";
 import { FakeClock } from "./support/fake-clock";
 
-/** One structured log line as the application wrote it. */
 export type LogLine = Record<string, unknown> & { level: number; msg?: string };
 
 export type TestApp = {
   /** The running Nest application, for harness self-checks only; tests drive it over HTTP. */
   nest: INestApplication;
-  /** A supertest client bound to the running application. */
   http: () => ReturnType<typeof request>;
   /** Where the clock started: the real time the app booted, so Sessions it stores outlive MongoDB's TTL monitor. */
   startedAt: Date;
-  /** The clock the application reads; set or advance it to move time. */
   clock: FakeClock;
-  /** The application's database, for seeding and inspecting raw collections. */
   db: Db;
-  /** Every log line written so far. */
   logs: () => LogLine[];
   /** Stops the throwaway MongoDB, so the application sees its database as unreachable. */
   stopDatabase: () => Promise<void>;
   close: () => Promise<void>;
 };
 
-/** The environment every test app starts from: the documented defaults, with test-only values. */
 export const testEnv: Record<string, string> = {
   NODE_ENV: "test",
   PORT: "0",
@@ -49,10 +43,7 @@ export const testEnv: Record<string, string> = {
   REQUEST_BODY_LIMIT: "16kb",
 };
 
-/**
- * Boots the real application, wired as in production, against its own throwaway MongoDB.
- * Only the clock and the log destination are swapped. Call once per test file.
- */
+/** Only the clock and the log destination are swapped; the rest is wired as in production (ADR 0004). Once per file. */
 export async function startTestApp(env: Record<string, string> = {}): Promise<TestApp> {
   // A cold mongod on Windows can take longer than the 10 s default to start.
   const mongo = await MongoMemoryServer.create({ instance: { launchTimeout: 30_000 } });

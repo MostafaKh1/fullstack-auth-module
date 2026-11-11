@@ -372,6 +372,18 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"] & {
+                        /** @enum {string} */
+                        code?: "auth.unauthenticated";
+                    };
+                };
+            };
             /** @description Error codes: auth.origin_rejected */
             403: {
                 headers: {

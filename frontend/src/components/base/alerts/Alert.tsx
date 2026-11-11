@@ -1,20 +1,18 @@
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/cn";
 
-type Props = ComponentProps<"div">;
+type Props = ComponentProps<"p">;
 
-/** A failure message assistive technology announces as soon as it appears. */
-export function Alert({ className, children, ...props }: Props) {
+// Destructive only: no screen needs another look.
+export function Alert({ className, ...props }: Props) {
   return (
-    <div
+    <p
       role="alert"
       className={cn(
-        "relative w-full rounded-lg border border-destructive/50 bg-card px-4 py-3 text-sm text-destructive",
+        "w-full rounded-lg border border-destructive/50 bg-card px-4 py-3 text-sm text-destructive",
         className,
       )}
       {...props}
-    >
-      <p>{children}</p>
-    </div>
+    />
   );
 }

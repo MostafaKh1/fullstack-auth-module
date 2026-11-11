@@ -4,6 +4,7 @@ import { type Session, SessionContext } from "@/providers/session-context";
 import { setAccessToken } from "@/utils/api/api-client";
 import { type SignedIn, signOut } from "@/utils/api/auth-api";
 import {
+  discardRefreshInFlight,
   listenForSessionChanges,
   refreshSessionOnce,
   type SessionListener,
@@ -31,6 +32,7 @@ export function SessionProvider({ children }: Props) {
   }, [queryClient]);
 
   const endSession = useCallback(async () => {
+    discardRefreshInFlight();
     try {
       await signOut();
     } catch {

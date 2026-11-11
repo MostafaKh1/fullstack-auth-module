@@ -17,4 +17,4 @@ Keeping the apps independent means each one can be cloned out, containerised and
 ## Consequences
 
 - A dependency both apps use (TypeScript, Zod) is declared and upgraded twice.
-- Installing is three `npm ci` runs, wrapped by `npm run setup`.
+- Installing is three `npm ci` runs, wrapped by `npm run setup`. The browser journeys (ADR 0004) add a third, tool-only package in `e2e/`, installed and locked on its own for the same reasons; it holds no application code.

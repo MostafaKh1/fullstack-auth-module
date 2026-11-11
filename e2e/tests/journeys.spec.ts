@@ -16,6 +16,12 @@ async function signUp(page: Page, user: { email: string; name: string; password:
   await page.getByRole("button", { name: "Sign up" }).click();
 }
 
+async function signIn(page: Page, user: { email: string; password: string }) {
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+}
+
 async function expectApplicationPage(page: Page, name: string) {
   await expect(page.getByRole("heading", { name: "Welcome to the application." })).toBeVisible();
   await expect(page.getByText(`Signed in as ${name}`)).toBeVisible();
@@ -34,9 +40,7 @@ test("Sign up, reload, Sign out, Sign in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page).toHaveURL(/auth=sign-in/);
 
-  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
-  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await signIn(page, user);
   await expectApplicationPage(page, user.name);
 });
 
@@ -45,14 +49,13 @@ test("Sign in with a wrong password shows the generic message", async ({ page, b
 
   // A separate context, so the page under test has no Session cookie.
   const setup = await browser.newContext();
-  await signUp(await setup.newPage(), user);
-  await expectApplicationPage(setup.pages()[0] as Page, user.name);
+  const setupPage = await setup.newPage();
+  await signUp(setupPage, user);
+  await expectApplicationPage(setupPage, user.name);
   await setup.close();
 
   await page.goto("/?auth=sign-in");
-  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
-  await page.getByRole("textbox", { name: "Password" }).fill("Wrong-password-1!");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await signIn(page, { email: user.email, password: "Wrong-password-1!" });
 
   await expect(page.getByText("Invalid email or password")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();

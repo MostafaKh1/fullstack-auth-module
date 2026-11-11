@@ -8,8 +8,7 @@
   },
   "scripts": {
     "test": "playwright test",
-    "typecheck": "tsc --noEmit",
-    "install:browser": "playwright install chromium"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@playwright/test": "~1.62.0",

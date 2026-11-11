@@ -142,7 +142,7 @@ What survived from the discarded attempt, because it was learned rather than wri
 - **Verified:** 13 back-end tests (throttling, headers, CORS, `413`, malformed JSON, the documented routes, schemas, error codes and Bearer scheme, and the checked-in contract equal to the served document) were committed first and seen failing. `openapi:check` and regeneration of the front end's types leave no diff; front-end typecheck and its 137 tests pass unchanged after the types were swapped; back end 151 tests, lint, format, typecheck and build are green.
 - **Fixed:** a double-escaped regex in the first draft of the `REQUEST_BODY_LIMIT` rule made every test app fail to boot; the first test of the request-body schema asserted the inline shape although routes reference a named component.
 - **Decided:** body-parser errors never reach Nest's filter, so the parser's own error handler renders the envelope (reusing the request id helper, so `traceId` equals `X-Request-Id`). Only `/api/docs` relaxes the Content-Security-Policy, for Swagger UI's inline scripts. The contract is exported in Nest's preview mode, so no database is needed.
-- **Not verified:** Swagger UI was not opened in a browser, so the relaxed CSP and the Bearer "Authorize" flow are asserted only through the served document. The throttle keys on `req.ip`; behind a reverse proxy `trust proxy` must be set, which this ticket does not do.
+- **Not verified:** Swagger UI was not opened in a browser, so the relaxed CSP and the Bearer "Authorize" flow are asserted only through the served document. The throttle keys on `req.ip`; behind a reverse proxy `trust proxy` must be set, which this ticket does not do (#20 adds `TRUST_PROXY`).
 
 ### 10: Browser journeys and containers (#20)
 

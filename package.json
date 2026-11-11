@@ -10,7 +10,7 @@
     "db:up": "docker compose up -d --wait mongo",
     "db:down": "docker compose down",
     "dev": "concurrently --names backend,frontend --prefix-colors blue,magenta --kill-others-on-fail \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend && npm run typecheck --prefix e2e",
     "test": "npm test --prefix backend && npm test --prefix frontend",
     "build": "npm run build --prefix backend && npm run build --prefix frontend",
     "e2e": "npm test --prefix e2e",

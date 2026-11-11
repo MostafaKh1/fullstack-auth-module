@@ -119,6 +119,8 @@ jobs:
       - run: npm ci --prefix e2e
       - run: npx playwright install --with-deps chromium
         working-directory: e2e
+      - run: npm run typecheck
+        working-directory: e2e
       - name: Journeys
         run: npm test
         working-directory: e2e
@@ -133,8 +135,10 @@ jobs:
           retention-days: 7
       - name: Build the images and wait for the stack's health checks
         run: docker compose up --build --detach --wait
+        # The MongoDB service container already holds host port 27017.
         env:
           MONGO_PORT: "27117"
+        if: ${{ !cancelled() }}
       - name: Stack logs
         if: failure()
         run: docker compose logs

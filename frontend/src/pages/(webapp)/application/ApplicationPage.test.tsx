@@ -1,6 +1,7 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
+import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   accessToken,
   ada,
@@ -57,6 +58,40 @@ describe("Application page", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Welcome to the application." }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("Application page accessibility", () => {
+  it("has no accessibility violations once the User's name is shown", async () => {
+    const { container } = await renderApp("/", {
+      handlers: [http.post("/api/auth/refresh", () => signedInAsAda()), currentUserIsAda],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
+  it("has no accessibility violations while the name loads", async () => {
+    const pending = heldUntilReleased("get", "/api/users/me", () => HttpResponse.json(ada));
+    const { container } = await renderApp("/", {
+      handlers: [http.post("/api/auth/refresh", () => signedInAsAda()), pending.handler],
+    });
+    await screen.findByText("Loading your details…");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+    pending.release();
+  });
+
+  it("has no accessibility violations when the protected endpoint fails", async () => {
+    const { container } = await renderApp("/", {
+      handlers: [
+        http.post("/api/auth/refresh", () => signedInAsAda()),
+        http.get("/api/users/me", () => envelope("server.internal", 500)),
+      ],
+    });
+    await screen.findByRole("alert");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
   });
 });
 

@@ -179,6 +179,39 @@ describe("structure check", () => {
     fails({ "utils/useThing.ts": stub }, "hook-location", "utils/useThing.ts");
   });
 
+  it("hook-location: a <Folder>UseX file is a hook, so it sits in the folder it is named for", () => {
+    fails({ "utils/FormUseThing.ts": stub }, "hook-location", "utils/FormUseThing.ts");
+    fails(
+      { "components/composite/screens/AuthScreen/OtherUseThing.ts": stub },
+      "hook-location",
+      "components/composite/screens/AuthScreen/OtherUseThing.ts",
+    );
+    fails({ "hooks/FormUseThing.ts": stub }, "hook-name", "hooks/FormUseThing.ts");
+  });
+
+  it("hook-shared: a <Folder>UseX hook used by two or more files moves to hooks/", () => {
+    fails(
+      {
+        "components/composite/screens/AuthScreen/AuthScreenUseThing.ts": stub,
+        "components/composite/screens/AuthScreen/AuthScreen.tsx":
+          'import { AuthScreenUseThing } from "./AuthScreenUseThing";\nimport { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
+        "components/composite/screens/AuthScreen/AuthScreenForm.tsx":
+          'import { AuthScreenFieldRules } from "./AuthScreenFieldRules";\nimport { AuthScreenUseThing } from "./AuthScreenUseThing";\n',
+      },
+      "hook-shared",
+      "components/composite/screens/AuthScreen/AuthScreenUseThing.ts",
+    );
+  });
+
+  it("accepts a <Folder>UseX hook used by one file of its folder", () => {
+    const { status, out } = check({
+      "components/composite/screens/AuthScreen/AuthScreenUseThing.ts": stub,
+      "components/composite/screens/AuthScreen/AuthScreen.tsx":
+        'import { AuthScreenUseThing } from "./AuthScreenUseThing";\nimport { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
+    });
+    assert.equal(status, 0, out);
+  });
+
   it("hook-single-use: a hook in hooks/ is used by two or more files", () => {
     fails(
       {

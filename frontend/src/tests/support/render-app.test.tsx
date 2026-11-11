@@ -6,7 +6,7 @@ import { renderApp } from "./render-app";
 
 describe("rendered-app harness", () => {
   it("fails a test that makes a request it did not declare", async () => {
-    const { user } = await renderApp("/sign-in");
+    const { user } = await renderApp("/?auth=sign-in");
 
     // Submitting Sign in posts to /api/auth/sign-in, which this test does not declare.
     await fillForm(user, { Email: "ada@example.com", Password: "Passw0rd!" });

@@ -24,7 +24,7 @@ The case of a file name says what it holds:
 - **PascalCase** for a component, layout, page or provider; the file is named after the one component it exports: `Button.tsx` exports `Button`, `SessionProvider.tsx` exports `SessionProvider`.
 - **`useX.ts`** for a hook: `useSession.ts` exports `useSession`.
 - **kebab-case** for everything else (utilities, contexts, helpers, test support): `api-client.ts`, `session-context.ts`, `render-app.tsx`. Folders are kebab-case too, except a component folder, which takes its entry component's name.
-- **A component that grows children becomes a folder** named after it, holding the entry file of the same name and children that share its prefix: `AuthScreen/AuthScreen.tsx`, `AuthScreen/AuthScreenSignInForm.tsx`. A non-component helper inside such a folder is kebab-case with the same prefix (`auth-screen-return-path.ts`). Children import each other relatively; the outside world imports the entry, or the child it needs, by its own path.
+- **A component that grows children becomes a folder** named after it, holding the entry file of the same name and children that share its prefix: `AuthScreen/AuthScreen.tsx`, `AuthScreen/AuthScreenSignInForm.tsx`. A non-component helper inside such a folder is kebab-case with the same prefix (`auth-screen-api-failure.ts`). Children import each other relatively; the outside world imports the entry, or the child it needs, by its own path.
 - One public component or hook per file, as a named export; no default exports and no `index.ts` barrels.
 - Props are `type Props = { ... }`; a styleable root takes `className` and merges it through `cn()`.
 - `.tsx` for files with JSX, `.ts` otherwise. A test sits beside the file it covers as `<File>.test.tsx`.

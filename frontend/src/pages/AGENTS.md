@@ -14,23 +14,24 @@ pages/
 └── not-found/NotFoundPage.tsx
 ```
 
-A parenthesised folder groups screens by who sees them and adds nothing to the URL; a kebab-case folder is named for the route's path.
+A parenthesised folder groups screens by who sees them and adds nothing to the URL; a kebab-case folder is named for the route's path or, for Sign in and Sign up (both at `/`), for their `auth` search-parameter value ([ADR 0009](../../../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)).
 
 ## Where does this file belong?
 
-1. A new screen at a URL -> `<group>/<route>/<Name>Page.tsx` exporting `<Name>Page`, plus its entry in `src/app/routes.tsx`. The spec's screens are Sign up, Sign in and the Application page.
+1. A new screen at a URL -> `<group>/<route>/<Name>Page.tsx` exporting `<Name>Page`, plus its entry in `src/app/routes.tsx`. A protected screen goes inside `RequireSession`, which bounces a signed-out visitor to Sign in with the screen's URL as `returnTo`. The spec's screens are Sign up, Sign in and the Application page.
 2. A form, a frame or any UI the screen renders -> `src/components/` ([src/components/AGENTS.md](../components/AGENTS.md)); a hook -> `src/hooks/`.
 3. The test for the screen -> `<Name>Page.test.tsx` beside it, through `renderApp` ([src/tests/AGENTS.md](../tests/AGENTS.md)).
 
 ## Conventions
 
-- A page renders one `<main>` with one `<h1>`; tests find the screen by that heading.
+- A page renders one `<main>` with one `<h1>`; tests find the screen by that heading. It also renders a `<title>` naming the screen (React hoists it into `<head>`).
 - Named export (the router takes elements, so no page needs a default export).
 - A page reads server data through a hook in `src/hooks/` or TanStack Query over `src/utils/`.
 - Canonical example: `(auth)/sign-in/SignInPage.tsx` with `SignInPage.test.tsx`.
 
 ## Inventory
 
-- `(webapp)/application/ApplicationPage.tsx`: `/`, the Application page: "Welcome to the application." and "Signed in as {name}" from `GET /api/users/me`.
-- `(auth)/sign-in/SignInPage.tsx`: `/sign-in`; `(auth)/sign-up/SignUpPage.tsx`: `/sign-up`. Both frame their form in `AuthScreen`.
+- `(webapp)/application/ApplicationPage.tsx`: `/` without `auth`, the Application page: "Welcome to the application." and "Signed in as {name}" from `GET /api/users/me`.
+- `(auth)/sign-in/SignInPage.tsx`: `/?auth=sign-in` (and any unknown `auth` value); `(auth)/sign-up/SignUpPage.tsx`: `/?auth=sign-up`. Both frame their form in `AuthScreen`.
+- `(webapp)/application/ApplicationPage.test.tsx` also holds the addressing journeys: the redirects, the switch links, `returnTo`, and every row of `src/utils/return-to.examples.ts`.
 - `not-found/NotFoundPage.tsx`: every path with no route.

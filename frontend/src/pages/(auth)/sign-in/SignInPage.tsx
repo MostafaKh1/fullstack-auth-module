@@ -9,7 +9,7 @@ export function SignInPage() {
       subtitle="Welcome back. Enter the email and password you signed up with."
       footer={
         <>
-          New here? <AuthScreenSwitchLink to="/sign-up">Sign up</AuthScreenSwitchLink>
+          New here? <AuthScreenSwitchLink to="sign-up">Sign up</AuthScreenSwitchLink>
         </>
       }
     >

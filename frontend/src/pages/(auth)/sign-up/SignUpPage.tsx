@@ -9,7 +9,7 @@ export function SignUpPage() {
       subtitle="Choose an email, a name and a password. You are signed in as soon as you sign up."
       footer={
         <>
-          Already signed up? <AuthScreenSwitchLink to="/sign-in">Sign in</AuthScreenSwitchLink>
+          Already signed up? <AuthScreenSwitchLink to="sign-in">Sign in</AuthScreenSwitchLink>
         </>
       }
     >

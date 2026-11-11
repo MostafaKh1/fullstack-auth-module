@@ -17,7 +17,16 @@ import {
 import { expectedCopy } from "../../../tests/support/expected-copy";
 import { fillForm } from "../../../tests/support/fill-form";
 import { renderApp, renderRestoringApp } from "../../../tests/support/render-app";
+import { returnToExamples } from "../../../utils/return-to.examples";
 import { getCurrentUser } from "../../../utils/users-api";
+
+type Router = ReturnType<typeof renderRestoringApp>["router"];
+
+/** The URL the router is showing: path, search and hash. */
+function urlOf(router: Router) {
+  const { pathname, search, hash } = router.state.location;
+  return `${pathname}${search}${hash}`;
+}
 
 async function signInThroughTheForm(user: Awaited<ReturnType<typeof renderApp>>["user"]) {
   await fillForm(user, { Email: ada.email, Password: adaPassword });
@@ -26,7 +35,7 @@ async function signInThroughTheForm(user: Awaited<ReturnType<typeof renderApp>>[
 
 describe("Application page", () => {
   it("welcomes the signed-in User with the exact heading and their name from the protected endpoint", async () => {
-    const { user } = await renderApp("/sign-up", { handlers: [signUpSucceeds, currentUserIsAda] });
+    const { user } = await renderApp("/?auth=sign-up", { handlers: [signUpSucceeds, currentUserIsAda] });
 
     await fillForm(user, { Email: ada.email, Name: ada.name, Password: adaPassword });
     await user.click(screen.getByRole("button", { name: "Sign up" }));
@@ -39,7 +48,7 @@ describe("Application page", () => {
   });
 
   it("shows a readable message when the protected endpoint fails", async () => {
-    const { user } = await renderApp("/sign-in", {
+    const { user } = await renderApp("/?auth=sign-in", {
       handlers: [signInSucceeds, http.get("/api/users/me", () => envelope("server.internal", 500))],
     });
 
@@ -50,49 +59,6 @@ describe("Application page", () => {
       screen.getByRole("heading", { level: 1, name: "Welcome to the application." }),
     ).toBeInTheDocument();
   });
-
-  it("sends a signed-out visitor to Sign in, then back to the page they asked for once signed in", async () => {
-    const { user, router } = await renderApp("/?from=bookmark#top", {
-      handlers: [signInSucceeds, currentUserIsAda],
-    });
-
-    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/sign-in");
-
-    await signInThroughTheForm(user);
-
-    expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
-    expect(router.state.location).toMatchObject({ pathname: "/", search: "?from=bookmark", hash: "#top" });
-  });
-
-  it("keeps the return path when the visitor switches from Sign in to Sign up", async () => {
-    const { user, router } = await renderApp("/?from=bookmark", {
-      handlers: [signUpSucceeds, currentUserIsAda],
-    });
-
-    await user.click(screen.getByRole("link", { name: "Sign up" }));
-    await fillForm(user, { Email: ada.email, Name: ada.name, Password: adaPassword });
-    await user.click(screen.getByRole("button", { name: "Sign up" }));
-
-    expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
-    expect(router.state.location).toMatchObject({ pathname: "/", search: "?from=bookmark" });
-  });
-
-  it.each(["/sign-in", "/sign-up"])(
-    "sends a signed-in User who opens %s to the Application page",
-    async (path) => {
-      const { user, router } = await renderApp("/sign-in", { handlers: [signInSucceeds, currentUserIsAda] });
-      await signInThroughTheForm(user);
-      await screen.findByText("Signed in as Ada Lovelace");
-
-      await act(() => router.navigate(path));
-
-      expect(router.state.location.pathname).toBe("/");
-      expect(
-        screen.getByRole("heading", { level: 1, name: "Welcome to the application." }),
-      ).toBeInTheDocument();
-    },
-  );
 });
 
 describe("the Session survives reloads", () => {
@@ -109,11 +75,11 @@ describe("the Session survives reloads", () => {
     return { handler, seen };
   }
 
-  /** Every path the router has shown, from the first render on. */
-  function visitedPaths(router: ReturnType<typeof renderRestoringApp>["router"]) {
-    const paths = [router.state.location.pathname];
-    router.subscribe((state) => paths.push(state.location.pathname));
-    return paths;
+  /** Every URL the router has shown, from the first render on. */
+  function visitedUrls(router: Router) {
+    const urls = [urlOf(router)];
+    router.subscribe(() => urls.push(urlOf(router)));
+    return urls;
   }
 
   it("restores the Session on a reload behind a loading state, never showing Sign in", async () => {
@@ -123,7 +89,7 @@ describe("the Session survives reloads", () => {
       return signedInAsAda();
     });
     const { router } = renderRestoringApp("/", { handlers: [held.handler, currentUserIsAda] });
-    const paths = visitedPaths(router);
+    const urls = visitedUrls(router);
 
     expect(screen.getByRole("status")).toHaveTextContent("Checking your session…");
     expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
@@ -132,7 +98,7 @@ describe("the Session survives reloads", () => {
 
     expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
     expect(refreshes).toBe(1);
-    expect(paths.every((path) => path === "/")).toBe(true);
+    expect(urls.every((url) => url === "/")).toBe(true);
   });
 
   it("sends one boot refresh under StrictMode, as the browser entry renders the app", async () => {
@@ -145,7 +111,7 @@ describe("the Session survives reloads", () => {
 
   it("sends a User whose Session restores away from Sign in without showing the form", async () => {
     const held = heldUntilReleased("post", "/api/auth/refresh", () => signedInAsAda());
-    const { router } = renderRestoringApp("/sign-in", { handlers: [held.handler, currentUserIsAda] });
+    const { router } = renderRestoringApp("/?auth=sign-in", { handlers: [held.handler, currentUserIsAda] });
 
     expect(screen.getByRole("status")).toHaveTextContent("Checking your session…");
     expect(screen.queryByRole("heading", { level: 1, name: "Sign in" })).not.toBeInTheDocument();
@@ -153,7 +119,7 @@ describe("the Session survives reloads", () => {
     held.release();
 
     expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/");
+    expect(urlOf(router)).toBe("/");
   });
 
   it("shows Sign in after the loading state when the refresh cookie holds no Session", async () => {
@@ -161,7 +127,7 @@ describe("the Session survives reloads", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("Checking your session…");
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/sign-in");
+    expect(urlOf(router)).toBe("/?auth=sign-in");
   });
 
   it("refreshes once the access token is refused, then retries the request with the new token", async () => {
@@ -230,7 +196,168 @@ describe("the Session survives reloads", () => {
     });
 
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/sign-in");
+    expect(urlOf(router)).toBe("/?auth=sign-in");
     expect(refreshes).toBe(2);
+  });
+});
+
+describe("Sign in and Sign up addressed by search parameter", () => {
+  const bookmark = "/?from=bookmark";
+  const bookmarkReturnTo = "returnTo=%2F%3Ffrom%3Dbookmark";
+
+  /** Opens `path` with a Session the boot restore finds, so the User is signed in before any page shows. */
+  function renderSignedInApp(path: string) {
+    return renderApp(path, { handlers: [refreshAnswersAda(accessToken).handler, currentUserIsAda] });
+  }
+
+  it("sends a signed-out visitor at / to Sign in, replacing the history entry", async () => {
+    const { router } = await renderApp("/");
+
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+    expect(router.state.historyAction).toBe("REPLACE");
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["/?auth=sign-in", "Sign in"],
+    ["/?auth=sign-up", "Sign up"],
+    ["/?auth=register", "Sign in"],
+  ])("shows %s as the %s form, full screen", async (path, form) => {
+    const { router } = await renderApp(path);
+
+    expect(screen.getByRole("heading", { level: 1, name: form })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(urlOf(router)).toBe(path);
+  });
+
+  it("titles the page after the visible form, and the Application page once signed in", async () => {
+    const { user } = await renderApp("/?auth=sign-in", { handlers: [signUpSucceeds, currentUserIsAda] });
+    expect(document.title).toBe("Sign in");
+
+    await user.click(screen.getByRole("link", { name: "Sign up" }));
+    expect(document.title).toBe("Sign up");
+
+    await fillForm(user, { Email: ada.email, Name: ada.name, Password: adaPassword });
+    await user.click(screen.getByRole("button", { name: "Sign up" }));
+    await screen.findByText("Signed in as Ada Lovelace");
+    expect(document.title).toBe("The application");
+  });
+
+  it("switches between the forms by swapping only auth, keeping returnTo and replacing the history entry", async () => {
+    const { user, router } = await renderApp(`/?auth=sign-in&${bookmarkReturnTo}`);
+
+    await user.click(screen.getByRole("link", { name: "Sign up" }));
+
+    expect(screen.getByRole("heading", { level: 1, name: "Sign up" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe(`/?auth=sign-up&${bookmarkReturnTo}`);
+    expect(router.state.historyAction).toBe("REPLACE");
+
+    await user.click(screen.getByRole("link", { name: "Sign in" }));
+
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe(`/?auth=sign-in&${bookmarkReturnTo}`);
+    expect(router.state.historyAction).toBe("REPLACE");
+  });
+
+  it("sends a signed-out visitor at a protected path to Sign in, carrying the path and search as returnTo", async () => {
+    const { router } = await renderApp(bookmark);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe(`/?auth=sign-in&${bookmarkReturnTo}`);
+    expect(router.state.historyAction).toBe("REPLACE");
+  });
+
+  it("brings a bounced visitor back to the page they asked for, hash included, once signed in", async () => {
+    const { user, router } = await renderApp(`${bookmark}#top`, {
+      handlers: [signInSucceeds, currentUserIsAda],
+    });
+    expect(urlOf(router)).toBe("/?auth=sign-in&returnTo=%2F%3Ffrom%3Dbookmark%23top");
+
+    await signInThroughTheForm(user);
+
+    expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
+    expect(urlOf(router)).toBe(`${bookmark}#top`);
+  });
+
+  it("brings the visitor to returnTo after a Sign up, too", async () => {
+    const { user, router } = await renderApp(`/?auth=sign-up&${bookmarkReturnTo}`, {
+      handlers: [signUpSucceeds, currentUserIsAda],
+    });
+
+    await fillForm(user, { Email: ada.email, Name: ada.name, Password: adaPassword });
+    await user.click(screen.getByRole("button", { name: "Sign up" }));
+
+    expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
+    expect(urlOf(router)).toBe(bookmark);
+  });
+
+  describe("goes to returnTo after Sign in only when it is a same-site path, otherwise to /", () => {
+    for (const example of returnToExamples) {
+      const expected = example.safe ? example.returnTo : "/";
+      it(`${JSON.stringify(example.returnTo)} (${example.note}) leads to ${JSON.stringify(expected)}`, async () => {
+        const { user, router } = await renderApp(
+          `/?auth=sign-in&returnTo=${encodeURIComponent(example.returnTo)}`,
+          { handlers: [signInSucceeds, currentUserIsAda] },
+        );
+
+        await signInThroughTheForm(user);
+
+        await waitFor(() => expect(urlOf(router)).toBe(expected));
+        if (router.state.location.pathname === "/") {
+          expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
+        } else {
+          expect(screen.getByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
+        }
+      });
+    }
+  });
+
+  it.each([
+    ["/?auth=sign-in", "/"],
+    ["/?auth=sign-up&returnTo=%2F%2Fevil.example", "/"],
+    ["/?from=bookmark&auth=sign-up", bookmark],
+  ])(
+    "removes auth and returnTo for a signed-in User who opens %s, showing the Application page",
+    async (path, expected) => {
+      const { router } = await renderSignedInApp(path);
+
+      expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
+      expect(urlOf(router)).toBe(expected);
+      expect(router.state.historyAction).toBe("REPLACE");
+    },
+  );
+
+  it("sends a signed-in User who opens an auth URL on to its safe returnTo", async () => {
+    const { router } = await renderSignedInApp(`/?auth=sign-in&${bookmarkReturnTo}`);
+
+    expect(await screen.findByText("Signed in as Ada Lovelace")).toBeInTheDocument();
+    expect(urlOf(router)).toBe(bookmark);
+  });
+
+  it("sends a User signed in in this tab who navigates to an auth URL to the Application page", async () => {
+    const { user, router } = await renderApp("/?auth=sign-in", {
+      handlers: [signInSucceeds, currentUserIsAda],
+    });
+    await signInThroughTheForm(user);
+    await screen.findByText("Signed in as Ada Lovelace");
+
+    await act(() => router.navigate("/?auth=sign-up"));
+
+    expect(urlOf(router)).toBe("/");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Welcome to the application." }),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["/sign-in", "/?auth=sign-in"],
+    ["/sign-up", "/?auth=sign-up"],
+    [`/sign-in?${bookmarkReturnTo}`, `/?auth=sign-in&${bookmarkReturnTo}`],
+    [`/sign-up?${bookmarkReturnTo}`, `/?auth=sign-up&${bookmarkReturnTo}`],
+  ])("redirects the old path %s to %s", async (oldPath, newUrl) => {
+    const { router } = await renderApp(oldPath);
+
+    expect(urlOf(router)).toBe(newUrl);
+    expect(router.state.historyAction).toBe("REPLACE");
   });
 });

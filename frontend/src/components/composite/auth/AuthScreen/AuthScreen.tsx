@@ -9,10 +9,11 @@ type Props = {
   footer: ReactNode;
 };
 
-/** The frame shared by Sign up and Sign in: a brand panel beside a card holding the form. */
+/** The full-screen frame shared by Sign up and Sign in: a brand panel beside a card holding the form; `title` is also the page title. */
 export function AuthScreen({ title, subtitle, children, footer }: Props) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <title>{title}</title>
       <aside className="relative hidden overflow-hidden bg-indigo-950 p-12 text-indigo-50 lg:flex lg:flex-col lg:justify-between">
         <div
           aria-hidden="true"

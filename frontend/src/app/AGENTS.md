@@ -11,5 +11,5 @@ The top of the stack: what wraps every page, and which page answers which URL. T
 ## Inventory
 
 - `App.tsx`: `App({ router, queryClient })`, the providers (the query client, then `SessionProvider`) around the router.
-- `routes.tsx`: `routes`, the one route table: `/` wrapped in `RequireSession`, `/sign-in` and `/sign-up` in `RequireSignedOut`, and `*` for the not-found page.
+- `routes.tsx`: `routes`, the one route table ([ADR 0009](../../../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)): `/` is `AuthFormSwitch`, which shows Sign in (`?auth=sign-in`, or any unknown value) or Sign up (`?auth=sign-up`) inside `RequireSignedOut`, and, without `auth`, the Application page inside `RequireSession`; the old `/sign-in` and `/sign-up` are `AuthPathRedirect`s; `*` is the not-found page.
 - `query-client.ts`: `createQueryClient({ retry })`; tests pass `retry: false`.

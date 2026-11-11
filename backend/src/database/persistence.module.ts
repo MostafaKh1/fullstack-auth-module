@@ -7,7 +7,6 @@ import { DatabaseHealth } from "./database-health";
 import { SessionRepository } from "./repositories/session.repository";
 import { UserRepository } from "./repositories/user.repository";
 
-/** The database tier: the connection, the models, the repositories that are the only door to them, and the health ping. */
 @Module({
   imports: [
     MongooseModule.forRootAsync({

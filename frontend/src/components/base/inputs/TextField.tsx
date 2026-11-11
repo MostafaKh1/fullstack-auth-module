@@ -27,7 +27,7 @@ const input = cva(
 
 type Props = Omit<ComponentProps<"input">, "id"> & {
   label: string;
-  /** The field's error sentence; it is linked to the input with `aria-describedby`. */
+  /** Linked to the input with `aria-describedby`. */
   error?: string;
   /** Content placed inside the input's right edge, such as a show-password toggle. */
   trailing?: ReactNode;
@@ -35,7 +35,6 @@ type Props = Omit<ComponentProps<"input">, "id"> & {
   children?: ReactNode;
 };
 
-/** A labelled input with its error beside it, wired for assistive technology. */
 export function TextField({ label, error, trailing, children, className, ...props }: Props) {
   const id = useId();
   const errorId = `${id}-error`;

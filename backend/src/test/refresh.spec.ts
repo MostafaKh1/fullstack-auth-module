@@ -8,7 +8,6 @@ const SECOND = 1000;
 const DAY = 24 * 60 * 60 * SECOND;
 const frontEnd = "http://localhost:5173";
 
-/** The `<sessionId>.<secret>` a response's refresh cookie carries. */
 function credentialOf(response: { headers: Record<string, unknown> }): string {
   const cookie = refreshCookie(response.headers["set-cookie"] as string[] | undefined);
   return decodeURIComponent(cookie.split(/[=;]/)[1]);

@@ -6,7 +6,6 @@ import { useSession } from "../../../hooks/useSession";
 import { apiErrorEnvelope } from "../../../utils/api-error";
 import { errorCopy, unreachableCopy } from "../../../utils/error-copy";
 
-/** The page only a signed-in User sees: the welcome message and who they are signed in as. */
 export function ApplicationPage() {
   const currentUser = useCurrentUser();
   const { endSession } = useSession();

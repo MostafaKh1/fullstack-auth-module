@@ -31,7 +31,7 @@ const button = cva(
 
 type Props = VariantProps<typeof button> &
   ComponentProps<"button"> & {
-    /** Disables the button and shows a spinner; `children` should then say what is in progress. */
+    /** `children` should say what is in progress. */
     pending?: boolean;
   };
 

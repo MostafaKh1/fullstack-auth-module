@@ -1,6 +1,6 @@
 import { ERROR_CODES, type ErrorCode, type ValidationIssue } from "./error-codes";
 
-/** The one error application code throws; the global filter turns it into the envelope. Branch on `code`, never on `message`. */
+/** Branch on `code`, never on `message`. */
 export class ApiError extends Error {
   readonly status: number;
   readonly issues?: ValidationIssue[];

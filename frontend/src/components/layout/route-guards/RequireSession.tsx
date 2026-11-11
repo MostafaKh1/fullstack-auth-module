@@ -8,7 +8,7 @@ type Props = {
   children: ReactNode;
 };
 
-/** Shows `children` only to a signed-in User; sends anyone else to Sign in, carrying the URL they asked for. */
+/** A signed-out visitor is sent to Sign in, carrying the URL they asked for. */
 export function RequireSession({ children }: Props) {
   const { session } = useSession();
   const { pathname, search, hash } = useLocation();

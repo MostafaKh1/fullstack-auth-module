@@ -3,11 +3,10 @@ import { cn } from "../../utils/cn";
 
 type Props = {
   className?: string;
-  /** What is being loaded, announced to assistive technology. */
   children: ReactNode;
 };
 
-/** A full-page loading state, shown instead of a page that is not ready, so the wrong page never flashes. */
+/** Shown instead of a page that is not ready, so the wrong page never flashes. */
 export function PageLoader({ className, children }: Props) {
   return (
     <div role="status" className={cn("grid min-h-dvh place-items-center p-6", className)}>

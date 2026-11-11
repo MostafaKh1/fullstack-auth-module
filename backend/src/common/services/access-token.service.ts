@@ -2,12 +2,12 @@ import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AppConfigService } from "../../config/app-config.service";
 
-/** Who a request is from: the User (`sub`) and the Session (`sid`) its access token was issued for. */
+/** `sub` is the User, `sid` the Session the access token was issued for. */
 export type AuthContext = { userId: string; sessionId: string };
 
 type Payload = { sub: string; sid: string; iat: number; exp: number };
 
-/** Issues and checks the short-lived HS256 access token (ADR 0001); its times come from the caller's clock. */
+/** The short-lived HS256 access token (ADR 0001); its times come from the caller's clock. */
 @Injectable()
 export class AccessTokenService {
   constructor(

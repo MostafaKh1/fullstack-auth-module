@@ -6,7 +6,7 @@ const origin = z.url().refine((value) => new URL(value).origin === value, {
   message: "must be an origin: scheme, host and optional port, with no path or trailing slash",
 });
 
-/** Every variable the back end reads; `backend/.env.example` documents each one. */
+/** `backend/.env.example` documents each variable. */
 const environmentSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]),
@@ -74,7 +74,7 @@ export type AppConfig = {
   requestBodyLimit: string;
 };
 
-/** One bad variable, named, with what is wrong. The value itself is never included: it may be a secret. */
+/** The value is never included: it may be a secret. */
 export type ConfigProblem = { variable: string; problem: string };
 
 export class InvalidConfigError extends Error {
@@ -84,7 +84,6 @@ export class InvalidConfigError extends Error {
   }
 }
 
-/** Parses the environment, throwing `InvalidConfigError` that names every bad variable at once. */
 export function parseConfig(env: Record<string, string | undefined>): AppConfig {
   const result = environmentSchema.safeParse(env);
   if (!result.success) {

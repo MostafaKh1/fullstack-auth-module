@@ -5,11 +5,7 @@ import { errorCopy, fallbackCopy, unreachableCopy } from "../../../utils/error-c
 /** The form-level alert's key in React Hook Form's errors. */
 export const FORM_ALERT = "root.server";
 
-/**
- * Shows a failed Sign up or Sign in on the form: each validation issue on the field it names, a taken email
- * on the email field, and anything else (including an unreachable server) as the form-level alert.
- * A field error holds a code, as the schema's own errors do; the form-level alert holds its sentence.
- */
+/** A field error holds a code, as the schema's own errors do; the form-level alert holds its sentence. */
 export function applyApiFailure<Fields extends FieldValues>(
   error: unknown,
   fields: readonly Path<Fields>[],

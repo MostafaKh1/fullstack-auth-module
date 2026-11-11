@@ -15,7 +15,6 @@ import { applyApiFailure } from "./auth-screen-api-failure";
 
 const fields = ["email", "name", "password"] as const;
 
-/** Sign up: validates on blur and on submit, then starts the new User's Session. */
 export function AuthScreenSignUpForm() {
   const { startSession } = useSession();
   const mutation = useMutation({ mutationFn: signUp, onSuccess: startSession });

@@ -1,6 +1,5 @@
 import { setupServer } from "msw/node";
 
-/** The fake network every rendered-app test runs against; tests declare their requests through `renderApp`. */
 export const server = setupServer();
 
 const undeclaredRequests: string[] = [];
@@ -16,10 +15,7 @@ export function listenForDeclaredRequestsOnly() {
   });
 }
 
-/**
- * Throws if the test made a request it did not declare, then forgets the recorded requests.
- * MSW's own "error" strategy only rejects the request, which a component can swallow; this fails the test.
- */
+/** MSW's own "error" strategy only rejects the request, which a component can swallow; this fails the test. */
 export function failOnUndeclaredRequests() {
   const requests = undeclaredRequests.splice(0);
   if (requests.length > 0) {

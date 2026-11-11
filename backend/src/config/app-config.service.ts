@@ -1,6 +1,5 @@
 import type { AppConfig } from "./app-env";
 
-/** The validated configuration; the only way the application reads its environment. */
 export class AppConfigService {
   constructor(private readonly config: AppConfig) {}
 

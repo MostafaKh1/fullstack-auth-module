@@ -9,10 +9,7 @@ type Props = {
   children: ReactNode;
 };
 
-/**
- * Holds the Session for the whole app; the access token goes to the API client's memory and nowhere else.
- * A tab boots `restoring` and asks the back end, through the refresh cookie, whether it still has a Session.
- */
+/** The access token goes to the API client's memory and nowhere else (ADR 0008). */
 export function SessionProvider({ children }: Props) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session>({ status: "restoring" });
@@ -22,7 +19,7 @@ export function SessionProvider({ children }: Props) {
     setSession({ status: "signed-in", user: signedIn.user });
   }, []);
 
-  // The Session is over in this tab: forget its token and everything fetched for its User.
+  // Nothing fetched for this User may outlive their Session.
   const endLocally = useCallback(() => {
     setAccessToken(null);
     queryClient.clear();
@@ -33,7 +30,7 @@ export function SessionProvider({ children }: Props) {
     try {
       await signOut();
     } catch {
-      // The tab is signed out anyway: the User asked to leave, and a failed request is not a reason to stay.
+      // The tab is signed out anyway: the User asked to leave, and a failed request is not a reason to stay (ADR 0008).
     }
     endLocally();
   }, [endLocally]);

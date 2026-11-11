@@ -12,7 +12,6 @@ export type SessionWithSecretHashes = {
   previousReplacedAt: Date | null;
 };
 
-/** The only door to the sessions collection. */
 @Injectable()
 export class SessionRepository implements OnModuleInit {
   constructor(@InjectModel(SESSION_MODEL) private readonly model: Model<SessionDocument>) {}
@@ -46,7 +45,6 @@ export class SessionRepository implements OnModuleInit {
     return found ? toSession(found) : null;
   }
 
-  /** The one read of a Session's secret hashes, for refresh. */
   async findWithSecretHashesById(id: string): Promise<SessionWithSecretHashes | null> {
     if (!isValidObjectId(id)) return null;
     const found = await this.model.findById(id).select("+secretHash +previousSecretHash").lean();

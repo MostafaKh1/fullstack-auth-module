@@ -22,7 +22,6 @@ import { getCurrentUser } from "../../../utils/users-api";
 
 type Router = ReturnType<typeof renderRestoringApp>["router"];
 
-/** The URL the router is showing: path, search and hash. */
 function urlOf(router: Router) {
   const { pathname, search, hash } = router.state.location;
   return `${pathname}${search}${hash}`;
@@ -62,7 +61,6 @@ describe("Application page", () => {
 });
 
 describe("Sign out", () => {
-  /** `POST /api/auth/sign-out` answering 204, counting calls. */
   function signOutSucceeds() {
     const calls = { count: 0 };
     const handler = http.post("/api/auth/sign-out", () => {
@@ -183,7 +181,6 @@ describe("Sign out", () => {
 });
 
 describe("the Session survives reloads", () => {
-  /** `/users/me` answering Ada only for `token`, `401 auth.unauthenticated` otherwise, recording each token sent. */
   function currentUserIsAdaWith(token: string) {
     const seen: (string | null)[] = [];
     const handler = http.get("/api/users/me", ({ request }) => {
@@ -196,7 +193,6 @@ describe("the Session survives reloads", () => {
     return { handler, seen };
   }
 
-  /** Every URL the router has shown, from the first render on. */
   function visitedUrls(router: Router) {
     const urls = [urlOf(router)];
     router.subscribe(() => urls.push(urlOf(router)));
@@ -326,7 +322,6 @@ describe("Sign in and Sign up addressed by search parameter", () => {
   const bookmark = "/?from=bookmark";
   const bookmarkReturnTo = "returnTo=%2F%3Ffrom%3Dbookmark";
 
-  /** Opens `path` with a Session the boot restore finds, so the User is signed in before any page shows. */
   function renderSignedInApp(path: string) {
     return renderApp(path, { handlers: [refreshAnswersAda(accessToken).handler, currentUserIsAda] });
   }

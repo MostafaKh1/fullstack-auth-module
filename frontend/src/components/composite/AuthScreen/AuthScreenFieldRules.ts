@@ -14,7 +14,7 @@ const EMAIL_FORMAT =
 /** Length in characters (code points), as the back end counts it, so an emoji counts once, not twice. */
 const characters = (value: string): number => [...value].length;
 
-/** The Sign up password policy, one predicate per rule; the live checklist shows the same predicates. */
+/** The checklist shows the same predicates live. */
 export const passwordRule = {
   longEnough: (value: string) => characters(value) >= 8,
   shortEnough: (value: string) => characters(value) <= 128,

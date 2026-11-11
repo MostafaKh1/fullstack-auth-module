@@ -17,7 +17,6 @@ type Props = {
   className?: string;
 };
 
-/** The Sign up password policy as a checklist that ticks off each rule as the typed password meets it. */
 export function AuthScreenPasswordChecklist({ password, className }: Props) {
   const titleId = useId();
   return (

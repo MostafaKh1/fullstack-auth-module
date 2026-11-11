@@ -3,14 +3,10 @@ import { apiClient } from "./api-client";
 import { apiErrorEnvelope } from "./api-error";
 import { refreshSession, type SignedIn } from "./auth-api";
 
-/**
- * How a refresh's outcome reaches the Session context, which alone writes the access token (ADR 0008).
- * The provider registers one with `listenForSessionChanges`.
- */
+/** How a refresh's outcome reaches the Session context, which alone writes the access token (ADR 0008). */
 export type SessionListener = {
-  /** The refresh cookie still held a Session: here is its new access token and the User. */
   restored: (signedIn: SignedIn) => void;
-  /** It did not, or the refresh failed: the Session is over in this tab. */
+  /** The refresh found no Session, or failed: the Session is over in this tab. */
   ended: () => void;
 };
 

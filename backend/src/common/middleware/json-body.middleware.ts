@@ -7,10 +7,7 @@ const BODY_PARSER_ERRORS: Record<string, ErrorCode> = {
   "entity.parse.failed": "request.malformed",
 };
 
-/**
- * Parses JSON bodies up to `limit` and answers the two failures of the parser itself in the error envelope. The
- * parser runs before Nest's routing, so its errors never reach the global filter and are rendered here instead.
- */
+/** Runs before Nest's routing, so the parser's own errors never reach the global filter and are rendered here. */
 export function jsonBody(limit: string, isProduction: boolean): (RequestHandler | ErrorRequestHandler)[] {
   const parse = json({ limit });
   const render: ErrorRequestHandler = (error, req, res, next) => {

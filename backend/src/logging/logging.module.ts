@@ -23,7 +23,6 @@ export const REDACTED_PATHS = [
 ];
 
 export type LoggingOptions = {
-  /** Where log lines go; standard output when omitted. */
   logDestination?: DestinationStream;
 };
 

@@ -10,7 +10,6 @@ export function authFormIn(search: string): AuthForm | null {
   return auth === "sign-up" ? "sign-up" : "sign-in";
 }
 
-/** The URL of Sign in or Sign up, carrying `returnTo` when given. */
 export function authUrl(form: AuthForm, returnTo?: string): string {
   const params = new URLSearchParams({ auth: form });
   if (returnTo !== undefined) params.set("returnTo", returnTo);
@@ -27,10 +26,6 @@ export function withAuthForm(search: string, form: AuthForm): string {
   return `?${new URLSearchParams([["auth", form], ...params])}`;
 }
 
-/**
- * Where a signed-in User at an auth URL goes: its `returnTo` when safe, otherwise the same URL without `auth` and
- * `returnTo`, which is the Application page.
- */
 export function signedInDestination({ search, hash }: { search: string; hash: string }): string {
   const params = new URLSearchParams(search);
   const returnTo = params.get("returnTo");

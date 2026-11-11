@@ -8,7 +8,7 @@ type Props = {
   queryClient: QueryClient;
 };
 
-/** The whole app: its providers around the router. The browser and the test harness pass their own router. */
+/** The browser and the test harness pass their own router. */
 export function App({ router, queryClient }: Props) {
   return (
     <QueryClientProvider client={queryClient}>

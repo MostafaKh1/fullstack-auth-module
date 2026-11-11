@@ -3,13 +3,11 @@ import type { ReactNode } from "react";
 type Props = {
   title: string;
   subtitle: string;
-  /** The form. */
   children: ReactNode;
-  /** The link to the other form. */
   footer: ReactNode;
 };
 
-/** The full-screen frame shared by Sign up and Sign in: a brand panel beside a card holding the form; `title` is also the page title. */
+/** `title` is also the page title. */
 export function AuthScreen({ title, subtitle, children, footer }: Props) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">

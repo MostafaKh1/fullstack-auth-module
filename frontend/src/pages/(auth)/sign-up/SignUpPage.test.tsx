@@ -170,6 +170,20 @@ describe("Sign up page", () => {
     expect(password).toHaveAttribute("type", "password");
   });
 
+  it("shows the password control as an icon with no visible text, pressed while the password is shown", async () => {
+    const { user } = await renderApp("/?auth=sign-up");
+
+    const show = screen.getByRole("button", { name: "Show password" });
+    expect(show).toHaveTextContent("");
+    expect(show).toHaveAttribute("aria-pressed", "false");
+
+    show.focus();
+    await user.keyboard("{Enter}");
+    const hide = screen.getByRole("button", { name: "Hide password" });
+    expect(hide).toHaveTextContent("");
+    expect(hide).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("does not send the request while a field breaks a rule", async () => {
     const { user } = await renderApp("/?auth=sign-up");
 

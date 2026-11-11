@@ -30,6 +30,11 @@ const HOOK = /^use[A-Z][A-Za-z0-9]*$/;
 const SOURCE = /\.(ts|tsx|js|jsx)$/;
 const TEST = /\.test\.[tj]sx?$/;
 
+// A Tailwind palette colour utility (`text-indigo-600`, `hover:bg-slate-100`): colours come from the theme tokens in index.css.
+const PALETTE_COLOUR =
+  /(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|outline|ring|ring-offset|fill|stroke|from|to|via|divide|decoration|accent|caret|shadow|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d/;
+const THEMED = ["components", "pages", "app"];
+
 const stemOf = (name) => name.split(".")[0];
 const startsWithPrefix = (stem, prefix) => stem.startsWith(prefix) && /[A-Z]/.test(stem[prefix.length] ?? "");
 const isComponentFolder = (dir) => dir.startsWith("components/") && PASCAL.test(dir.split("/").at(-1));
@@ -209,6 +214,17 @@ for (const item of items) {
   else checkOther(item, segs);
   if (!item.isDir && /^index\.(ts|tsx|js|jsx|mjs)$/.test(name))
     violate("no-barrel", item.rel, "no index files");
+}
+
+for (const file of files.filter((f) => SOURCE.test(f) && !TEST.test(f) && THEMED.includes(f.split("/")[0]))) {
+  const match = PALETTE_COLOUR.exec(readFileSync(join(root, file), "utf8"));
+  if (match) {
+    violate(
+      "palette-colour",
+      file,
+      `${match[0]} is a palette colour: use a theme token from index.css (bg-primary, text-muted-foreground)`,
+    );
+  }
 }
 
 // Barrels that are not named index.

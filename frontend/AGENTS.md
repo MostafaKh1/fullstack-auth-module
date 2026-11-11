@@ -46,7 +46,7 @@ Dependencies point from app-aware toward behaviour-only: base imports primitives
 The building blocks come from shadcn/ui on Radix ([ADR 0011](../docs/adr/0011-shadcn-ui-on-radix-for-building-blocks.md)). Adopted so far: `Button`, `Input` (and `PasswordInput` on it), `Label`, `Form`, `Card` and `Alert`. They are the only way to build a button, a text field, a form field, a card, a failure message or the page loader (`utility/PageLoader.tsx`): no screen or component hand-rolls one. A field is `FormField` > `FormItem` > `FormLabel`, `FormControl` around the input, and `FormMessage`, which shows `errorCopy()` of the field's code: copy `composite/screens/AuthScreen/AuthScreenSignInForm.tsx`.
 
 - **Adding one**: `npx shadcn@latest add <name>` from `frontend/` (`components.json` holds style new-york, base colour slate, CSS variables). Then move it into its base kind folder, PascalCase with one export per file (a family becomes a component folder); point its `cn` import at `@/utils/cn`; replace its `radix-ui` import with a primitive (adding the `@radix-ui/react-<part>` package and its wrapper if none exists); uninstall the `cn` and `radix-ui` packages the CLI adds; drop the parts and variants no screen uses; hold it to the comment rule. Add only what a screen needs now.
-- **Colours** are the theme tokens in `src/index.css` (`bg-primary`, `text-muted-foreground`, `border-input`): shadcn's variables mapped through `@theme inline`. Dark values switch on `prefers-color-scheme`, so there is no `.dark` class and no toggle. Change a colour there, not in a component.
+- **Colours** are the theme tokens in `src/index.css` (`bg-primary`, `text-muted-foreground`, `border-input`): shadcn's variables mapped through `@theme inline`. Dark values switch on `prefers-color-scheme`, so there is no `.dark` class and no toggle. Change a colour there, not in a component; a Tailwind palette colour (`text-indigo-600`, `bg-slate-100`) in `components/`, `pages/` or `app/` fails the structure check. A colour no token fits becomes a token in `index.css` (the brand panel beside the forms has `bg-brand` and friends).
 
 ## Component folders
 
@@ -114,7 +114,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 ## Structure check
 
-`npm run check:structure` (from the repository root, `scripts/check-frontend-structure.mjs`) enforces every rule in "Where does this file belong?", "Component folders", "Naming" and "Imports" over `src/`, and prints each violation as `<rule> <path>: <what to do>`. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job. A new rule lands in the script with a planted violation in its tests (`npm run test:structure`, which runs the script over example trees).
+`npm run check:structure` (from the repository root, `scripts/check-frontend-structure.mjs`) enforces every rule in "Where does this file belong?", "Component folders", "Naming", "Imports" and the colour rule in "shadcn/ui" over `src/`, and prints each violation as `<rule> <path>: <what to do>`. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job. A new rule lands in the script with a planted violation in its tests (`npm run test:structure`, which runs the script over example trees).
 
 ## Container
 

@@ -17,14 +17,14 @@ export function AuthScreen({ title, subtitle, children, footer }: Props) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <title>{title}</title>
-      <aside className="relative hidden overflow-hidden bg-indigo-950 p-12 text-indigo-50 lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden bg-brand p-12 text-brand-foreground lg:flex lg:flex-col lg:justify-between">
         <div
           aria-hidden="true"
-          className="absolute -top-32 -left-24 size-[28rem] rounded-full bg-indigo-500/40 blur-3xl"
+          className="absolute -top-32 -left-24 size-[28rem] rounded-full bg-primary/40 blur-3xl"
         />
         <div
           aria-hidden="true"
-          className="absolute -right-24 -bottom-40 size-[30rem] rounded-full bg-fuchsia-500/25 blur-3xl"
+          className="absolute -right-24 -bottom-40 size-[30rem] rounded-full bg-brand-accent/25 blur-3xl"
         />
         <p className="relative flex items-center gap-2 text-lg font-semibold tracking-tight">
           <span
@@ -39,7 +39,7 @@ export function AuthScreen({ title, subtitle, children, footer }: Props) {
           <p className="text-3xl font-semibold leading-tight tracking-tight">
             One Session per device, ended the moment you sign out.
           </p>
-          <p className="mt-4 text-indigo-200">
+          <p className="mt-4 text-brand-muted-foreground">
             Your password is hashed, your refresh credential is out of reach of scripts, and your access token
             never touches storage.
           </p>

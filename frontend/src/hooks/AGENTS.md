@@ -12,5 +12,5 @@ Hooks that more than one component or page uses: over server state (TanStack Que
 
 ## Inventory
 
-- `useSession.ts`: `useSession()`, the Session and `startSession()`.
+- `useSession.ts`: `useSession()`, the Session, `startSession()` and `endSession()`.
 - `useCurrentUser.ts`: `useCurrentUser()`, the protected endpoint (`["users", "me"]`).

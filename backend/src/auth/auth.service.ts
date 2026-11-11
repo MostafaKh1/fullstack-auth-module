@@ -18,7 +18,7 @@ export type SignedIn = {
   refreshCredential: IssuedRefreshCredential | null;
 };
 
-/** Sign up, Sign in and refresh: each operation's rules, ordering and failure policy. */
+/** Sign up, Sign in, refresh and Sign out: each operation's rules, ordering and failure policy. */
 @Injectable()
 export class AuthService {
   constructor(
@@ -63,6 +63,11 @@ export class AuthService {
       throw new ApiError("auth.session_expired", { message: "The Session's User no longer exists." });
     }
     return this.signedIn(user, claims, issued);
+  }
+
+  /** Ends the Session the credential holds, with reason `sign-out`; a credential holding none is not an error. */
+  async signOut(presentedCredential: string | null): Promise<void> {
+    await this.sessionService.revokeForCredential(presentedCredential);
   }
 
   private async startSession(user: User, userAgent: string | null): Promise<SignedIn> {

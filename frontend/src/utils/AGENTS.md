@@ -22,7 +22,7 @@ Framework-free modules any layer may import: the front end's side of the API con
 
 - `api-client.ts`: `apiClient`, axios with `baseURL: "/api"` and `withCredentials` so the refresh cookie travels; `setAccessToken()`, the in-memory access token it attaches as `Bearer` (ADR 0008).
 - `api-error.ts`: `ApiErrorEnvelope`, `ValidationIssue`, and `apiErrorEnvelope(error)`, which returns the envelope or `null` when none arrived.
-- `auth-api.ts`: `signUp()`, `signIn()`, `refreshSession()`, and `SignedIn` (`{ accessToken, expiresIn, user }`).
+- `auth-api.ts`: `signUp()`, `signIn()`, `refreshSession()`, `signOut()`, and `SignedIn` (`{ accessToken, expiresIn, user }`).
 - `users-api.ts`: `getCurrentUser()` (`GET /users/me`) and `User`.
 - `session-refresh.ts`: `refreshSessionOnce()`, one refresh shared by every caller while in flight, and the response interceptor that answers a `401 auth.unauthenticated` with it and sends the request again once (never for `/auth/*`). The outcome reaches the Session context through the `SessionListener` it registers with `listenForSessionChanges()`, so the context stays the only writer of the token.
 - `auth-url.ts`: the auth URLs of [ADR 0009](../../../docs/adr/0009-auth-forms-addressed-by-search-parameter.md): `AuthForm` (`sign-in` / `sign-up`), `authFormIn(search)`, `authUrl(form, returnTo?)`, `withAuthForm(search, form)` (swaps `auth`, keeps the rest) and `signedInDestination(location)`.

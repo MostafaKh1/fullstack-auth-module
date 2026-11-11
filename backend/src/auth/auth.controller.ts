@@ -50,6 +50,16 @@ export class AuthController {
     return this.respond(response, signedIn);
   }
 
+  /** Idempotent: the cookie is cleared whether or not it held a live Session. */
+  @Public()
+  @UseGuards(OriginCsrfGuard)
+  @Post("sign-out")
+  @HttpCode(204)
+  async signOut(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<void> {
+    await this.authService.signOut(this.authCookies.readRefreshCookie(request));
+    this.authCookies.clearRefreshCookie(response);
+  }
+
   /** Within the grace window there is no new credential, so the cookie the rotation set is left in place. */
   private respond(response: Response, signedIn: SignedIn): AuthResponse {
     if (signedIn.refreshCredential) {

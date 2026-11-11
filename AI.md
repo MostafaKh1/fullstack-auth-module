@@ -190,6 +190,13 @@ What survived from the discarded attempt, because it was learned rather than wri
 - **Decided:** `TRUST_PROXY` is a hop count, not a boolean, so a client cannot choose its own bucket with a forged `X-Forwarded-For`. The Docker checks share one CI job with the journeys.
 - **Not verified:** the CI job itself (it runs on the pull request); the journeys in CI's Linux runner.
 
+### 30: Front-end structure check (#30)
+
+- **AI-generated:** `scripts/check-frontend-structure.mjs` (dependency-free Node) with its tests in `scripts/check-frontend-structure.test.mjs`, the baseline `frontend/structure-baseline.json`, the root scripts `check:structure` and `test:structure`, a step in the CI lint job and in the pre-commit hook, and the "Structure check" section of `frontend/AGENTS.md`. Test first: the tests, which run the script as a command over example trees, were committed failing before the script existed.
+- **Verified:** 21 tests, one violation per rule id plus a conforming tree, a child nested in its only user, the `@/` alias and the three baseline behaviours (listed passes, unlisted fails, stale entry fails). The real tree passes with 7 baseline entries. A planted file in `frontend/src/components/base/` made the pre-commit hook refuse the commit and `npm run check:structure` (the CI step) and `npm run lint` fail; it was then removed.
+- **Decided:** the spec leaves several things open, so the check encodes these readings: a hook file inside a component folder is `<Folder>UseX.ts`; "used by one sibling" means imported by exactly one sibling and not by the folder's entry; a helper concern is three or more files in `utils/` sharing a first word; `app/` and `providers/` may hold PascalCase `.tsx` components; a section may not import `pages/`, `app/` or `tests/`, and primitives, base and utility import only `utils/` outside `components/`. Features shared by several routes have no rule yet. A baseline entry that no longer matches fails, so the baseline can only shrink.
+- **Not verified:** the CI job itself (it runs on the pull request). The rules are heuristics over file names and imports, not a parse of the code.
+
 ### 17: Comments explain why, and only where the code cannot (#28)
 
 - **AI-generated:** a file-by-file review of every comment in `backend/src`, `frontend/src`, `e2e/` and the root configuration (Biome, Compose, CI, Dockerfiles, `.env.example` files): each one kept, rewritten to its reason alone, or deleted. The "Comments" section of `CODING_STANDARDS.md` with the rule and a good and a bad example of each kind. No test-first step: nothing about behaviour changes, so `tdd` had nothing to drive and the existing suites were the safety net.

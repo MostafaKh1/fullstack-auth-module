@@ -3,7 +3,8 @@ import { startTestApp, type TestApp } from "./boot";
 import { signUpExamples } from "./support/field-rules.examples";
 import { refreshCookie } from "./support/refresh-cookie";
 
-const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
 
 const valid = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
 
@@ -21,6 +22,7 @@ describe("Sign up", () => {
   beforeEach(async () => {
     await app.db.collection("users").deleteMany({});
     await app.db.collection("sessions").deleteMany({});
+    app.clock.set(app.startedAt);
   });
 
   it("creates the User, starts a Session and answers 201 with an access token and the User", async () => {
@@ -55,6 +57,15 @@ describe("Sign up", () => {
     expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain(`Max-Age=${7 * 24 * 60 * 60}`);
     expect(cookie).not.toContain("Secure");
+  });
+
+  it("sets the refresh cookie to expire at the Session's idle expiry", async () => {
+    app.clock.advance(HOUR);
+
+    const response = await app.http().post("/api/auth/sign-up").send(valid);
+
+    const idleExpiry = new Date(app.startedAt.getTime() + HOUR + 7 * DAY);
+    expect(refreshCookie(response.headers["set-cookie"])).toContain(`Expires=${idleExpiry.toUTCString()}`);
   });
 
   it("stores the refresh secret only as its SHA-256 hash, with the Session's expiries", async () => {
@@ -150,10 +161,28 @@ describe("Sign up", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.issues).toEqual([
-      { path: "email", code: "email.invalid" },
-      { path: "name", code: "name.too_short" },
-      { path: "password", code: "field.required" },
+      { path: ["email"], code: "email.invalid" },
+      { path: ["name"], code: "name.too_short" },
+      { path: ["password"], code: "field.required" },
     ]);
+  });
+});
+
+describe("Sign up with COOKIE_SECURE", () => {
+  let app: TestApp;
+
+  beforeAll(async () => {
+    app = await startTestApp({ COOKIE_SECURE: "true", PASSWORD_HASH_COST: "10" });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("marks the refresh cookie Secure", async () => {
+    const response = await app.http().post("/api/auth/sign-up").send(valid);
+
+    expect(refreshCookie(response.headers["set-cookie"])).toMatch(/; Secure(;|$)/);
   });
 });
 
@@ -194,7 +223,7 @@ describe("Sign up field rules: the worked examples", () => {
         status: 400,
         retryable: false,
       });
-      expect(response.body.issues).toEqual(example.codes.map((code) => ({ path: example.field, code })));
+      expect(response.body.issues).toEqual(example.codes.map((code) => ({ path: [example.field], code })));
     }
   });
 });

@@ -15,3 +15,4 @@ A Sign in with an unknown email verifies against a decoy hash made at boot with 
 - Node caps scrypt's memory at 32 MiB by default, below what cost 17 needs (`128 * N * r` bytes), so the hasher raises `maxmem` explicitly.
 - Each hash occupies one libuv thread-pool thread while it runs; the throttling of Sign up and Sign in (#19) is what bounds how many run at once.
 - Tests may lower the cost to 10 for speed; the stored-hash test runs at the default 17.
+- A password is NFC-normalised before it is hashed or verified, so `é` typed as one code point at Sign up and as `e` plus a combining accent at Sign in is the same password. The field rules still count the characters as sent.

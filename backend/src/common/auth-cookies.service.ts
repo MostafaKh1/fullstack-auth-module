@@ -1,27 +1,35 @@
 import { Injectable } from "@nestjs/common";
 import type { Request, Response } from "express";
+import { AppConfigService } from "../config/app-config.service";
+import { ClockService } from "../core/clock.service";
 
 export const REFRESH_COOKIE = "refresh_credential";
 
 // The cookie travels only to the auth routes, never to the rest of the API (ADR 0001).
 const REFRESH_COOKIE_PATH = "/api/auth";
 
-/** Sets and reads the refresh cookie, the Session's credential on the wire. */
+/** The refresh cookie's whole policy: its name, its attributes, and reading it back. */
 @Injectable()
 export class AuthCookiesService {
+  constructor(
+    private readonly config: AppConfigService,
+    private readonly clock: ClockService,
+  ) {}
+
   /** Sets the refresh cookie: script-unreadable, same-site, scoped to the auth routes, expiring with the Session's idle window. */
-  setRefreshCookie(
-    response: Response,
-    credential: string,
-    options: { maxAgeMs: number; secure: boolean },
-  ): void {
-    response.cookie(REFRESH_COOKIE, credential, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: options.secure,
-      path: REFRESH_COOKIE_PATH,
-      maxAge: options.maxAgeMs,
-    });
+  setRefreshCookie(response: Response, credential: string, idleExpiresAt: Date): void {
+    const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
+    // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
+    const attributes = [
+      `${REFRESH_COOKIE}=${encodeURIComponent(credential)}`,
+      `Max-Age=${maxAgeSeconds}`,
+      `Path=${REFRESH_COOKIE_PATH}`,
+      `Expires=${idleExpiresAt.toUTCString()}`,
+      "HttpOnly",
+      ...(this.config.get("cookieSecure") ? ["Secure"] : []),
+      "SameSite=Lax",
+    ];
+    response.append("Set-Cookie", attributes.join("; "));
   }
 
   /** The refresh credential the request's `Cookie` header carries, or `null` when there is none. */

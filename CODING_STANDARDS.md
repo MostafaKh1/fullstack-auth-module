@@ -13,22 +13,25 @@ Every back-end capability has exactly one door, and the door is injected:
 - **Configuration is read only through `AppConfigService`.** No file outside `src/config/` reads `process.env`. The environment is parsed with Zod at boot and the process crashes on an invalid value, so a misconfiguration fails at start-up and not under load.
 - **The current time and randomness come from where they can be controlled in tests.** Token, secret and expiry logic takes `now` from the injected `ClockService` or as an argument, never `Date.now()` buried in a helper.
 
-### One operation, one handler
+### Controller, service, repository
 
-- A business operation is one `@Injectable()` class in `handlers/<operation>.handler.ts` beside its module's controller (`src/auth/`, `src/health/`, `src/features/<feature>/`), with `execute` as its **only** public method.
-- A handler knows nothing about HTTP: no `Request`, `Response`, cookies, status codes or decorators from `@nestjs/common` beyond `Injectable`. It throws `ApiError` with a code from the closed set and returns plain data.
-- A handler holds the operation's ordering and failure policy, and reaches the database through repositories.
-- Pure logic shared by handlers is a module-level `export function` in a sibling `*.rules.ts`.
+The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.md). Biome's `noRestrictedImports` (`biome.jsonc`) enforces the import rules marked _(lint)_.
 
-### Controllers are transport
+| Layer                                                       | Owns                                                                                                                                                            | Never                                                                                        |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Controller (`<module>.controller.ts`)                       | the route, extracting body, headers and the current User, calling **one** service method, calling `AuthCookiesService`, mapping the result to the response type | business decisions, `ClockService`, `AppConfigService`, repositories _(lint)_                |
+| Service (`<name>.service.ts`)                               | the operation's rules, ordering and failure policy, throwing `ApiError`                                                                                         | `Request`, `Response`, `express` _(lint)_, cookies _(lint)_, status codes, Mongoose _(lint)_ |
+| Repository (`database/repositories/<entity>.repository.ts`) | queries and writes for one collection, mapping documents onto the domain types                                                                                  | business rules, other collections                                                            |
 
-- One controller per module, one method per route. A method extracts the request (body, current Session, cookie), calls **one** handler, and shapes the response.
-- Setting or clearing the refresh cookie is transport, so it happens in the controller, never in a handler.
-- The controller method's field for an injected handler carries a `Handler` suffix (`signUpHandler`).
+- A module's business logic is one service named for its area (`AuthService`, `UsersService`, `HealthService`), with one public method per operation (`signUp`, `getCurrentUser`). A rule several operations share is a service of its own (`SessionService`) or a private function in the service's file, never a free-floating rules file.
+- A service throws `ApiError` with a code from the closed set and returns plain data typed with the domain types (`User`, `Session`, `AccessClaims` in `src/auth/auth.types.ts`), never a type from `src/database/`.
+- Setting or reading the refresh cookie is transport: the controller calls `AuthCookiesService`, which owns the whole cookie policy. A service returns the credential and never sees the response.
+- A controller's field for an injected service is the class name in camelCase (`authService`).
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections and repositories) -> `AuthModule` (the auth routes, the token and Session services, the global guard) -> feature modules (`users`, `health`). Shared transport pieces (the filter, the pipe, the decorators, the `Origin` guard) sit in `src/common/`, which has no module.
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `AuthModule` (the auth routes, `AuthService`, the token, password and Session services, the global guard) -> feature modules (`users`, `health`). Shared transport pieces (the filter, the pipe, the decorators, the `Origin` guard, the cookie service) sit in `src/common/`, which has no module.
+- A repository imports the domain types from `src/auth/auth.types.ts` as types only, so no runtime edge points to a higher tier.
 - A module imports only from a lower tier. A feature module exports nothing and never imports another feature module. `forwardRef` is never needed and never used.
 
 ### Authentication is deny-by-default

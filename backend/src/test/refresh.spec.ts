@@ -84,6 +84,7 @@ describe("refresh: POST /api/auth/refresh", () => {
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain(`Max-Age=${7 * 24 * 60 * 60}`);
+    expect(cookie).toContain(`Expires=${new Date(app.startedAt.getTime() + 9 * DAY).toUTCString()}`);
   });
 
   it("accepts the rotated credential on the next refresh", async () => {
@@ -112,6 +113,19 @@ describe("refresh: POST /api/auth/refresh", () => {
 
     expect([one.status, two.status]).toEqual([200, 200]);
     expect((await storedSession())?.revokedAt ?? null).toBeNull();
+  });
+
+  it("answers two concurrent refreshes with the same credential, rotating exactly once and keeping the Session live", async () => {
+    const responses = await Promise.all([refresh(), refresh()]);
+
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    const rotating = responses.filter((response) => response.headers["set-cookie"] !== undefined);
+    expect(rotating).toHaveLength(1);
+    const rotated = credentialOf(rotating[0]);
+    const session = await storedSession();
+    expect(session?.secretHash).toBe(createHash("sha256").update(rotated.split(".")[1]).digest("hex"));
+    expect(session?.revokedAt ?? null).toBeNull();
+    expect((await refresh(rotated)).status).toBe(200);
   });
 
   it("revokes the Session when the previous credential is replayed after the grace window", async () => {
@@ -201,7 +215,9 @@ describe("refresh: POST /api/auth/refresh", () => {
 
     const response = await refresh();
 
-    expect(refreshCookie(response.headers["set-cookie"])).toContain(`Max-Age=${24 * 60 * 60}`);
+    const cookie = refreshCookie(response.headers["set-cookie"]);
+    expect(cookie).toContain(`Max-Age=${24 * 60 * 60}`);
+    expect(cookie).toContain(`Expires=${new Date(app.startedAt.getTime() + 30 * DAY).toUTCString()}`);
   });
 
   it("answers 401 auth.unauthenticated without a refresh cookie", async () => {

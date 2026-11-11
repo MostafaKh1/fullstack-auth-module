@@ -1,10 +1,8 @@
 import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { isValidObjectId, type Model } from "mongoose";
+import type { User } from "../../auth/auth.types";
 import { USER_MODEL, type UserDocument } from "../collections/user.collection";
-
-/** A User as the rest of the application sees it: never with its password hash. */
-export type User = { id: string; email: string; name: string; createdAt: Date };
 
 const DUPLICATE_KEY = 11_000;
 

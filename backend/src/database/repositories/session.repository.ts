@@ -1,17 +1,8 @@
 import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { isValidObjectId, type Model, Types } from "mongoose";
-import { type RevokedReason, SESSION_MODEL, type SessionDocument } from "../collections/session.collection";
-
-/** A Session as the rest of the application sees it: never with its secret hashes. */
-export type Session = {
-  id: string;
-  userId: string;
-  idleExpiresAt: Date;
-  absoluteExpiresAt: Date;
-  revokedAt: Date | null;
-  revokedReason: RevokedReason | null;
-};
+import type { RevokedReason, Session } from "../../auth/auth.types";
+import { SESSION_MODEL, type SessionDocument } from "../collections/session.collection";
 
 /** A Session with the hashes refresh compares against; only `findWithSecretHashesById` returns one. */
 export type SessionWithSecretHashes = {

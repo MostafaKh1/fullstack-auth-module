@@ -1,9 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AppConfigService } from "../config/app-config.service";
-
-/** What an access token says: the User (`sub`) and the Session (`sid`) it was issued for. */
-export type AccessClaims = { userId: string; sessionId: string };
+import type { AccessClaims } from "./auth.types";
 
 type Payload = { sub: string; sid: string; iat: number; exp: number };
 

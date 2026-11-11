@@ -3,11 +3,11 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AppConfigService } from "../config/app-config.service";
 import { SESSION_MODEL, sessionSchema } from "./collections/session.collection";
 import { USER_MODEL, userSchema } from "./collections/user.collection";
-import { DatabaseHealthRepository } from "./repositories/database-health.repository";
+import { DatabaseHealth } from "./database-health";
 import { SessionRepository } from "./repositories/session.repository";
 import { UserRepository } from "./repositories/user.repository";
 
-/** The database tier: the connection, the models, and the repositories that are the only door to them. */
+/** The database tier: the connection, the models, the repositories that are the only door to them, and the health ping. */
 @Module({
   imports: [
     MongooseModule.forRootAsync({
@@ -23,7 +23,7 @@ import { UserRepository } from "./repositories/user.repository";
       { name: SESSION_MODEL, schema: sessionSchema },
     ]),
   ],
-  providers: [DatabaseHealthRepository, UserRepository, SessionRepository],
-  exports: [DatabaseHealthRepository, UserRepository, SessionRepository],
+  providers: [DatabaseHealth, UserRepository, SessionRepository],
+  exports: [DatabaseHealth, UserRepository, SessionRepository],
 })
 export class PersistenceModule {}

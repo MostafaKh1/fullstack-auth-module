@@ -4,9 +4,9 @@ import type { Request } from "express";
 import { IS_PUBLIC } from "../common/auth.decorator";
 import { ApiError } from "../common/errors/api-error";
 import { ClockService } from "../core/clock.service";
-import { SessionRepository } from "../database/repositories/session.repository";
-import { type AccessClaims, AccessTokenService } from "./access-token.service";
-import { isSessionLive } from "./session.rules";
+import { AccessTokenService } from "./access-token.service";
+import type { AccessClaims } from "./auth.types";
+import { SessionService } from "./session.service";
 
 export type AuthenticatedRequest = Request & { authSession?: AccessClaims };
 
@@ -20,8 +20,8 @@ const BEARER = /^Bearer ([A-Za-z0-9._-]+)$/;
 export class AccessTokenGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly accessTokens: AccessTokenService,
-    private readonly sessions: SessionRepository,
+    private readonly accessTokenService: AccessTokenService,
+    private readonly sessionService: SessionService,
     private readonly clock: ClockService,
   ) {}
 
@@ -36,13 +36,11 @@ export class AccessTokenGuard implements CanActivate {
     const token = BEARER.exec(request.headers.authorization ?? "")?.[1];
     if (!token) throw new ApiError("auth.unauthenticated", { message: "A Bearer access token is required." });
 
-    const now = this.clock.now();
-    const claims = await this.accessTokens.verify(token, now);
+    const claims = await this.accessTokenService.verify(token, this.clock.now());
     if (!claims) {
       throw new ApiError("auth.unauthenticated", { message: "The access token is invalid or expired." });
     }
-    const session = await this.sessions.findById(claims.sessionId);
-    if (!session || session.userId !== claims.userId || !isSessionLive(session, now)) {
+    if (!(await this.sessionService.isLive(claims))) {
       throw new ApiError("auth.unauthenticated", { message: "The access token's Session has ended." });
     }
 

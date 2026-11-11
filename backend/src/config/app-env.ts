@@ -25,6 +25,7 @@ const environmentSchema = z
     PASSWORD_HASH_COST: z.coerce.number().int().min(10).max(20).default(17),
     THROTTLE_LIMIT: positiveInt.default(20),
     THROTTLE_TTL_SECONDS: positiveInt.default(60),
+    TRUST_PROXY: z.coerce.number().int().min(0).default(0),
     REQUEST_BODY_LIMIT: z
       .string()
       .regex(/^[0-9]+(kb|mb)$/, "must be a size such as 16kb")
@@ -69,6 +70,7 @@ export type AppConfig = {
   cookieSecure: boolean;
   throttleLimit: number;
   throttleTtlSeconds: number;
+  trustProxy: number;
   requestBodyLimit: string;
 };
 
@@ -109,6 +111,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     cookieSecure: e.COOKIE_SECURE,
     throttleLimit: e.THROTTLE_LIMIT,
     throttleTtlSeconds: e.THROTTLE_TTL_SECONDS,
+    trustProxy: e.TRUST_PROXY,
     requestBodyLimit: e.REQUEST_BODY_LIMIT,
   };
 }

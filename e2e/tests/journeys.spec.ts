@@ -10,9 +10,9 @@ function newUser(label: string) {
 
 async function signUp(page: Page, user: { email: string; name: string; password: string }) {
   await page.goto("/?auth=sign-up");
-  await page.getByLabel("Email").fill(user.email);
-  await page.getByLabel("Name").fill(user.name);
-  await page.getByLabel("Password").fill(user.password);
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Name" }).fill(user.name);
+  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
   await page.getByRole("button", { name: "Sign up" }).click();
 }
 
@@ -34,8 +34,8 @@ test("Sign up, reload, Sign out, Sign in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page).toHaveURL(/auth=sign-in/);
 
-  await page.getByLabel("Email").fill(user.email);
-  await page.getByLabel("Password").fill(user.password);
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expectApplicationPage(page, user.name);
 });
@@ -50,8 +50,8 @@ test("Sign in with a wrong password shows the generic message", async ({ page, b
   await setup.close();
 
   await page.goto("/?auth=sign-in");
-  await page.getByLabel("Email").fill(user.email);
-  await page.getByLabel("Password").fill("Wrong-password-1!");
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Password" }).fill("Wrong-password-1!");
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page.getByText("Invalid email or password")).toBeVisible();

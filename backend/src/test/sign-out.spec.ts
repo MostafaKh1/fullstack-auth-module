@@ -151,6 +151,30 @@ describe("Sign out: POST /api/auth/sign-out", () => {
     expect(response.status).toBe(204);
   });
 
+  describe("racing a refresh", () => {
+    it("ends the Session when Sign out carries the secret a refresh replaced moments before", async () => {
+      // The browser sent Sign out with its cookie before applying the cookie the refresh's response set.
+      const rotated = credentialOf(await refresh(device.credential).expect(200));
+      app.clock.advance(5 * SECOND);
+
+      const response = await signOut(device.credential);
+
+      expect(response.status).toBe(204);
+      expectCookieCleared(response);
+      expect((await storedSession(device.sessionId))?.revokedReason).toBe("sign-out");
+      expect((await refresh(rotated)).status).toBe(401);
+      expect((await currentUser(device.accessToken)).status).toBe(401);
+    });
+
+    it("ends the Session whichever of a concurrent refresh and Sign out is handled first", async () => {
+      const [, signedOut] = await Promise.all([refresh(device.credential), signOut(device.credential)]);
+
+      expect(signedOut.status).toBe(204);
+      expect((await storedSession(device.sessionId))?.revokedReason).toBe("sign-out");
+      expect((await currentUser(device.accessToken)).status).toBe(401);
+    });
+  });
+
   describe("the Origin check", () => {
     it("refuses a foreign Origin with 403 auth.origin_rejected, leaving the Session live", async () => {
       const response = await signOut().set("Origin", "https://evil.example");

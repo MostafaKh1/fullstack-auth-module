@@ -12,11 +12,11 @@ src/
 ├── app.setup.ts      # global wiring shared with the test harness (prefix, helmet, CORS, body parser, Swagger UI, logger)
 ├── app.module.ts     # every module, lowest tier first, and the global filter
 ├── config/           # global: the environment, read only through AppConfigService
-├── docs/             # the OpenAPI document and Swagger UI; export-openapi.ts writes contract/openapi.json
+├── docs/             # the OpenAPI document and Swagger UI (reads the request schemas from features/auth/); export-openapi.ts writes contract/openapi.json
 ├── logging/          # global: pino, the request id, the redact list
 ├── core/             # global: injectable providers of outside things (the clock)
 ├── database/         # PersistenceModule, the only door to MongoDB: src/database/AGENTS.md
-├── common/           # CommonModule and what the global guard or several features share, by kind: src/common/AGENTS.md
+├── common/           # CommonModule and what the global wiring or several features share, by kind: src/common/AGENTS.md
 ├── features/<name>/  # one module per feature: auth, users, health
 └── test/             # the HTTP-seam suites and their harness; never built into dist/
 ```
@@ -42,6 +42,7 @@ The first match wins:
 5. A wrapper over something outside the process that tests must control (the time, an email sender, a third-party client) -> `src/core/<name>.service.ts`, listed in `core.module.ts`'s `providers` and `exports`. A duration or lifetime is configuration, not a constant there; a domain decision belongs in a feature's service.
 6. A log field that carries a secret -> `REDACTED_PATHS` in `src/logging/logging.module.ts`.
 7. A test -> `src/test/`; see "Tests".
+8. An import rule `noRestrictedImports` cannot express -> a GritQL plugin `lint/<rule>.grit`, registered with its `includes` under `plugins` in the root `biome.jsonc`, and proven red by a planted import.
 
 ## Inside a feature
 

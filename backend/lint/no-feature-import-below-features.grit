@@ -3,12 +3,13 @@ language js
 or {
   `import $_ from $source`,
   `import type $_ from $source`,
+  `import $source`,
   `export { $_ } from $source`,
   `export type { $_ } from $source`,
   `export * from $source`,
   `import($source)`
 } where {
-  $source <: r"[\"']@/features(?:/.*)?[\"']",
+  $source <: r"[\"'](?:@/|src/)features(?:/.*)?[\"']",
   register_diagnostic(
     span=$source,
     message="The tiers below the features import nothing from src/features/: a type both sides need lives in src/common/types/."

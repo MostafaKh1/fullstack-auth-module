@@ -15,7 +15,7 @@ Every back-end capability has exactly one door, and the door is injected:
 
 ### Controller, service, repository
 
-The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.md). Biome's `noRestrictedImports` (`biome.jsonc`) enforces the import rules marked _(lint)_.
+The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.md). Biome (`biome.jsonc`: `noRestrictedImports` and the GritQL plugins in `backend/lint/`) enforces the import rules marked _(lint)_.
 
 | Layer                                                       | Owns                                                                                                                                                            | Never                                                                                        |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -30,9 +30,9 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `services/`, `types/`), which imports nothing from a feature.
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `services/`, `types/`), which imports nothing from a feature _(lint)_.
 - A repository imports the domain types from `src/common/types/` as types only, so no runtime edge points to a higher tier.
-- A module imports only from a lower tier. A feature module exports nothing, and a feature imports nothing from another feature. `forwardRef` is never needed and never used.
+- A module imports only from a lower tier. A feature module exports nothing, and a feature imports nothing from another feature _(lint)_. `forwardRef` is never needed and never used.
 
 ### Authentication is deny-by-default
 

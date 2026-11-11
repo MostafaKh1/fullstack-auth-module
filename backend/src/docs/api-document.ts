@@ -3,8 +3,8 @@ import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from "@nestjs/swag
 import type { SchemaObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
 import helmet from "helmet";
 import { z } from "zod";
-import { ERROR_CODES } from "../common/errors/error-codes";
-import { signInSchema, signUpSchema } from "../features/auth/auth.types";
+import { ERROR_CODES } from "@/common/errors/error-codes";
+import { signInSchema, signUpSchema } from "@/features/auth/auth.types";
 
 const requestSchema = (schema: z.ZodType): SchemaObject => {
   const { $schema: _draft, ...rest } = z.toJSONSchema(schema, { io: "input", unrepresentable: "any" });

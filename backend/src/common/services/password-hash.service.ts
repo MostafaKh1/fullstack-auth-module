@@ -1,6 +1,6 @@
 import { randomBytes, type ScryptOptions, scrypt, timingSafeEqual } from "node:crypto";
 import { Injectable, type OnModuleInit } from "@nestjs/common";
-import { AppConfigService } from "../../config/app-config.service";
+import { AppConfigService } from "@/config/app-config.service";
 
 const KEY_LENGTH = 64;
 const SALT_LENGTH = 16;

@@ -1,12 +1,12 @@
 import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
-import { AppConfigService } from "../config/app-config.service";
-import { PersistenceModule } from "../database/persistence.module";
-import { AccessTokenGuard } from "./guards/access-token.guard";
-import { AccessTokenService } from "./services/access-token.service";
-import { AuthCookiesService } from "./services/auth-cookies.service";
-import { PasswordHashService } from "./services/password-hash.service";
+import { AccessTokenGuard } from "@/common/guards/access-token.guard";
+import { AccessTokenService } from "@/common/services/access-token.service";
+import { AuthCookiesService } from "@/common/services/auth-cookies.service";
+import { PasswordHashService } from "@/common/services/password-hash.service";
+import { AppConfigService } from "@/config/app-config.service";
+import { PersistenceModule } from "@/database/persistence.module";
 
 @Module({
   imports: [

@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { PersistenceModule } from "../../database/persistence.module";
+import { PersistenceModule } from "@/database/persistence.module";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
 

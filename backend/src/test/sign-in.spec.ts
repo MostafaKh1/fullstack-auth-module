@@ -1,6 +1,6 @@
+import { signInExamples } from "@/test/support/field-rules.examples";
+import { refreshCookie } from "@/test/support/refresh-cookie";
 import { startTestApp, type TestApp } from "./boot";
-import { signInExamples } from "./support/field-rules.examples";
-import { refreshCookie } from "./support/refresh-cookie";
 
 const ada = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
 

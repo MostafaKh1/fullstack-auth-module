@@ -41,7 +41,7 @@ describe("structured logs", () => {
   });
 
   it("redacts both secret hashes of a logged Session document", async () => {
-    // No route logs a Session document today; the app's own logger is what any future line would go through.
+    // No route logs a Session document, so the app's own logger, which every line goes through, stands in for one.
     const logger = await app.nest.resolve(PinoLogger);
 
     logger.info(

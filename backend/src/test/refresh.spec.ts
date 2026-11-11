@@ -71,6 +71,8 @@ describe("refresh: POST /api/auth/refresh", () => {
     const stored = (await storedSession())?.secretHash;
     expect(stored).toMatch(/^[0-9a-f]{64}$/);
     expect(stored).not.toContain(rotatedSecret);
+    // The check above is proven to be SHA-256, so the rotated secret being accepted means its stored hash is SHA-256.
+    expect((await refresh(credentialOf(response))).status).toBe(200);
   });
 
   it("issues an access token the protected endpoint accepts", async () => {

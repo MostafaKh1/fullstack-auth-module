@@ -23,10 +23,8 @@ const USER = {
   },
 };
 
-/**
- * The component schemas the routes reference by name; request schemas come from the Zod schemas. Response objects are
- * closed, so `api-docs.spec.ts` fails when a route sends a field the document does not describe.
- */
+// Request schemas come from the Zod schemas. Response objects are closed, so `api-docs.spec.ts` fails when a route
+// sends a field the document does not describe.
 const SCHEMAS = {
   SignUpRequest: requestSchema(signUpSchema),
   SignInRequest: requestSchema(signInSchema),

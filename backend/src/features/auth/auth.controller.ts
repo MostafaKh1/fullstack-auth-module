@@ -8,7 +8,7 @@ import { OriginCsrfGuard } from "../../common/guards/origin-csrf.guard";
 import { RouteValidationPipe } from "../../common/pipes/route-validation.pipe";
 import { AuthCookiesService } from "../../common/services/auth-cookies.service";
 import { type SignInBody, type SignUpBody, signInSchema, signUpSchema, type User } from "./auth.types";
-import { AuthService, type SignedInWithCredential } from "./services/auth.service";
+import { type AuthOutcome, AuthService } from "./services/auth.service";
 
 export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
@@ -103,7 +103,7 @@ export class AuthController {
   }
 
   /** Within the grace window there is no new credential, so the cookie the rotation set is left in place (ADR 0001). */
-  private respond(response: Response, signedIn: SignedInWithCredential): AuthResponse {
+  private respond(response: Response, signedIn: AuthOutcome): AuthResponse {
     if (signedIn.refreshCredential) this.authCookies.setRefreshCookie(response, signedIn.refreshCredential);
     return { accessToken: signedIn.accessToken, expiresIn: signedIn.expiresIn, user: signedIn.user };
   }

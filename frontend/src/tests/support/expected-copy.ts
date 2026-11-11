@@ -2,12 +2,21 @@ import type { components } from "../../utils/api-types.generated";
 
 type ContractErrorCode = components["schemas"]["ErrorEnvelope"]["code"];
 
-/**
- * The sentence a User should read for every error code in the contract. Typed against the generated contract, so a
- * code the back end adds fails the typecheck until it has a sentence here, and the page tests then fail until the app
- * has one too. The two sentences docs/requirements.md fixes are quoted from it verbatim.
- */
-export const expectedErrorCopy = {
+type Contract = { components: { schemas: { ErrorEnvelope: { properties: { code: { enum: string[] } } } } } };
+
+// Read from the contract at run time, so a code the back end adds fails the page tests even before the types are
+// regenerated; `import.meta.glob` is Vite's, so the app's TypeScript settings need no JSON support.
+const [contract] = Object.values(
+  import.meta.glob<Contract>("../../../../contract/openapi.json", { eager: true, import: "default" }),
+);
+
+/** Every error code in the closed set, as `contract/openapi.json` lists it. */
+export const contractErrorCodes: string[] =
+  contract?.components.schemas.ErrorEnvelope.properties.code.enum ?? [];
+
+// Typed against the generated contract too, so a missing code also fails the typecheck. The sentences for
+// `auth.invalid_credentials` and `user.email_taken` are quoted verbatim from docs/requirements.md.
+export const expectedErrorCopy: Record<string, string> = {
   "request.validation_failed": "Some fields need attention. Check them, then try again.",
   "request.malformed": "That request could not be read. Reload the page, then try again.",
   "request.too_large": "That request was too large to send.",
@@ -20,7 +29,7 @@ export const expectedErrorCopy = {
   "user.email_taken": "An account with this email already exists",
   "server.internal": "Something went wrong on our side. Please try again.",
   "server.unavailable": "The service is temporarily unavailable. Please try again shortly.",
-} as const satisfies Record<ContractErrorCode, string>;
+} satisfies Record<ContractErrorCode, string>;
 
 /** The sentence for each rule id and error code, written out independently of the app's copy map. */
 export const expectedCopy: Record<string, string> = {

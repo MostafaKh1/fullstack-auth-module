@@ -135,7 +135,7 @@ describe("the documented response schemas", () => {
     await app.close();
   });
 
-  /** The problems `body` has against the documented schema; each part of an `allOf` must accept it on its own. */
+  // JSON Schema's `allOf`: each part must accept the body on its own (Zod's intersection of them is laxer).
   function problems(route: string, status: number, body: unknown): string[] {
     const [method, path] = route.split(" ");
     const response = document.paths[path][method.toLowerCase()].responses[String(status)] as
@@ -148,7 +148,7 @@ describe("the documented response schemas", () => {
     });
   }
 
-  it("checks a success and a failure of every route", () => {
+  it("records a success of every route with a body and each refusal a caller can cause", () => {
     expect(exchanges.map(({ route, status }) => `${route} ${status}`)).toEqual([
       "POST /api/auth/sign-up 201",
       "POST /api/auth/sign-in 200",
@@ -198,7 +198,6 @@ describe("the documented response schemas", () => {
   });
 });
 
-/** The schema with each `#/components/schemas/<name>` reference replaced by the schema it names. */
 function inlineRefs(schema: unknown, document: Document): unknown {
   if (Array.isArray(schema)) return schema.map((entry) => inlineRefs(entry, document));
   if (typeof schema !== "object" || schema === null) return schema;

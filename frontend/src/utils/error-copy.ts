@@ -6,13 +6,13 @@ import type { ApiErrorCode } from "./api-error";
  */
 
 // Typed against the contract, so a code added to the back end's closed set fails the typecheck until it has copy.
+// The sentences for `auth.invalid_credentials` and `user.email_taken` are fixed by docs/requirements.md.
 const copyByErrorCode: Record<ApiErrorCode, string> = {
   "request.validation_failed": "Some fields need attention. Check them, then try again.",
   "request.malformed": "That request could not be read. Reload the page, then try again.",
   "request.too_large": "That request was too large to send.",
   "request.rate_limited": "Too many attempts. Wait a minute, then try again.",
   "auth.unauthenticated": "Your session has ended. Please sign in again.",
-  // The two auth sentences are fixed by docs/requirements.md.
   "auth.invalid_credentials": "Invalid email or password",
   "auth.session_expired": "Your session has ended. Please sign in again.",
   "auth.origin_rejected": "This request did not come from this application. Reload the page, then try again.",

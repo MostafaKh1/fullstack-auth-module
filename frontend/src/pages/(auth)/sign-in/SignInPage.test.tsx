@@ -10,7 +10,12 @@ import {
   heldUntilReleased,
   signedInAsAda,
 } from "../../../tests/support/auth-fixtures";
-import { expectedCopy, expectedErrorCopy, unreachableCopy } from "../../../tests/support/expected-copy";
+import {
+  contractErrorCodes,
+  expectedCopy,
+  expectedErrorCopy,
+  unreachableCopy,
+} from "../../../tests/support/expected-copy";
 import { enterField, fillForm } from "../../../tests/support/fill-form";
 import { renderApp } from "../../../tests/support/render-app";
 
@@ -102,7 +107,13 @@ describe("Sign in page", () => {
     );
   });
 
-  it.each(Object.entries(expectedErrorCopy))("shows its own sentence for %s", async (code, sentence) => {
+  it("has a sentence for every error code in the contract", () => {
+    expect(contractErrorCodes.length).toBeGreaterThan(0);
+    expect(contractErrorCodes.filter((code) => !Object.hasOwn(expectedErrorCopy, code))).toEqual([]);
+  });
+
+  it.each(contractErrorCodes)("shows its own sentence for %s", async (code) => {
+    const sentence = expectedErrorCopy[code] as string;
     const { user } = await renderApp("/?auth=sign-in", {
       handlers: [http.post("/api/auth/sign-in", () => envelope(code, 400))],
     });

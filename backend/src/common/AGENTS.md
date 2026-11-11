@@ -8,7 +8,7 @@ What the global guard or more than one feature needs, organised by kind. `common
 common/
 ├── common.module.ts   # CommonModule: provides and exports the services, registers the global AccessTokenGuard
 ├── decorators/        # @Public() (auth.decorator.ts), @CurrentAuth()
-├── errors/            # error-codes.ts (the closed set), api-error.ts (ApiError)
+├── errors/            # error-codes.ts (the closed set and errorEnvelope(), the one envelope builder), api-error.ts
 ├── filters/           # the one global filter, registered in src/app.module.ts
 ├── middleware/        # the JSON body parser with its size cap and its envelope errors
 ├── guards/            # the global AccessTokenGuard, the Origin check of the cookie routes

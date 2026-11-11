@@ -1,16 +1,12 @@
 import { apiClient } from "./api-client";
-import type { User } from "./users-api";
+import type { components } from "./api-types.generated";
 
 /** What Sign up and Sign in answer: a new Session's access token, its lifetime in seconds, and the User. */
-export type SignedIn = {
-  accessToken: string;
-  expiresIn: number;
-  user: User;
-};
+export type SignedIn = components["schemas"]["SignedIn"];
 
-export type SignUpRequest = { email: string; name: string; password: string };
+export type SignUpRequest = components["schemas"]["SignUpRequest"];
 
-export type SignInRequest = { email: string; password: string };
+export type SignInRequest = components["schemas"]["SignInRequest"];
 
 /** `POST /api/auth/sign-up`; the refresh cookie arrives with the response. */
 export async function signUp(request: SignUpRequest): Promise<SignedIn> {

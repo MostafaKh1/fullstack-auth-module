@@ -29,11 +29,16 @@ The apps share no code; HTTP is the only contract between them.
 
 ## Workflow
 
-Work flows spec -> tickets -> implementation -> review, one ticket at a time, test first.
-Take the next ticket from the frontier: an open sub-issue of the spec with no open blocker (`docs/agents/issue-tracker.md`).
-Every ticket carries a `model:` and an `effort:` label; its implementer runs on exactly those (`docs/agents/issue-tracker.md`, "Model and effort per ticket").
-Review is the `code-review` skill, against `CODING_STANDARDS.md` and the ticket.
-A ticket is done when lint, typecheck, tests and build are green for every app it touched, its `AI.md` entry is written, and it lands as one commit whose message carries `Closes #<n>`.
+All work goes through the skills in this order, and nothing skips a step:
+
+`grill-with-docs` -> `to-spec` -> `to-tickets` -> `implement` -> `code-review` -> `retro`
+
+- **A new decision or new work** starts at `grill-with-docs` (decisions land in `GLOSSARY.md` and `docs/adr/`), then `to-spec`, then `to-tickets`. Tickets are never written by hand.
+- **Each ticket** is built with `implement`: take it from the frontier (an open sub-issue of the spec with no open blocker, `docs/agents/issue-tracker.md`), run on its `model:` and `effort:` labels, and use `tdd` at the agreed seams.
+- **Red, then green, in git**: a behaviour ticket commits its failing tests first (`test(<scope>): <behaviour> (red)`), then the code that passes them (`feat(<scope>): ... (green)`, ending `Closes #<n>`). A ticket with no new behaviour (tooling, renames, docs) says so in its commit body.
+- **Before the ticket lands**, `code-review` runs on its diff against `CODING_STANDARDS.md` and the ticket, and its findings are fixed.
+- **When every ticket of a spec has landed**, `code-review` runs on the whole integration branch, then `retro` closes the session.
+- A ticket is done when lint, typecheck, tests and build are green for every app it touched and its `AI.md` entry is written.
 
 ## Keeping these docs true
 

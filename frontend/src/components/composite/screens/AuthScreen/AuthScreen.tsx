@@ -4,6 +4,7 @@ import { CardContent } from "@/components/base/cards/Card/CardContent";
 import { CardDescription } from "@/components/base/cards/Card/CardDescription";
 import { CardHeader } from "@/components/base/cards/Card/CardHeader";
 import { CardTitle } from "@/components/base/cards/Card/CardTitle";
+import { ThemeToggle } from "@/components/composite/toggles/ThemeToggle/ThemeToggle";
 
 type Props = {
   title: string;
@@ -15,8 +16,11 @@ type Props = {
 /** `title` is also the page title. */
 export function AuthScreen({ title, subtitle, children, footer }: Props) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <div className="relative grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <title>{title}</title>
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <aside className="relative hidden overflow-hidden bg-brand p-12 text-brand-foreground lg:flex lg:flex-col lg:justify-between">
         <div
           aria-hidden="true"

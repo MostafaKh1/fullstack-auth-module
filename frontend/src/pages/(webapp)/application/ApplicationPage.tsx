@@ -7,6 +7,7 @@ import { CardContent } from "@/components/base/cards/Card/CardContent";
 import { CardDescription } from "@/components/base/cards/Card/CardDescription";
 import { CardHeader } from "@/components/base/cards/Card/CardHeader";
 import { CardTitle } from "@/components/base/cards/Card/CardTitle";
+import { ThemeToggle } from "@/components/composite/toggles/ThemeToggle/ThemeToggle";
 import { useSession } from "@/hooks/useSession";
 import { apiErrorEnvelope } from "@/utils/api/api-error";
 import { getCurrentUser } from "@/utils/api/users-api";
@@ -34,9 +35,12 @@ export function ApplicationPage() {
             ◆
           </span>
           The application
-          <Button variant="ghost" size="sm" className="ml-auto" pending={signingOut} onClick={signOut}>
-            {signingOut ? "Signing out…" : "Sign out"}
-          </Button>
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle />
+            <Button variant="ghost" size="sm" pending={signingOut} onClick={signOut}>
+              {signingOut ? "Signing out…" : "Sign out"}
+            </Button>
+          </div>
         </div>
       </header>
 

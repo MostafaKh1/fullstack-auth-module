@@ -8,7 +8,7 @@ const ENVELOPE = (code: string, status: number) => ({
   message: expect.any(String),
 });
 
-describe("throttling of Sign up and Sign in", () => {
+describe("throttling of Sign up, Sign in and refresh", () => {
   let app: TestApp;
 
   beforeAll(async () => {
@@ -45,6 +45,16 @@ describe("throttling of Sign up and Sign in", () => {
     expect((await attempt()).status).toBe(400);
     expect((await attempt()).status).toBe(400);
     expect((await attempt()).status).toBe(429);
+  });
+
+  it("throttles refresh past the limit, counted apart from Sign in", async () => {
+    const attempt = () => app.http().post("/api/auth/refresh");
+
+    for (let i = 0; i < 3; i++) expect((await attempt()).status).toBe(401);
+    const limited = await attempt();
+
+    expect(limited.status).toBe(429);
+    expect(limited.body).toEqual({ ...ENVELOPE("request.rate_limited", 429), retryable: true });
   });
 });
 

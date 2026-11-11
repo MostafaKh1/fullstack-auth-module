@@ -12,14 +12,16 @@ export type SessionListener = {
 
 type RetriableConfig = InternalAxiosRequestConfig & { sessionRetried?: boolean };
 
-let listener: SessionListener | null = null;
 type InFlight = { owner: SessionListener | null; attempt: Promise<boolean>; discarded: boolean };
 
+let listener: SessionListener | null = null;
 let inFlight: InFlight | null = null;
+let stopped = false;
 
-/** Registers the Session context's listener, or removes it with `null`. */
+/** Registers the Session context's listener, or removes it with `null`. A newly registered app may refresh. */
 export function listenForSessionChanges(next: SessionListener | null) {
   listener = next;
+  if (next) stopped = false;
 }
 
 /**
@@ -29,6 +31,7 @@ export function listenForSessionChanges(next: SessionListener | null) {
  * new app does not join it. The same listener registering again (StrictMode's second effect run) joins it.
  */
 export function refreshSessionOnce(): Promise<boolean> {
+  if (stopped) return Promise.resolve(false);
   if (inFlight && inFlight.owner === listener) return inFlight.attempt;
   const owner = listener;
   const current: InFlight = { owner, attempt: Promise.resolve(false), discarded: false };
@@ -53,12 +56,19 @@ export function refreshSessionOnce(): Promise<boolean> {
 }
 
 /**
- * Sign out began: the refresh in flight restores nothing when it is answered, and no request it would have
- * retried is sent again, since its answer could sign the tab back in after the User left.
+ * Sign out began: the refresh in flight restores nothing when it is answered, and none starts until a Session
+ * starts again, so no request is retried meanwhile. A refresh answered late would sign the tab back in after the
+ * User left.
  */
-export function discardRefreshInFlight() {
+export function stopRefreshing() {
+  stopped = true;
   if (inFlight) inFlight.discarded = true;
   inFlight = null;
+}
+
+/** A Session started in this tab (Sign up, Sign in): an expired access token may be refreshed again. */
+export function resumeRefreshing() {
+  stopped = false;
 }
 
 // A `401 auth.unauthenticated` means the access token expired or was never there: refresh once, shared by every

@@ -4,10 +4,11 @@ import { type Session, SessionContext } from "@/providers/session-context";
 import { setAccessToken } from "@/utils/api/api-client";
 import { type SignedIn, signOut } from "@/utils/api/auth-api";
 import {
-  discardRefreshInFlight,
   listenForSessionChanges,
   refreshSessionOnce,
+  resumeRefreshing,
   type SessionListener,
+  stopRefreshing,
 } from "@/utils/api/session-refresh";
 
 type Props = {
@@ -20,6 +21,7 @@ export function SessionProvider({ children }: Props) {
   const [session, setSession] = useState<Session>({ status: "restoring" });
 
   const startSession = useCallback((signedIn: SignedIn) => {
+    resumeRefreshing();
     setAccessToken(signedIn.accessToken);
     setSession({ status: "signed-in", user: signedIn.user });
   }, []);
@@ -32,7 +34,7 @@ export function SessionProvider({ children }: Props) {
   }, [queryClient]);
 
   const endSession = useCallback(async () => {
-    discardRefreshInFlight();
+    stopRefreshing();
     try {
       await signOut();
     } catch {

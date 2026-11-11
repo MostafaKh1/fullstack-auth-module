@@ -9,9 +9,10 @@ Shared code is organised by kind, everything else by feature. Auth is a feature 
 ```
 src/
 ├── main.ts           # parses configuration, then boots
-├── app.setup.ts      # global wiring shared with the test harness (prefix, logger, shutdown hooks)
+├── app.setup.ts      # global wiring shared with the test harness (prefix, helmet, CORS, body parser, Swagger UI, logger)
 ├── app.module.ts     # every module, lowest tier first, and the global filter
 ├── config/           # global: the environment, read only through AppConfigService
+├── docs/             # the OpenAPI document and Swagger UI; export-openapi.ts writes contract/openapi.json
 ├── logging/          # global: pino, the request id, the redact list
 ├── core/             # global: injectable providers of outside things (the clock)
 ├── database/         # PersistenceModule, the only door to MongoDB: src/database/AGENTS.md
@@ -26,7 +27,9 @@ src/
 - **Controller, service, repository**: a controller is the API only (extract the request, call one service method, call `AuthCookiesService`, map to the response type); a service holds the business logic and knows nothing about HTTP; a repository is the data access for one collection. Biome enforces the import rules ([CODING_STANDARDS.md](../CODING_STANDARDS.md), "Controller, service, repository").
 - **Deny by default**: the global `AccessTokenGuard` (registered by `CommonModule`) requires a live Session on every route. Mark a route `@Public()` only if it is Sign up, Sign in, refresh, Sign out or health. A cookie route (refresh, Sign out) is `@Public()` and carries `@UseGuards(OriginCsrfGuard)`. A protected route reads who is calling with `@CurrentAuth()`, an `AuthContext` (`{ userId, sessionId }`), and loads the User itself.
 - **The error envelope**: code throws `ApiError(code)` from `src/common/errors/`; the one global filter writes the envelope of [ADR 0002](../docs/adr/0002-api-errors-carry-codes-not-copy.md).
-- Global wiring (prefix, pipes, middleware) goes in `app.setup.ts`, so tests run it too.
+- Global wiring (prefix, helmet, CORS, the body parser, Swagger UI) goes in `app.setup.ts`, so tests run it too. The JSON body parser is `common/middleware/json-body.middleware.ts`: it caps the body (`REQUEST_BODY_LIMIT`) and renders `request.too_large` and `request.malformed` itself, because parser errors never reach the global filter.
+- **Throttling**: Sign up and Sign in carry `@UseGuards(ThrottlerGuard)` (limit `THROTTLE_LIMIT` per `THROTTLE_TTL_SECONDS`, per IP); `ThrottlerModule` is configured in `AuthModule`. A new throttled route adds the same guard. Tests run with a limit high enough to never trip; a throttling spec lowers it.
+- **Documenting a route**: every route carries `@ApiTags`, an `@ApiResponse` for its success and `@ApiErrors(...codes)` (`common/decorators/api-errors.decorator.ts`) for its errors; a protected route adds `@ApiBearerAuth("bearer")`. Schemas are referenced by name from `SCHEMAS` in `src/docs/api-document.ts`. Then regenerate the contract ([contract/AGENTS.md](../contract/AGENTS.md)).
 
 ## Where does this file belong?
 
@@ -73,7 +76,7 @@ Inject `PinoLogger` from `nestjs-pino` and call `setContext(ClassName.name)` in 
 
 ## Tests
 
-The only test seam is the real application over HTTP against a throwaway MongoDB ([ADR 0004](../docs/adr/0004-quality-gates-and-test-seams.md)). Jest runs `src/test/**/*.spec.ts`; `tsconfig.build.json` excludes `src/test/`.
+The only test seam is the real application over HTTP (`api-docs.spec.ts` also pins `contract/openapi.json` to the generated document) against a throwaway MongoDB ([ADR 0004](../docs/adr/0004-quality-gates-and-test-seams.md)). Jest runs `src/test/**/*.spec.ts`; `tsconfig.build.json` excludes `src/test/`.
 
 - A route's or module's behaviour -> `src/test/<area>.spec.ts`, named for what it covers; no spec sits beside source. Boot-time behaviour of `src/main.ts` -> `configuration.spec.ts`. A helper several specs use -> `src/test/support/<name>.ts`. How the app boots under test -> `src/test/boot.ts`.
 - `startTestApp(env?)` in `beforeAll`, `app.close()` in `afterAll`. It boots `AppModule` as production does and gives `http()` (supertest), `clock` (a `FakeClock` replacing `ClockService`), `startedAt`, `db` (the raw database), `logs()` and `stopDatabase()`.
@@ -93,4 +96,4 @@ The only test seam is the real application over HTTP against a throwaway MongoDB
 
 ## Commands
 
-`npm run dev` (reads `.env` if present; copy `.env.example`), `npm test`, `npm run typecheck`, `npm run build`, `npm start`. Lint and format run from the repository root.
+`npm run dev` (reads `.env` if present; copy `.env.example`), `npm run openapi` (writes `../contract/openapi.json`; `openapi:check` fails when it is stale), `npm test`, `npm run typecheck`, `npm run build`, `npm start`. Lint and format run from the repository root.

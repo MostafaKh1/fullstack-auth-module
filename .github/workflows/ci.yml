@@ -32,6 +32,23 @@ jobs:
       - name: Prettier
         run: npm run format:check
 
+  contract:
+    name: Contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix backend
+      - run: npm ci --prefix frontend
+      - name: openapi.json is current
+        run: npm run openapi:check --prefix backend
+      - name: Generated front-end types are current
+        run: |
+          npm run generate:api --prefix frontend
+          git diff --exit-code -- frontend/src/utils/api-types.generated.ts
+
   app:
     name: ${{ matrix.app }}
     needs: lint

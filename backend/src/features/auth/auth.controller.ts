@@ -1,5 +1,8 @@
 import { Body, Controller, Headers, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { ApiBody, ApiCookieAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import type { Request, Response } from "express";
+import { ApiErrors } from "../../common/decorators/api-errors.decorator";
 import { Public } from "../../common/decorators/auth.decorator";
 import { OriginCsrfGuard } from "../../common/guards/origin-csrf.guard";
 import { RouteValidationPipe } from "../../common/pipes/route-validation.pipe";
@@ -9,6 +12,7 @@ import { AuthService, type SignedIn } from "./services/auth.service";
 
 export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
+@ApiTags("auth")
 @Controller("auth")
 export class AuthController {
   constructor(
@@ -17,6 +21,20 @@ export class AuthController {
   ) {}
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @ApiBody({ schema: { $ref: "#/components/schemas/SignUpRequest" } })
+  @ApiResponse({
+    status: 201,
+    description: "A new Session; the refresh cookie is set.",
+    schema: { $ref: "#/components/schemas/SignedIn" },
+  })
+  @ApiErrors(
+    "request.validation_failed",
+    "request.malformed",
+    "user.email_taken",
+    "request.too_large",
+    "request.rate_limited",
+  )
   @Post("sign-up")
   async signUp(
     @Body(new RouteValidationPipe(signUpSchema)) body: SignUpBody,
@@ -27,6 +45,20 @@ export class AuthController {
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @ApiBody({ schema: { $ref: "#/components/schemas/SignInRequest" } })
+  @ApiResponse({
+    status: 200,
+    description: "A new Session; the refresh cookie is set.",
+    schema: { $ref: "#/components/schemas/SignedIn" },
+  })
+  @ApiErrors(
+    "request.validation_failed",
+    "request.malformed",
+    "auth.invalid_credentials",
+    "request.too_large",
+    "request.rate_limited",
+  )
   @Post("sign-in")
   @HttpCode(200)
   async signIn(
@@ -40,6 +72,13 @@ export class AuthController {
   /** Authenticated by the refresh cookie and the Origin check, not an access token. */
   @Public()
   @UseGuards(OriginCsrfGuard)
+  @ApiCookieAuth()
+  @ApiResponse({
+    status: 200,
+    description: "A rotated Session; the refresh cookie is replaced.",
+    schema: { $ref: "#/components/schemas/SignedIn" },
+  })
+  @ApiErrors("auth.unauthenticated", "auth.session_expired", "auth.origin_rejected")
   @Post("refresh")
   @HttpCode(200)
   async refresh(
@@ -53,6 +92,9 @@ export class AuthController {
   /** Idempotent: the cookie is cleared whether or not it held a live Session. */
   @Public()
   @UseGuards(OriginCsrfGuard)
+  @ApiCookieAuth()
+  @ApiResponse({ status: 204, description: "The Session ended and the refresh cookie is cleared." })
+  @ApiErrors("auth.origin_rejected")
   @Post("sign-out")
   @HttpCode(204)
   async signOut(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<void> {

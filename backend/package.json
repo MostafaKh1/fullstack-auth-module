@@ -11,7 +11,9 @@
     "start": "node --env-file-if-exists=.env dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "jest"
+    "test": "jest",
+    "openapi": "ts-node --transpile-only src/docs/export-openapi.ts",
+    "openapi:check": "ts-node --transpile-only src/docs/export-openapi.ts --check"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.9",
@@ -19,6 +21,9 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.2.9",
+    "@nestjs/swagger": "^11.4.8",
+    "@nestjs/throttler": "^6.7.1",
+    "helmet": "^8.3.0",
     "mongoose": "^8.24.8",
     "nestjs-pino": "^4.6.1",
     "pino": "^9.14.0",

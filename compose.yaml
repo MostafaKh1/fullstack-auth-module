@@ -1,11 +1,10 @@
-# MongoDB for local development: `docker compose up -d --wait` (or `npm run db:up`).
-# The back end's MONGODB_URI default in backend/.env.example points here.
+# `docker compose up --build` serves the app at http://localhost:8080; `npm run db:up` starts MongoDB alone.
 services:
   mongo:
     image: mongo:8.0
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo-data:/data/db
     healthcheck:
@@ -14,6 +13,35 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      MONGODB_URI: mongodb://mongo:27017/auth
+      # Fallback for demonstration only: set JWT_ACCESS_SECRET for any real deployment.
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-compose-only-access-secret-change-me-0123456789}
+      CORS_ORIGINS: http://localhost:8080
+      # Production requires Secure cookies; browsers accept them on http://localhost.
+      COOKIE_SECURE: "true"
+      # nginx is the one proxy in front: throttle per client, not per proxy.
+      TRUST_PROXY: "1"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_URL: http://backend:3000
+    ports:
+      - "8080:8080"
 
 volumes:
   mongo-data:

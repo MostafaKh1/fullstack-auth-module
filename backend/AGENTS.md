@@ -94,6 +94,10 @@ The only test seam is the real application over HTTP (`api-docs.spec.ts` also pi
 - A controller's field for its service is the class name in camelCase (`usersService`).
 - Domain names come from [GLOSSARY.md](../GLOSSARY.md): `signUp`, never `register`.
 
+## Container
+
+`Dockerfile` builds the production image (build, production-dependencies and runtime stages, non-root); the root `compose.yaml` wires it to MongoDB and the front end.
+
 ## Commands
 
 `npm run dev` (reads `.env` if present; copy `.env.example`), `npm run openapi` (writes `../contract/openapi.json`; `openapi:check` fails when it is stale), `npm test`, `npm run typecheck`, `npm run build`, `npm start`. Lint and format run from the repository root.

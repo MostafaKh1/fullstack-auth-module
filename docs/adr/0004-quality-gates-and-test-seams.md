@@ -5,7 +5,7 @@ Biome's formatter is turned off: Prettier formats Markdown, YAML and HTML as wel
 Biome carries the rules no formatter can: its recommended preset, plus `noConsole` as an error because application code logs only through pino.
 A pre-commit hook (Husky and lint-staged) runs Biome's safe fixes and then Prettier on the staged files only, so a commit is fast and a violation Biome cannot fix blocks it.
 
-CI (`.github/workflows/ci.yml`, on pushes to `main` and on pull requests) gates in order: lint (`biome ci` and `prettier --check` over the whole repository), then for each app on its own `npm ci`, typecheck, test and build.
+CI (`.github/workflows/ci.yml`, on pushes to `main` and on pull requests) gates in order: lint (`biome ci` and `prettier --check` over the whole repository), then for each app on its own `npm ci`, typecheck, test and build, then the browser journeys (the `e2e/` package's typecheck, Playwright against both apps and a MongoDB service) and a build of both Docker images whose Compose health checks must pass.
 An app's job checks nothing while the app's `package.json` is absent and gates from the commit that creates the app, so CI is green before the apps exist and never silently skips one after.
 The hook is a convenience that `--no-verify` can bypass; CI is the gate a reviewer trusts.
 

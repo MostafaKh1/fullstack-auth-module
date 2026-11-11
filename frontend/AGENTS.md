@@ -83,6 +83,10 @@ The only seam is the whole rendered app with its real router and providers, the 
 - Query by role and visible text, as a User would; await what appears after a request with `findBy*`. Expected sentences come from `src/tests/support/expected-copy.ts`, written apart from the app's copy map.
 - Canonical example: `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
 
+## Container
+
+`Dockerfile` builds the static files and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
+
 ## Commands
 
 Run from `frontend/`: `npm run generate:api`, `npm run dev`, `npm run typecheck`, `npm test`, `npm run build`. Lint and format run from the repository root. `.env.example` lists every variable the app reads (`API_PROXY_TARGET`, used only by the dev proxy).

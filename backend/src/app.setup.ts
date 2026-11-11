@@ -9,6 +9,8 @@ import { setupApiDocs } from "./docs/api-document";
 export function configureApp(app: INestApplication): void {
   const config = app.get(AppConfigService);
   app.useLogger(app.get(Logger));
+  // A hop count, never `true`: trusting every X-Forwarded-For entry lets a client pick its own throttle bucket.
+  app.getHttpAdapter().getInstance().set("trust proxy", config.get("trustProxy"));
   app.setGlobalPrefix("api");
   app.use(helmet());
   app.enableCors({ origin: config.get("corsOrigins"), credentials: true });

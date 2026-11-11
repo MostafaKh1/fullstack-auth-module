@@ -1,0 +1,62 @@
+import { expect, type Page, test } from "@playwright/test";
+
+// The database is real and not reset, so every run needs fresh addresses.
+const runId = Date.now().toString(36);
+const password = "Correct-horse-9!";
+
+function newUser(label: string) {
+  return { email: `${label}-${runId}@example.com`, name: `E2E ${label}`, password };
+}
+
+async function signUp(page: Page, user: { email: string; name: string; password: string }) {
+  await page.goto("/?auth=sign-up");
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Name" }).fill(user.name);
+  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
+  await page.getByRole("button", { name: "Sign up" }).click();
+}
+
+async function signIn(page: Page, user: { email: string; password: string }) {
+  await page.getByRole("textbox", { name: "Email" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+}
+
+async function expectApplicationPage(page: Page, name: string) {
+  await expect(page.getByRole("heading", { name: "Welcome to the application." })).toBeVisible();
+  await expect(page.getByText(`Signed in as ${name}`)).toBeVisible();
+}
+
+test("Sign up, reload, Sign out, Sign in", async ({ page }) => {
+  const user = newUser("journey");
+
+  await signUp(page, user);
+  await expectApplicationPage(page, user.name);
+
+  await page.reload();
+  await expectApplicationPage(page, user.name);
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page).toHaveURL(/auth=sign-in/);
+
+  await signIn(page, user);
+  await expectApplicationPage(page, user.name);
+});
+
+test("Sign in with a wrong password shows the generic message", async ({ page, browser }) => {
+  const user = newUser("wrong-password");
+
+  // A separate context, so the page under test has no Session cookie.
+  const setup = await browser.newContext();
+  const setupPage = await setup.newPage();
+  await signUp(setupPage, user);
+  await expectApplicationPage(setupPage, user.name);
+  await setup.close();
+
+  await page.goto("/?auth=sign-in");
+  await signIn(page, { email: user.email, password: "Wrong-password-1!" });
+
+  await expect(page.getByText("Invalid email or password")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+});

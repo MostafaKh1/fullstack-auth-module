@@ -48,7 +48,12 @@ export async function startTestApp(env: Record<string, string> = {}): Promise<Te
   // A cold mongod on Windows can take longer than the 10 s default to start.
   const mongo = await MongoMemoryServer.create({ instance: { launchTimeout: 30_000 } });
   const uri = mongo.getUri("auth-test");
-  const config = parseConfig({ ...testEnv, MONGODB_URI: uri, ...env });
+  // The throwaway mongod has no authentication, but the production check demands credentials: validate with fake ones,
+  // connect with the real URI.
+  const config = {
+    ...parseConfig({ ...testEnv, MONGODB_URI: uri.replace("mongodb://", "mongodb://test:test@"), ...env }),
+    mongodbUri: uri,
+  };
 
   const lines: LogLine[] = [];
   const logDestination = new Writable({

@@ -66,11 +66,24 @@ describe("starting with invalid configuration", () => {
     expect(exit.output).not.toContain("leaky-short-secret");
   });
 
+  it("refuses a MongoDB connection string without credentials in production", async () => {
+    const exit = await startApi({
+      ...testEnv,
+      NODE_ENV: "production",
+      MONGODB_URI: "mongodb://mongo:27017/auth",
+      COOKIE_SECURE: "true",
+    });
+
+    expect(exit.code).not.toBe(0);
+    expect(exit.output).toContain("MONGODB_URI");
+    expect(exit.output).toContain("credentials");
+  });
+
   it("refuses insecure cookies in production", async () => {
     const exit = await startApi({
       ...testEnv,
       NODE_ENV: "production",
-      MONGODB_URI: "mongodb://localhost:27017/auth",
+      MONGODB_URI: "mongodb://app:secret@localhost:27017/auth",
       COOKIE_SECURE: "false",
     });
 
@@ -82,7 +95,7 @@ describe("starting with invalid configuration", () => {
     const exit = await startApi({
       ...testEnv,
       NODE_ENV: "production",
-      MONGODB_URI: "mongodb://localhost:27017/auth",
+      MONGODB_URI: "mongodb://app:secret@localhost:27017/auth",
       COOKIE_SECURE: "true",
       JWT_ACCESS_SECRET: "dev-only-access-secret-change-me-0123456789",
     });

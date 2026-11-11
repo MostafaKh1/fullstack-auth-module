@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signUpExamples } from "../../../components/composite/AuthScreen/AuthScreenFieldRules.examples";
+import { signUpExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
 import {
   ada,
   adaPassword,
@@ -9,10 +9,10 @@ import {
   envelope,
   heldUntilReleased,
   signedInAsAda,
-} from "../../../tests/support/auth-fixtures";
-import { expectedCopy, fallbackCopy, unreachableCopy } from "../../../tests/support/expected-copy";
-import { enterField, fillForm } from "../../../tests/support/fill-form";
-import { renderApp } from "../../../tests/support/render-app";
+} from "@/tests/support/auth-fixtures";
+import { expectedCopy, fallbackCopy, unreachableCopy } from "@/tests/support/expected-copy";
+import { enterField, fillForm } from "@/tests/support/fill-form";
+import { renderApp } from "@/tests/support/render-app";
 
 const labels = { email: "Email", name: "Name", password: "Password" } as const;
 const validForm = { Email: ada.email, Name: ada.name, Password: adaPassword };

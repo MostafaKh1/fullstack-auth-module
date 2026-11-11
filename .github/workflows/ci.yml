@@ -52,7 +52,7 @@ jobs:
       - name: Generated front-end types are current
         run: |
           npm run generate:api --prefix frontend
-          git diff --exit-code -- frontend/src/utils/api-types.generated.ts
+          git diff --exit-code -- frontend/src/utils/api/api-types.generated.ts
 
   app:
     name: ${{ matrix.app }}

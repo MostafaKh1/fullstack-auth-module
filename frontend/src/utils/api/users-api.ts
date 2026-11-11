@@ -1,5 +1,5 @@
-import { apiClient } from "./api-client";
-import type { components } from "./api-types.generated";
+import { apiClient } from "@/utils/api/api-client";
+import type { components } from "@/utils/api/api-types.generated";
 
 export type User = components["schemas"]["User"];
 

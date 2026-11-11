@@ -1,4 +1,4 @@
-import type { ApiErrorCode } from "./api-error";
+import type { ApiErrorCode } from "@/utils/api/api-error";
 
 /*
  * Every error sentence a User reads, keyed by the API's error code or a field rule id (ADR 0002).

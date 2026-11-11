@@ -30,6 +30,28 @@
     },
   },
   "overrides": [
+    // The front end imports through @/; the structure check also confines ./ to component folders, which a glob
+    // cannot tell apart from kind folders.
+    {
+      "includes": ["frontend/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["..", "../**", "**/../**", "**/.."],
+                    "message": "Import through @/ (the front end's src/), never a parent-relative path.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
     {
       "includes": ["backend/**"],
       "linter": {

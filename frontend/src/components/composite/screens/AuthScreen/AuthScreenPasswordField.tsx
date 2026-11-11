@@ -1,6 +1,6 @@
 import { type ComponentProps, type ReactNode, useState } from "react";
-import { Button } from "../../base/buttons/Button";
-import { TextField } from "../../base/inputs/TextField";
+import { Button } from "@/components/base/buttons/Button";
+import { TextField } from "@/components/base/inputs/TextField";
 
 type Props = Omit<ComponentProps<typeof TextField>, "type" | "trailing"> & {
   children?: ReactNode;

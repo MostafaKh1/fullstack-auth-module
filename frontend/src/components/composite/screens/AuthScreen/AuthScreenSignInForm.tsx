@@ -2,15 +2,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { useSession } from "../../../hooks/useSession";
-import { signIn } from "../../../utils/auth-api";
-import { errorCopy } from "../../../utils/error-copy";
-import { Button } from "../../base/buttons/Button";
-import { TextField } from "../../base/inputs/TextField";
-import { Alert } from "../banners-and-notifications/Alert";
+import { Button } from "@/components/base/buttons/Button";
+import { TextField } from "@/components/base/inputs/TextField";
+import { Alert } from "@/components/composite/banners-and-notifications/Alert";
+import { useSession } from "@/hooks/useSession";
+import { signIn } from "@/utils/api/auth-api";
+import { errorCopy } from "@/utils/error-copy";
+import { applyApiFailure } from "./AuthScreenApiFailure";
 import { type SignInFields, signInSchema } from "./AuthScreenFieldRules";
 import { AuthScreenPasswordField } from "./AuthScreenPasswordField";
-import { applyApiFailure } from "./auth-screen-api-failure";
 
 const fields = ["email", "password"] as const;
 

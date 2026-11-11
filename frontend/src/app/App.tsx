@@ -1,7 +1,7 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { DataRouter } from "react-router";
 import { RouterProvider } from "react-router";
-import { SessionProvider } from "../providers/SessionProvider";
+import { SessionProvider } from "@/providers/SessionProvider";
 
 type Props = {
   router: DataRouter;

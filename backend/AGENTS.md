@@ -62,7 +62,7 @@ features/<feature>/
 
 ### The auth feature
 
-- `auth.types.ts` holds the domain types (`User`, `Session`, `RevokedReason`) and the request schemas, the back end's copy of the field rules; the front end's copy is `frontend/src/components/composite/AuthScreen/AuthScreenFieldRules.ts`. Change both, and both worked-examples tables, in the same commit. Every check's error is its rule id (`.max(254, "email.too_long")`).
+- `auth.types.ts` holds the domain types (`User`, `Session`, `RevokedReason`) and the request schemas, the back end's copy of the field rules; the front end's copy is `frontend/src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`. Change both, and both worked-examples tables, in the same commit. Every check's error is its rule id (`.max(254, "email.too_long")`).
 - `refresh-credential.ts` is the only code that knows the `<sessionId>.<secret>` format; only `sha256(secret)` is stored.
 - A rule about a Session's lifecycle (rotation, the sliding idle expiry, the grace window, revocation) -> `services/session.service.ts`. Liveness is the guard's rule, `isSessionLive` in `src/common/guards/access-token.guard.ts`, which `SessionService` applies too.
 

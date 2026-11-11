@@ -6,7 +6,7 @@
 
 - The back end describes its routes with Swagger decorators on the controllers and builds the document in `backend/src/docs/api-document.ts`; the request schemas come from the Zod schemas in `auth.types.ts` through `z.toJSONSchema()`. Swagger UI serves the same document at `/api/docs`.
 - `npm run openapi --prefix backend` writes `openapi.json`. It needs no database.
-- The front end's request and response types are generated from it: `npm run generate:api --prefix frontend` writes `frontend/src/utils/api-types.generated.ts`. The `*-api.ts` modules alias those types; do not hand-write a duplicate.
+- The front end's request and response types are generated from it: `npm run generate:api --prefix frontend` writes `frontend/src/utils/api/api-types.generated.ts`. The `*-api.ts` modules alias those types; do not hand-write a duplicate.
 
 ## Changing the contract
 

@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import { type ComponentProps, type ReactNode, useId } from "react";
-import { cn } from "../../../utils/cn";
+import { cn } from "@/utils/cn";
 
 const input = cva(
   [

@@ -1,6 +1,6 @@
 import { createContext } from "react";
-import type { SignedIn } from "../utils/auth-api";
-import type { User } from "../utils/users-api";
+import type { SignedIn } from "@/utils/api/auth-api";
+import type { User } from "@/utils/api/users-api";
 
 /** `restoring` lasts while the app asks the back end whether the refresh cookie still holds a Session (ADR 0008). */
 export type Session =

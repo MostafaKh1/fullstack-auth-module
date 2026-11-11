@@ -60,7 +60,7 @@ export class SessionService {
     return this.rotate(credential);
   }
 
-  async revoke(sessionId: string, reason: RevokedReason): Promise<void> {
+  private async revoke(sessionId: string, reason: RevokedReason): Promise<void> {
     await this.sessions.revoke(sessionId, reason, this.clock.now());
   }
 
@@ -99,15 +99,14 @@ export class SessionService {
       return this.rotate(credential);
     }
 
-    const graceMs = this.config.get("refreshGraceSeconds") * 1000;
-    if (
-      secretMatches(credential, found.previousSecretHash) &&
-      isWithinGrace(found.previousReplacedAt, now, graceMs)
-    ) {
-      return { claims, issued: null };
-    }
+    // Any other secret proves nothing (the Session id is readable from the access token), so it changes nothing (ADR 0001).
+    if (!secretMatches(credential, found.previousSecretHash)) throw sessionExpired();
 
-    // A known Session presented with a wrong secret: a stolen credential may be in use, so the Session ends (ADR 0001).
+    const graceMs = this.config.get("refreshGraceSeconds") * 1000;
+    if (isWithinGrace(found.previousReplacedAt, now, graceMs)) return { claims, issued: null };
+
+    // A replaced secret replayed after the grace window: only a holder of a real credential has it, and the
+    // credential has been used twice, so one of the two holders is a thief and the Session ends (ADR 0001).
     await this.revoke(sessionId, "reuse-detected");
     this.logger.warn(claims, "session.reuse_detected");
     throw sessionExpired();

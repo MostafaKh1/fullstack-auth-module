@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { PinoLogger } from "nestjs-pino";
 import { AppConfigService } from "../../config/app-config.service";
 import { ApiError } from "../errors/api-error";
-import { ERROR_CODES, type ErrorCode, type ErrorEnvelope } from "../errors/error-codes";
+import { type ErrorCode, errorEnvelope } from "../errors/error-codes";
 
 // What an HttpException raised by Nest or Express itself (not by our code) means in the closed set.
 const CODE_BY_STATUS: Record<number, ErrorCode> = {
@@ -30,17 +30,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = http.getResponse<Response>();
 
     const { code, issues, message } = this.classify(exception);
-    const { status, retryable } = ERROR_CODES[code];
+    const envelope = errorEnvelope(code, String(request.id), {
+      issues,
+      message,
+      isProduction: this.config.isProduction,
+    });
 
-    if (status >= 500) {
+    if (envelope.status >= 500) {
       this.logger.error({ err: exception, code }, "request.failed");
     }
 
-    const envelope: ErrorEnvelope = { code, status, traceId: String(request.id), retryable };
-    if (issues) envelope.issues = issues;
-    if (!this.config.isProduction) envelope.message = message;
-
-    response.status(status).json(envelope);
+    response.status(envelope.status).json(envelope);
   }
 
   private classify(exception: unknown): { code: ErrorCode; issues?: ApiError["issues"]; message: string } {

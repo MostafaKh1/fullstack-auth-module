@@ -185,7 +185,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "request.validation_failed" | "request.malformed";
                     };
                 };
@@ -197,7 +197,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "user.email_taken";
                     };
                 };
@@ -209,7 +209,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "request.too_large";
                     };
                 };
@@ -221,7 +221,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "request.rate_limited";
                     };
                 };
@@ -257,7 +257,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "request.validation_failed" | "request.malformed";
                     };
                 };
@@ -269,7 +269,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "auth.invalid_credentials";
                     };
                 };
@@ -281,7 +281,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "request.too_large";
                     };
                 };
@@ -293,7 +293,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "request.rate_limited";
                     };
                 };
@@ -325,7 +325,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "auth.unauthenticated" | "auth.session_expired";
                     };
                 };
@@ -337,8 +337,20 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "auth.origin_rejected";
+                    };
+                };
+            };
+            /** @description Error codes: request.rate_limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"] & {
+                        /** @enum {string} */
+                        code?: "request.rate_limited";
                     };
                 };
             };
@@ -367,7 +379,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "auth.origin_rejected";
                     };
                 };
@@ -399,7 +411,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "auth.unauthenticated";
                     };
                 };
@@ -431,7 +443,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"] & {
-                        /** @enum {unknown} */
+                        /** @enum {string} */
                         code?: "server.unavailable";
                     };
                 };

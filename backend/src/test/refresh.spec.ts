@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { startTestApp, type TestApp } from "./boot";
 import { refreshCookie } from "./support/refresh-cookie";
 
@@ -57,8 +56,23 @@ describe("refresh: POST /api/auth/refresh", () => {
     const rotated = credentialOf(response);
     expect(rotated.split(".")[0]).toBe(credential.split(".")[0]);
     expect(rotated).not.toBe(credential);
-    const session = await storedSession();
-    expect(session?.secretHash).toBe(createHash("sha256").update(rotated.split(".")[1]).digest("hex"));
+  });
+
+  it("checks the secret against its stored SHA-256 hash, and stores only a hash of the rotated one", async () => {
+    // The SHA-256 test vector of FIPS 180-2: sha256("abc").
+    const abcHash = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    const sessionId = credential.split(".")[0];
+    await app.db.collection("sessions").updateMany({}, { $set: { secretHash: abcHash } });
+
+    const response = await refresh(`${sessionId}.abc`);
+
+    expect(response.status).toBe(200);
+    const rotatedSecret = credentialOf(response).split(".")[1];
+    const stored = (await storedSession())?.secretHash;
+    expect(stored).toMatch(/^[0-9a-f]{64}$/);
+    expect(stored).not.toContain(rotatedSecret);
+    // The check above is proven to be SHA-256, so the rotated secret being accepted means its stored hash is SHA-256.
+    expect((await refresh(credentialOf(response))).status).toBe(200);
   });
 
   it("issues an access token the protected endpoint accepts", async () => {
@@ -121,9 +135,7 @@ describe("refresh: POST /api/auth/refresh", () => {
     const rotating = responses.filter((response) => response.headers["set-cookie"] !== undefined);
     expect(rotating).toHaveLength(1);
     const rotated = credentialOf(rotating[0]);
-    const session = await storedSession();
-    expect(session?.secretHash).toBe(createHash("sha256").update(rotated.split(".")[1]).digest("hex"));
-    expect(session?.revokedAt ?? null).toBeNull();
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
     expect((await refresh(rotated)).status).toBe(200);
   });
 
@@ -141,20 +153,38 @@ describe("refresh: POST /api/auth/refresh", () => {
     expect((await refresh(credentialOf(first))).body.code).toBe("auth.session_expired");
   });
 
-  it("revokes the Session when a credential older than the previous one is replayed, even within the grace window", async () => {
+  it("refuses a credential older than the previous one with 401 auth.session_expired, leaving the Session live", async () => {
     const first = await refresh();
     const second = await refresh(credentialOf(first));
 
-    const replay = await refresh(credential);
+    const stale = await refresh(credential);
 
-    expect(replay.status).toBe(401);
-    expect(replay.body.code).toBe("auth.session_expired");
-    expect((await storedSession())?.revokedReason).toBe("reuse-detected");
-    const me = await app
-      .http()
-      .get("/api/users/me")
-      .set("Authorization", `Bearer ${second.body.accessToken}`);
-    expect(me.status).toBe(401);
+    expect(stale.status).toBe(401);
+    expect(stale.body.code).toBe("auth.session_expired");
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
+    expect((await refresh(credentialOf(second))).status).toBe(200);
+  });
+
+  it("leaves a Session live when its id is presented with a guessed secret", async () => {
+    const sessionId = credential.split(".")[0];
+
+    const guessed = await refresh(`${sessionId}.x`);
+
+    expect(guessed.status).toBe(401);
+    expect(guessed.body.code).toBe("auth.session_expired");
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
+    expect((await refresh()).status).toBe(200);
+  });
+
+  it("leaves a Session live when a guessed secret is presented within the grace window", async () => {
+    const first = await refresh();
+    const sessionId = credential.split(".")[0];
+
+    const guessed = await refresh(`${sessionId}.x`);
+
+    expect(guessed.status).toBe(401);
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
+    expect((await refresh(credentialOf(first))).status).toBe(200);
   });
 
   it("refuses a revoked Session with 401 auth.session_expired", async () => {

@@ -1,3 +1,4 @@
+import { PinoLogger } from "nestjs-pino";
 import { startTestApp, type TestApp } from "./boot";
 
 describe("structured logs", () => {
@@ -37,6 +38,19 @@ describe("structured logs", () => {
     expect(lines[0]).toMatchObject({
       req: { headers: { authorization: "[Redacted]", cookie: "[Redacted]" } },
     });
+  });
+
+  it("redacts both secret hashes of a logged Session document", async () => {
+    // No route logs a Session document, so the app's own logger, which every line goes through, stands in for one.
+    const logger = await app.nest.resolve(PinoLogger);
+
+    logger.info(
+      { session: { secretHash: "current-hash", previousSecretHash: "previous-hash" } },
+      "redaction.check",
+    );
+
+    const line = app.logs().find((entry) => entry.msg === "redaction.check");
+    expect(line).toMatchObject({ session: { secretHash: "[Redacted]", previousSecretHash: "[Redacted]" } });
   });
 });
 

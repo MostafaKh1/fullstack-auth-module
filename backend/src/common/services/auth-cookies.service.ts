@@ -15,32 +15,14 @@ export class AuthCookiesService {
     private readonly clock: ClockService,
   ) {}
 
-  setRefreshCookie(response: Response, credential: string, idleExpiresAt: Date): void {
+  setRefreshCookie(response: Response, credential: { value: string; idleExpiresAt: Date }): void {
+    const { value, idleExpiresAt } = credential;
     const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
-    // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
-    const attributes = [
-      `${REFRESH_COOKIE}=${encodeURIComponent(credential)}`,
-      `Max-Age=${maxAgeSeconds}`,
-      `Path=${REFRESH_COOKIE_PATH}`,
-      `Expires=${idleExpiresAt.toUTCString()}`,
-      "HttpOnly",
-      ...(this.config.get("cookieSecure") ? ["Secure"] : []),
-      "SameSite=Lax",
-    ];
-    response.append("Set-Cookie", attributes.join("; "));
+    this.writeRefreshCookie(response, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
   }
 
   clearRefreshCookie(response: Response): void {
-    const attributes = [
-      `${REFRESH_COOKIE}=`,
-      "Max-Age=0",
-      `Path=${REFRESH_COOKIE_PATH}`,
-      "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-      "HttpOnly",
-      ...(this.config.get("cookieSecure") ? ["Secure"] : []),
-      "SameSite=Lax",
-    ];
-    response.append("Set-Cookie", attributes.join("; "));
+    this.writeRefreshCookie(response, "", 0, new Date(0));
   }
 
   readRefreshCookie(request: Request): string | null {
@@ -54,5 +36,19 @@ export class AuthCookiesService {
       }
     }
     return null;
+  }
+
+  // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
+  private writeRefreshCookie(response: Response, value: string, maxAgeSeconds: number, expires: Date): void {
+    const attributes = [
+      `${REFRESH_COOKIE}=${value}`,
+      `Max-Age=${maxAgeSeconds}`,
+      `Path=${REFRESH_COOKIE_PATH}`,
+      `Expires=${expires.toUTCString()}`,
+      "HttpOnly",
+      ...(this.config.get("cookieSecure") ? ["Secure"] : []),
+      "SameSite=Lax",
+    ];
+    response.append("Set-Cookie", attributes.join("; "));
   }
 }

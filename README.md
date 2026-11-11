@@ -17,13 +17,16 @@ The two apps share no code; HTTP is the only contract between them ([ADR 0003](d
 
 ### With Docker
 
+Compose needs a signing secret for the access tokens; it refuses to start without one. Put a random one in a `.env` file at the repository root, which Compose reads and git ignores:
+
 ```sh
+echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" > .env
 docker compose up --build
 ```
 
 Open http://localhost:8080. This builds both apps, starts MongoDB, the API and an nginx that serves the front end and proxies `/api`. If port 27017 is taken on your machine, set `MONGO_PORT` (for example `MONGO_PORT=27117 docker compose up --build`); only the published MongoDB port changes.
 
-The Compose file falls back to a demonstration-only `JWT_ACCESS_SECRET`; set your own for anything real.
+The stack runs with `NODE_ENV=production`, so the refresh cookie is `Secure`. Chrome and Firefox accept a `Secure` cookie on plain-HTTP `localhost`; Safari does not, so in Safari the Compose stack signs you in but a reload signs you out. Use Chrome or Firefox, or the development setup below, which does not set `Secure`.
 
 ### Without Docker for the apps
 
@@ -31,7 +34,7 @@ The Compose file falls back to a demonstration-only `JWT_ACCESS_SECRET`; set you
 npm run setup                                  # installs the root, backend, frontend and e2e dependencies
 cp backend/.env.example backend/.env           # local defaults; every variable is documented inside
 cp frontend/.env.example frontend/.env
-npm run db:up                                  # MongoDB alone, from compose.yaml
+npm run db:up                                  # MongoDB alone, from compose.mongo.yaml (no secret needed)
 npm run dev                                    # back end and front end together
 ```
 
@@ -70,7 +73,7 @@ frontend/    React app: pages/, components/, providers/ (the Session), hooks/, u
 e2e/         Playwright journeys, run against the real apps
 contract/    openapi.json, exported from the back end; the front end's API types are generated from it
 docs/        requirements.md (rules and traceability), spec/, adr/ (decisions), agents/
-compose.yaml MongoDB, API and front end as containers
+compose.yaml MongoDB (compose.mongo.yaml), API and front end as containers
 AI.md        how AI was used; AGENTS.md files hold the navigation for people and agents
 ```
 
@@ -80,14 +83,14 @@ Each app's architecture and the "where does this file go" rules are in [backend/
 
 Every route sits under `/api`. Swagger UI at `/api/docs` documents each route, its schemas and its error codes, and can call the protected endpoint with a Bearer token; the same document is checked in as [contract/openapi.json](contract/openapi.json).
 
-| Method | Path             | Auth                   | Purpose                                               |
-| ------ | ---------------- | ---------------------- | ----------------------------------------------------- |
-| POST   | `/auth/sign-up`  | Public, throttled      | Create a User and start a Session                     |
-| POST   | `/auth/sign-in`  | Public, throttled      | Start a Session                                       |
-| POST   | `/auth/refresh`  | Refresh cookie, Origin | Rotate the refresh credential, issue an access token  |
-| POST   | `/auth/sign-out` | Refresh cookie, Origin | End the Session on the server                         |
-| GET    | `/users/me`      | Access token           | The protected endpoint: id, email, name, sign-up date |
-| GET    | `/health`        | Public                 | Liveness and database status                          |
+| Method | Path             | Auth                              | Purpose                                               |
+| ------ | ---------------- | --------------------------------- | ----------------------------------------------------- |
+| POST   | `/auth/sign-up`  | Public, throttled                 | Create a User and start a Session                     |
+| POST   | `/auth/sign-in`  | Public, throttled                 | Start a Session                                       |
+| POST   | `/auth/refresh`  | Refresh cookie, Origin, throttled | Rotate the refresh credential, issue an access token  |
+| POST   | `/auth/sign-out` | Refresh cookie, Origin            | End the Session on the server                         |
+| GET    | `/users/me`      | Access token                      | The protected endpoint: id, email, name, sign-up date |
+| GET    | `/health`        | Public                            | Liveness and database status                          |
 
 Every error is one envelope, `{ code, status, traceId, retryable, issues? }`, with a stable code and no display copy; the front end owns the wording ([ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md)). `traceId` is also the `X-Request-Id` header.
 
@@ -98,7 +101,7 @@ Every error is one envelope, `{ code, status, traceId, retryable, issues? }`, wi
 - **The refresh cookie** is `httpOnly`, `SameSite=Lax`, `Secure` in production and scoped to `/api/auth`, so scripts cannot read it and it travels nowhere else ([ADR 0001](docs/adr/0001-session-record-with-short-lived-access-token.md)).
 - **Origin check**: the cookie routes (`refresh`, `sign-out`) reject a request whose `Origin` is not on the allowlist, which stops cross-site use of the cookie ([ADR 0001](docs/adr/0001-session-record-with-short-lived-access-token.md)).
 - **Sign in never says which half was wrong**: one message, "Invalid email or password". A taken email on Sign up is reported plainly; throttling is the mitigation ([docs/requirements.md](docs/requirements.md)).
-- **Throttling, helmet, CORS, body cap**: Sign up and Sign in are limited per IP (set `TRUST_PROXY` to the number of proxies in front); `helmet` sets the security headers; CORS allows only the configured origins, with credentials; request bodies are capped (`REQUEST_BODY_LIMIT`). See "API contract" in [docs/spec/auth-module.md](docs/spec/auth-module.md) and `backend/src/test/hardening.spec.ts`.
+- **Throttling, helmet, CORS, body cap**: Sign up, Sign in and refresh are limited per IP (set `TRUST_PROXY` to the number of proxies in front); `helmet` sets the security headers; CORS allows only the configured origins, with credentials; request bodies are capped (`REQUEST_BODY_LIMIT`). See "API contract" in [docs/spec/auth-module.md](docs/spec/auth-module.md) and `backend/src/test/hardening.spec.ts`.
 - **`returnTo`** is followed only when it is a same-site path, so Sign in cannot be used as an open redirect ([ADR 0009](docs/adr/0009-auth-forms-addressed-by-search-parameter.md)).
 - **Logs** are structured (pino), carry the request id, and redact credentials and cookies; configuration errors name the bad variable and never print its value.
 

@@ -7,7 +7,7 @@ import { IS_PUBLIC } from "../decorators/auth.decorator";
 import { ApiError } from "../errors/api-error";
 import { AccessTokenService, type AuthContext } from "../services/access-token.service";
 
-export type AuthenticatedRequest = Request & { authContext?: AuthContext };
+export type RequestWithAuthContext = Request & { authContext?: AuthContext };
 
 type SessionExpiry = { revokedAt: Date | null; idleExpiresAt: Date; absoluteExpiresAt: Date };
 
@@ -38,7 +38,7 @@ export class AccessTokenGuard implements CanActivate {
     ]);
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const request = context.switchToHttp().getRequest<RequestWithAuthContext>();
     const token = BEARER.exec(request.headers.authorization ?? "")?.[1];
     if (!token) throw new ApiError("auth.unauthenticated", { message: "A Bearer access token is required." });
 

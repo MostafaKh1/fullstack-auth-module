@@ -8,7 +8,7 @@ import type { SignInBody, SignUpBody, User } from "../auth.types";
 import { type IssuedRefreshCredential, SessionService } from "./session.service";
 
 /** `refreshCredential` is `null` only for a refresh accepted within the grace window (ADR 0001). */
-export type SignedIn = {
+export type AuthOutcome = {
   user: User;
   accessToken: string;
   expiresIn: number;
@@ -26,7 +26,7 @@ export class AuthService {
   ) {}
 
   /** A taken email is caught by the unique index. */
-  async signUp(input: SignUpBody & { userAgent: string | null }): Promise<SignedIn> {
+  async signUp(input: SignUpBody & { userAgent: string | null }): Promise<AuthOutcome> {
     const passwordHash = await this.passwordHashService.hash(input.password);
     const user = await this.users.create({
       email: input.email,
@@ -39,7 +39,7 @@ export class AuthService {
   }
 
   /** An unknown email still pays for a hash verification and fails as a wrong password does, so neither reveals which emails have a User. */
-  async signIn(input: SignInBody & { userAgent: string | null }): Promise<SignedIn> {
+  async signIn(input: SignInBody & { userAgent: string | null }): Promise<AuthOutcome> {
     const found = await this.users.findWithPasswordHashByEmail(input.email);
     const matches = found
       ? await this.passwordHashService.verify(input.password, found.passwordHash)
@@ -48,7 +48,7 @@ export class AuthService {
     return this.startSession(found.user, input.userAgent);
   }
 
-  async refresh(presentedCredential: string | null): Promise<SignedIn> {
+  async refresh(presentedCredential: string | null): Promise<AuthOutcome> {
     const { claims, issued } = await this.sessionService.refresh(presentedCredential);
     const user = await this.users.findById(claims.userId);
     if (!user) {
@@ -61,7 +61,7 @@ export class AuthService {
     await this.sessionService.revokeForCredential(presentedCredential);
   }
 
-  private async startSession(user: User, userAgent: string | null): Promise<SignedIn> {
+  private async startSession(user: User, userAgent: string | null): Promise<AuthOutcome> {
     const { claims, issued } = await this.sessionService.start(user.id, userAgent);
     return this.signedIn(user, claims, issued);
   }
@@ -70,7 +70,7 @@ export class AuthService {
     user: User,
     claims: AuthContext,
     refreshCredential: IssuedRefreshCredential | null,
-  ): Promise<SignedIn> {
+  ): Promise<AuthOutcome> {
     return {
       user,
       accessToken: await this.accessTokenService.sign(claims, this.clock.now()),

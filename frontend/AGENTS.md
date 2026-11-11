@@ -68,7 +68,7 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/0002-api-errors-carry-codes-not-copy.md)):
 
 - A failed request rejects with the envelope; the caller reads its `code`, never its `message`.
-- `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
+- `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ApiErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
 - Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `auth-screen-api-failure.ts`). A field error holds the code; the form renders `errorCopy(code)`.
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
 - The field rules are `src/components/composite/AuthScreen/AuthScreenFieldRules.ts`, the front end's copy; the back end's is `backend/src/features/auth/auth.types.ts`. Change both, and both worked-examples tables (`AuthScreenFieldRules.examples.ts` here), in the same commit.

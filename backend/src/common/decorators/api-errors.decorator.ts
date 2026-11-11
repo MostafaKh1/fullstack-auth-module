@@ -14,7 +14,10 @@ export function ApiErrors(...codes: ErrorCode[]): MethodDecorator & ClassDecorat
         status,
         description: `Error codes: ${group.join(", ")}`,
         schema: {
-          allOf: [{ $ref: "#/components/schemas/ErrorEnvelope" }, { properties: { code: { enum: group } } }],
+          allOf: [
+            { $ref: "#/components/schemas/ErrorEnvelope" },
+            { type: "object", properties: { code: { type: "string", enum: group } } },
+          ],
         },
       }),
     ),

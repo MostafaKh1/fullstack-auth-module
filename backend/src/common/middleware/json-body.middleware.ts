@@ -1,6 +1,6 @@
 import { type ErrorRequestHandler, json, type RequestHandler } from "express";
 import { assignRequestId } from "../../logging/request-id";
-import { ERROR_CODES, type ErrorCode, type ErrorEnvelope } from "../errors/error-codes";
+import { type ErrorCode, errorEnvelope } from "../errors/error-codes";
 
 const BODY_PARSER_ERRORS: Record<string, ErrorCode> = {
   "entity.too.large": "request.too_large",
@@ -16,10 +16,11 @@ export function jsonBody(limit: string, isProduction: boolean): (RequestHandler 
       next(error);
       return;
     }
-    const { status, retryable } = ERROR_CODES[code];
-    const envelope: ErrorEnvelope = { code, status, traceId: assignRequestId(req, res), retryable };
-    if (!isProduction) envelope.message = (error as Error).message;
-    res.status(status).json(envelope);
+    const envelope = errorEnvelope(code, assignRequestId(req, res), {
+      message: (error as Error).message,
+      isProduction,
+    });
+    res.status(envelope.status).json(envelope);
   };
   return [parse, render];
 }

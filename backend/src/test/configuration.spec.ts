@@ -72,4 +72,18 @@ describe("starting with invalid configuration", () => {
     expect(exit.code).not.toBe(0);
     expect(exit.output).toContain("COOKIE_SECURE");
   });
+
+  it("refuses the access-token secret published in .env.example in production", async () => {
+    const exit = await startApi({
+      ...testEnv,
+      NODE_ENV: "production",
+      MONGODB_URI: "mongodb://localhost:27017/auth",
+      COOKIE_SECURE: "true",
+      JWT_ACCESS_SECRET: "dev-only-access-secret-change-me-0123456789",
+    });
+
+    expect(exit.code).not.toBe(0);
+    expect(exit.output).toContain("must not be the example value");
+    expect(exit.output).not.toContain("dev-only-access-secret");
+  });
 });

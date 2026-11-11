@@ -13,6 +13,7 @@ const requestSchema = (schema: z.ZodType): SchemaObject => {
 
 const USER = {
   type: "object",
+  additionalProperties: false,
   required: ["id", "email", "name", "createdAt"],
   properties: {
     id: { type: "string" },
@@ -22,13 +23,15 @@ const USER = {
   },
 };
 
-/** The component schemas the routes reference by name; request schemas come from the Zod schemas. */
+// Request schemas come from the Zod schemas. Response objects are closed, so `api-docs.spec.ts` fails when a route
+// sends a field the document does not describe.
 const SCHEMAS = {
   SignUpRequest: requestSchema(signUpSchema),
   SignInRequest: requestSchema(signInSchema),
   User: USER,
   SignedIn: {
     type: "object",
+    additionalProperties: false,
     required: ["accessToken", "expiresIn", "user"],
     properties: {
       accessToken: { type: "string" },
@@ -38,11 +41,13 @@ const SCHEMAS = {
   },
   Health: {
     type: "object",
+    additionalProperties: false,
     required: ["status", "database"],
     properties: { status: { type: "string", enum: ["ok"] }, database: { type: "string", enum: ["up"] } },
   },
   ErrorEnvelope: {
     type: "object",
+    additionalProperties: false,
     required: ["code", "status", "traceId", "retryable"],
     properties: {
       code: { type: "string", enum: Object.keys(ERROR_CODES) },
@@ -53,6 +58,7 @@ const SCHEMAS = {
         type: "array",
         items: {
           type: "object",
+          additionalProperties: false,
           required: ["path", "code"],
           properties: {
             path: { type: "array", items: { oneOf: [{ type: "string" }, { type: "integer" }] } },

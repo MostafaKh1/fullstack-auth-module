@@ -78,7 +78,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Tests live at the agreed seams only: the back end's HTTP API, the front end's rendered app with the network faked by MSW, and the Playwright journeys. A test that reaches past a seam into a private method or a collaborator mock is rewritten at the seam.
 - Expected values come from the spec or a worked example, never recomputed the way the code computes them.
 - Back-end integration tests seed data through the raw collection, never through the repository under test, so a broken write and a broken read cannot agree with each other.
-- A test name reads as a behaviour in glossary terms: `"a replayed refresh credential revokes the Session"`, not `"refresh() throws"`.
+- A test name reads as a behaviour in glossary terms: `"a replayed previous refresh credential revokes the Session"`, not `"refresh() throws"`.
 
 ## Comments
 
@@ -93,7 +93,7 @@ A comment earns its place by saying a _why_ the code cannot say. Where the code 
 A good comment gives the reason, and cites the ADR when it rests on one:
 
 ```ts
-// A known Session presented with a wrong secret: a stolen credential may be in use, so the Session ends (ADR 0001).
+// A replaced secret replayed after the grace window: two parties hold the credential, so the Session ends (ADR 0001).
 ```
 
 A good doc header is one line that says what the name cannot:

@@ -1,5 +1,5 @@
-import { apiClient } from "./api-client";
-import type { components } from "./api-types.generated";
+import { apiClient } from "@/utils/api-client";
+import type { components } from "@/utils/api-types.generated";
 
 export type SignedIn = components["schemas"]["SignedIn"];
 

@@ -1,8 +1,8 @@
 import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { failOnUndeclaredRequests } from "../setup/server";
-import { fillForm } from "./fill-form";
-import { renderApp } from "./render-app";
+import { failOnUndeclaredRequests } from "@/tests/setup/server";
+import { fillForm } from "@/tests/support/fill-form";
+import { renderApp } from "@/tests/support/render-app";
 
 describe("rendered-app harness", () => {
   it("fails a test that makes a request it did not declare", async () => {

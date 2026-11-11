@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router";
-import { type AuthForm, withAuthForm } from "../../../utils/auth-url";
+import { type AuthForm, withAuthForm } from "@/utils/auth-url";
 
 type Props = {
   form: AuthForm;

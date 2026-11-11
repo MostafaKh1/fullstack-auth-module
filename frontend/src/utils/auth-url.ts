@@ -1,4 +1,4 @@
-import { isSafeReturnTo } from "./return-to";
+import { isSafeReturnTo } from "@/utils/return-to";
 
 /** The forms the `auth` search parameter on `/` addresses (ADR 0009), named as in GLOSSARY.md. */
 export type AuthForm = "sign-in" | "sign-up";

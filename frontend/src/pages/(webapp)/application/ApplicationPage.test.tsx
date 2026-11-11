@@ -13,12 +13,12 @@ import {
   signedInAsAda,
   signInSucceeds,
   signUpSucceeds,
-} from "../../../tests/support/auth-fixtures";
-import { expectedCopy } from "../../../tests/support/expected-copy";
-import { fillForm } from "../../../tests/support/fill-form";
-import { renderApp, renderRestoringApp } from "../../../tests/support/render-app";
-import { returnToExamples } from "../../../utils/return-to.examples";
-import { getCurrentUser } from "../../../utils/users-api";
+} from "@/tests/support/auth-fixtures";
+import { expectedCopy } from "@/tests/support/expected-copy";
+import { fillForm } from "@/tests/support/fill-form";
+import { renderApp, renderRestoringApp } from "@/tests/support/render-app";
+import { returnToExamples } from "@/utils/return-to.examples";
+import { getCurrentUser } from "@/utils/users-api";
 
 type Router = ReturnType<typeof renderRestoringApp>["router"];
 

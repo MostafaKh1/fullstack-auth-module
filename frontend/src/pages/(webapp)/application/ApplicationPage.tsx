@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "../../../components/base/buttons/Button";
-import { Alert } from "../../../components/composite/banners-and-notifications/Alert";
-import { useSession } from "../../../hooks/useSession";
-import { apiErrorEnvelope } from "../../../utils/api-error";
-import { errorCopy, unreachableCopy } from "../../../utils/error-copy";
-import { getCurrentUser } from "../../../utils/users-api";
+import { Button } from "@/components/base/buttons/Button";
+import { Alert } from "@/components/composite/banners-and-notifications/Alert";
+import { useSession } from "@/hooks/useSession";
+import { apiErrorEnvelope } from "@/utils/api-error";
+import { errorCopy, unreachableCopy } from "@/utils/error-copy";
+import { getCurrentUser } from "@/utils/users-api";
 
 export function ApplicationPage() {
   const currentUser = useQuery({ queryKey: ["users", "me"], queryFn: getCurrentUser });

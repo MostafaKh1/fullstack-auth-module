@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import type { components } from "./api-types.generated";
+import type { components } from "@/utils/api-types.generated";
 
 /** One field-level problem: `path` is the keys from the body down to the field, `code` is a rule id. */
 export type ValidationIssue = NonNullable<components["schemas"]["ErrorEnvelope"]["issues"]>[number];

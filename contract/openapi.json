@@ -36,8 +36,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.validation_failed",
                             "request.malformed"
@@ -60,8 +62,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "user.email_taken"
                           ]
@@ -83,8 +87,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.too_large"
                           ]
@@ -106,8 +112,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.rate_limited"
                           ]
@@ -160,8 +168,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.validation_failed",
                             "request.malformed"
@@ -184,8 +194,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "auth.invalid_credentials"
                           ]
@@ -207,8 +219,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.too_large"
                           ]
@@ -230,8 +244,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.rate_limited"
                           ]
@@ -274,8 +290,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "auth.unauthenticated",
                             "auth.session_expired"
@@ -298,8 +316,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "auth.origin_rejected"
                           ]
@@ -321,8 +341,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "request.rate_limited"
                           ]
@@ -363,8 +385,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "auth.origin_rejected"
                           ]
@@ -412,8 +436,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "auth.unauthenticated"
                           ]
@@ -461,8 +487,10 @@
                       "$ref": "#/components/schemas/ErrorEnvelope"
                     },
                     {
+                      "type": "object",
                       "properties": {
                         "code": {
+                          "type": "string",
                           "enum": [
                             "server.unavailable"
                           ]
@@ -548,6 +576,7 @@
       },
       "User": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
           "id",
           "email",
@@ -572,6 +601,7 @@
       },
       "SignedIn": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
           "accessToken",
           "expiresIn",
@@ -592,6 +622,7 @@
       },
       "Health": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
           "status",
           "database"
@@ -613,6 +644,7 @@
       },
       "ErrorEnvelope": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
           "code",
           "status",
@@ -651,6 +683,7 @@
             "type": "array",
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "required": [
                 "path",
                 "code"

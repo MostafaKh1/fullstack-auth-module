@@ -15,10 +15,12 @@
     "build": "npm run build --prefix backend && npm run build --prefix frontend",
     "e2e": "npm test --prefix e2e",
     "prepare": "husky",
-    "lint": "biome check .",
+    "lint": "biome check . && npm run check:structure",
     "lint:fix": "biome check --write .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:structure": "node scripts/check-frontend-structure.mjs",
+    "test:structure": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

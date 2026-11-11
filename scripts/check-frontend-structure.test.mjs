@@ -156,6 +156,8 @@ describe("structure check", () => {
       "components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenForm.tsx":
         'import { AuthScreenFormHint } from "./AuthScreenFormHint";\nimport { AuthScreenFieldRules } from "../AuthScreenFieldRules";\n',
       "components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenFormHint.tsx": stub,
+      "components/composite/screens/AuthScreen/AuthScreen.tsx":
+        'import { AuthScreenForm } from "./AuthScreenForm/AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
       "components/composite/screens/AuthScreen/AuthScreenForm.tsx": null,
     });
     assert.equal(status, 0, out);
@@ -251,21 +253,21 @@ describe("structure check", () => {
   });
 
   describe("baseline", () => {
-    const barrel = { "components/base/buttons/index.ts": stub };
+    const barrel = { "utils/index.ts": stub };
 
     it("lets a listed violation pass", () => {
-      const { status, out } = check(barrel, { baseline: ["no-barrel components/base/buttons/index.ts"] });
+      const { status, out } = check(barrel, { baseline: ["no-barrel utils/index.ts"] });
       assert.equal(status, 0, out);
     });
 
     it("still fails a violation that is not listed", () => {
       const { status, out } = check(barrel, { baseline: ["no-barrel somewhere/else.ts"] });
       assert.equal(status, 1, out);
-      assert.match(out, /no-barrel components\/base\/buttons\/index\.ts/);
+      assert.match(out, /no-barrel utils\/index\.ts/);
     });
 
     it("fails a listed entry that no longer matches, so the baseline only shrinks", () => {
-      const { status, out } = check({}, { baseline: ["no-barrel components/base/buttons/index.ts"] });
+      const { status, out } = check({}, { baseline: ["no-barrel utils/index.ts"] });
       assert.equal(status, 1, out);
       assert.match(out, /stale baseline entry/i);
     });

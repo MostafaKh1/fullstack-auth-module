@@ -83,7 +83,11 @@ The only seam is the whole rendered app with its real router and providers, the 
 - Query by role and visible text, as a User would; await what appears after a request with `findBy*`. Expected sentences come from `src/tests/support/expected-copy.ts`, written apart from the app's copy map.
 - Canonical example: `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
 
-## Container
+## Structure check
+
+`npm run check:structure` (from the repository root) enforces the folder and file rules of spec #29 over `src/`: the five sections of `components/` (`primitives`, `base`, `composite`, `layout`, `utility`) and the direction of imports between them, plural kebab-case kind folders in base, composite and layout, flat primitives, `Screen` components in `composite/screens/`, component folders with an entry file and the folder prefix on every child, a child used by one sibling nested inside it, casing per kind of file, `useX` hooks (`hooks/` only when two or more files use one), a folder once three helpers in `utils/` share a concern, and no barrel files. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job; its tests (`npm run test:structure`) run the script over example trees.
+
+Each violation prints as `<rule> <path>`. `structure-baseline.json` lists today's violations in that form so the check lands green: a violation not listed fails, and so does a listed one that no longer occurs. The baseline only shrinks; never add a line to it.
 
 `Dockerfile` builds the static files and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
 

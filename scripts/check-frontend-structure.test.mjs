@@ -12,13 +12,13 @@ const sandboxes = [];
 const stub = "export const a = 1;\n";
 
 const conforming = {
-  "main.tsx": 'import { App } from "./app/App";\n',
+  "main.tsx": 'import { App } from "@/app/App";\nimport "@/index.css";\n',
   "index.css": "body {}\n",
   "app/App.tsx":
-    'import { SessionProvider } from "../providers/SessionProvider";\nimport { routes } from "./routes";\n',
+    'import { SessionProvider } from "@/providers/SessionProvider";\nimport { routes } from "@/app/routes";\n',
   "app/routes.tsx":
-    'import { SignInPage } from "../pages/(auth)/sign-in/SignInPage";\nimport { NotFoundPage } from "../pages/not-found/NotFoundPage";\nimport { RequireSession } from "../components/layout/route-guards/RequireSession";\n',
-  "providers/SessionProvider.tsx": 'import { SessionContext } from "./session-context";\n',
+    'import { SignInPage } from "@/pages/(auth)/sign-in/SignInPage";\nimport { NotFoundPage } from "@/pages/not-found/NotFoundPage";\nimport { RequireSession } from "@/components/layout/route-guards/RequireSession";\n',
+  "providers/SessionProvider.tsx": 'import { SessionContext } from "@/providers/session-context";\n',
   "providers/session-context.ts": stub,
   "hooks/useSession.ts": stub,
   "utils/cn.ts": stub,
@@ -30,27 +30,25 @@ const conforming = {
   "tests/support/render-app.tsx": stub,
   "components/primitives/Slot.tsx": stub,
   "components/base/buttons/Button.tsx":
-    'import { Slot } from "../../primitives/Slot";\nimport { cn } from "../../../utils/cn";\n',
-  "components/base/buttons/Button.test.tsx": 'import { Button } from "./Button";\n',
+    'import { Slot } from "@/components/primitives/Slot";\nimport { cn } from "@/utils/cn";\n',
+  "components/base/buttons/Button.test.tsx": 'import { Button } from "@/components/base/buttons/Button";\n',
   "components/composite/screens/AuthScreen/AuthScreen.tsx":
-    'import { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\nimport { Button } from "../../../base/buttons/Button";\n',
+    'import { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\nimport { Button } from "@/components/base/buttons/Button";\n',
   "components/composite/screens/AuthScreen/AuthScreenForm.tsx":
     'import { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
   "components/composite/screens/AuthScreen/AuthScreenFieldRules.ts": stub,
   "components/composite/screens/AuthScreen/AuthScreenFieldRules.examples.ts": stub,
   "components/composite/screens/AuthScreen/AuthScreenFieldRules.test.tsx":
     'import "./AuthScreenFieldRules.examples";\n',
-  "components/layout/route-guards/RequireSession.tsx":
-    'import { useSession } from "../../../hooks/useSession";\n',
+  "components/layout/route-guards/RequireSession.tsx": 'import { useSession } from "@/hooks/useSession";\n',
   "components/utility/PageLoader.tsx": stub,
   "pages/(auth)/sign-in/SignInPage.tsx":
-    'import { useSession } from "../../../hooks/useSession";\nimport { AuthScreen } from "../../../components/composite/screens/AuthScreen/AuthScreen";\n',
-  "pages/(auth)/sign-in/SignInPage.test.tsx":
-    'import { renderApp } from "../../../tests/support/render-app";\n',
+    'import { useSession } from "@/hooks/useSession";\nimport { AuthScreen } from "@/components/composite/screens/AuthScreen/AuthScreen";\n',
+  "pages/(auth)/sign-in/SignInPage.test.tsx": 'import { renderApp } from "@/tests/support/render-app";\n',
   "pages/not-found/NotFoundPage.tsx": stub,
 };
 
-function check(overrides = {}, { baseline } = {}) {
+function check(overrides = {}) {
   const dir = mkdtempSync(join(tmpdir(), "structure-"));
   sandboxes.push(dir);
   const root = join(dir, "src");
@@ -61,13 +59,7 @@ function check(overrides = {}, { baseline } = {}) {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, content);
   }
-  const args = [script, "--root", root];
-  if (baseline) {
-    const file = join(dir, "baseline.json");
-    writeFileSync(file, JSON.stringify(baseline));
-    args.push("--baseline", file);
-  }
-  const run = spawnSync(process.execPath, args, { encoding: "utf8" });
+  const run = spawnSync(process.execPath, [script, "--root", root], { encoding: "utf8" });
   return { status: run.status, out: `${run.stdout}${run.stderr}` };
 }
 
@@ -154,7 +146,7 @@ describe("structure check", () => {
   it("accepts a child nested inside the only sibling that uses it", () => {
     const { status, out } = check({
       "components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenForm.tsx":
-        'import { AuthScreenFormHint } from "./AuthScreenFormHint";\nimport { AuthScreenFieldRules } from "../AuthScreenFieldRules";\n',
+        'import { AuthScreenFormHint } from "./AuthScreenFormHint";\nimport { AuthScreenFieldRules } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules";\n',
       "components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenFormHint.tsx": stub,
       "components/composite/screens/AuthScreen/AuthScreen.tsx":
         'import { AuthScreenForm } from "./AuthScreenForm/AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
@@ -192,7 +184,7 @@ describe("structure check", () => {
       {
         "hooks/useOnce.ts": stub,
         "components/layout/route-guards/RequireSession.tsx":
-          'import { useSession } from "../../../hooks/useSession";\nimport { useOnce } from "../../../hooks/useOnce";\n',
+          'import { useSession } from "@/hooks/useSession";\nimport { useOnce } from "@/hooks/useOnce";\n',
       },
       "hook-single-use",
       "hooks/useOnce.ts",
@@ -217,7 +209,9 @@ describe("structure check", () => {
   it("no-barrel: no index files and no re-export-only files", () => {
     fails({ "components/base/buttons/index.ts": stub }, "no-barrel", "components/base/buttons/index.ts");
     fails(
-      { "utils/exports.ts": 'export * from "./cn";\nexport { errorCopy } from "./error-copy";\n' },
+      {
+        "utils/exports.ts": 'export * from "@/utils/cn";\nexport { errorCopy } from "@/utils/error-copy";\n',
+      },
       "no-barrel",
       "utils/exports.ts",
     );
@@ -225,19 +219,19 @@ describe("structure check", () => {
 
   it("section-imports: sections import only toward behaviour-only ones", () => {
     fails(
-      { "components/primitives/Slot.tsx": 'import { Button } from "../base/buttons/Button";\n' },
+      { "components/primitives/Slot.tsx": 'import { Button } from "@/components/base/buttons/Button";\n' },
       "section-imports",
       "components/primitives/Slot.tsx",
     );
     fails(
-      { "components/base/buttons/Button.tsx": 'import { useSession } from "../../../hooks/useSession";\n' },
+      { "components/base/buttons/Button.tsx": 'import { useSession } from "@/hooks/useSession";\n' },
       "section-imports",
       "components/base/buttons/Button.tsx",
     );
     fails(
       {
         "components/base/buttons/Button.tsx":
-          'import { AuthScreen } from "../../composite/screens/AuthScreen/AuthScreen";\n',
+          'import { AuthScreen } from "@/components/composite/screens/AuthScreen/AuthScreen";\n',
       },
       "section-imports",
       "components/base/buttons/Button.tsx",
@@ -252,24 +246,24 @@ describe("structure check", () => {
     );
   });
 
-  describe("baseline", () => {
-    const barrel = { "utils/index.ts": stub };
-
-    it("lets a listed violation pass", () => {
-      const { status, out } = check(barrel, { baseline: ["no-barrel utils/index.ts"] });
-      assert.equal(status, 0, out);
-    });
-
-    it("still fails a violation that is not listed", () => {
-      const { status, out } = check(barrel, { baseline: ["no-barrel somewhere/else.ts"] });
-      assert.equal(status, 1, out);
-      assert.match(out, /no-barrel utils\/index\.ts/);
-    });
-
-    it("fails a listed entry that no longer matches, so the baseline only shrinks", () => {
-      const { status, out } = check({}, { baseline: ["no-barrel utils/index.ts"] });
-      assert.equal(status, 1, out);
-      assert.match(out, /stale baseline entry/i);
-    });
+  it("relative-import: ./ only between children of a component folder, never ../", () => {
+    fails(
+      { "providers/SessionProvider.tsx": 'import { SessionContext } from "./session-context";\n' },
+      "relative-import",
+      "providers/SessionProvider.tsx",
+    );
+    fails(
+      { "app/App.tsx": 'import { SessionProvider } from "../providers/SessionProvider";\n' },
+      "relative-import",
+      "app/App.tsx",
+    );
+    fails(
+      {
+        "components/composite/screens/AuthScreen/AuthScreenForm.tsx":
+          'import { AuthScreenFieldRules } from "../AuthScreen/AuthScreenFieldRules";\n',
+      },
+      "relative-import",
+      "components/composite/screens/AuthScreen/AuthScreenForm.tsx",
+    );
   });
 });

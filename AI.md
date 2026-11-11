@@ -111,7 +111,6 @@ What survived from the discarded attempt, because it was learned rather than wri
 - **Fixed:** the first lint run flagged the test harness for importing `@nestjs/mongoose`; `src/test/` is excluded from the restriction because it reaches the raw database on purpose.
 - **Decided:** the existing HTTP tests keep what they assert, except that the expected `path` changed from `"email"` to `["email"]` (the change this ticket asks for), and the cookie tests gained `Expires` assertions. Some specs now reset the clock in setup. The cookie keeps `Max-Age` beside `Expires`. `AuthCookiesService` injects `ClockService` and `AppConfigService`, so the controller does not. Repositories import the tier-3 domain types with `import type` only. `refresh` with a missing cookie still answers `auth.unauthenticated`, and every other refusal still answers `auth.session_expired`.
 - **Not verified:** `context.getHandler()` in `AccessTokenGuard` is Nest's API and the only "handler" left in the back end. `docs/spec/auth-module.md` (mirrored from #10) still describes one handler per operation; it was left for the spec's owner. Passwords stored before this change by a User who typed a decomposed form would no longer verify; no such data exists yet.
-  \=======
 
 ### 14: Sign in and Sign up addressed by search parameters, with returnTo (#25)
 

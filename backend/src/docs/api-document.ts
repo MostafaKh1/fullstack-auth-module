@@ -71,6 +71,7 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setDescription("Sign up, Sign in, refresh, Sign out and the signed-in User.")
     .setVersion("1.0.0")
     .addBearerAuth(undefined, "bearer")
+    .addCookieAuth("refresh_credential")
     .build();
   const document = SwaggerModule.createDocument(app, options);
   document.components = { ...document.components, schemas: { ...document.components?.schemas, ...SCHEMAS } };

@@ -2,10 +2,7 @@ import { isAxiosError } from "axios";
 import type { components } from "./api-types.generated";
 
 /** One field-level problem: `path` is the keys from the body down to the field, `code` is a rule id. */
-export type ValidationIssue = components["schemas"]["ErrorEnvelope"]["issues"] extends
-  (infer Issue)[] | undefined
-  ? Issue
-  : never;
+export type ValidationIssue = NonNullable<components["schemas"]["ErrorEnvelope"]["issues"]>[number];
 
 /** The body of every API error response (ADR 0002). `message` is a developer hint and is never shown. */
 export type ApiErrorEnvelope = components["schemas"]["ErrorEnvelope"];

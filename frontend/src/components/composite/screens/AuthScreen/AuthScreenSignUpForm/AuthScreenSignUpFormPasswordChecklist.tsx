@@ -1,6 +1,6 @@
 import { useId } from "react";
+import { passwordRule } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules";
 import { cn } from "@/utils/cn";
-import { passwordRule } from "./AuthScreenFieldRules";
 
 const rules = [
   {
@@ -17,7 +17,7 @@ type Props = {
   className?: string;
 };
 
-export function AuthScreenPasswordChecklist({ password, className }: Props) {
+export function AuthScreenSignUpFormPasswordChecklist({ password, className }: Props) {
   const titleId = useId();
   return (
     <div className={cn("rounded-xl bg-slate-50 px-3.5 py-3 dark:bg-slate-800/50", className)}>

@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signUpExamples } from "@/components/composite/AuthScreen/AuthScreenFieldRules.examples";
+import { signUpExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
 import {
   ada,
   adaPassword,

@@ -65,7 +65,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
 - Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/<resource>-api.ts`.
-- Forms use React Hook Form with the Zod schema from `src/components/composite/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Forms use React Hook Form with the Zod schema from `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules

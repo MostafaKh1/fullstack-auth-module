@@ -39,7 +39,7 @@ The case of a file name says what it holds:
 - **PascalCase** for a component, layout, page or provider; the file is named after the one component it exports: `Button.tsx` exports `Button`, `SessionProvider.tsx` exports `SessionProvider`.
 - **`useX.ts`** for a hook: `useSession.ts` exports `useSession`.
 - **kebab-case** for everything else (utilities, contexts, helpers, test support): `api-client.ts`, `session-context.ts`, `render-app.tsx`. Folders are kebab-case too, except a component folder, which takes its entry component's name.
-- **A component that grows children becomes a folder** named after it, holding the entry file of the same name and children that share its prefix: `AuthScreen/AuthScreen.tsx`, `AuthScreen/AuthScreenSignInForm.tsx`. A non-component helper inside such a folder is kebab-case with the same prefix (`auth-screen-api-failure.ts`). Children import each other relatively; the outside world imports the entry, or the child it needs, by its own path.
+- **A component that grows children becomes a folder** named after it, holding the entry file of the same name and children that share its prefix: `AuthScreen/AuthScreen.tsx`, `AuthScreen/AuthScreenSignInForm.tsx`. A non-component helper inside such a folder is kebab-case with the same prefix (`AuthScreenApiFailure.ts`). Children import each other relatively; the outside world imports the entry, or the child it needs, by its own path.
 - One public component or hook per file, as a named export; no default exports and no `index.ts` barrels.
 - Props are `type Props = { ... }`; a styleable root takes `className` and merges it through `cn()`. Variants are a `cva(...)` above the component, `Props` is `VariantProps<typeof x> & { className?: string; ... }`, and the root's classes are `cn(x({ ...variants }), className)`.
 - Use the native element with the right role (`<button>`, `<p role="status">`) so tests and assistive tech find it by role.
@@ -69,9 +69,9 @@ Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/
 
 - A failed request rejects with the envelope; the caller reads its `code`, never its `message`.
 - `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ApiErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
-- Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `auth-screen-api-failure.ts`). A field error holds the code; the form renders `errorCopy(code)`.
+- Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenApiFailure.ts`). A field error holds the code; the form renders `errorCopy(code)`.
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
-- The field rules are `src/components/composite/AuthScreen/AuthScreenFieldRules.ts`, the front end's copy; the back end's is `backend/src/features/auth/auth.types.ts`. Change both, and both worked-examples tables (`AuthScreenFieldRules.examples.ts` here), in the same commit.
+- The field rules are `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`, the front end's copy; the back end's is `backend/src/features/auth/auth.types.ts`. Change both, and both worked-examples tables (`AuthScreenFieldRules.examples.ts` here), in the same commit.
 
 ## Tests
 

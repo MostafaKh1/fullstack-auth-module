@@ -8,9 +8,9 @@ import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { useSession } from "@/hooks/useSession";
 import { signIn } from "@/utils/auth-api";
 import { errorCopy } from "@/utils/error-copy";
+import { applyApiFailure } from "./AuthScreenApiFailure";
 import { type SignInFields, signInSchema } from "./AuthScreenFieldRules";
 import { AuthScreenPasswordField } from "./AuthScreenPasswordField";
-import { applyApiFailure } from "./auth-screen-api-failure";
 
 const fields = ["email", "password"] as const;
 

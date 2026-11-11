@@ -20,6 +20,6 @@ Rollup, which Vite builds with, runs as its WebAssembly build (`@rollup/wasm-nod
 
 ## Consequences
 
-- Files are organised by role, not by feature: `src/app/`, `src/pages/` (one folder per route), `src/components/` (`base/`, `composite/`, `layout/`, `utility/`; a component with children is a folder of its name, such as `composite/AuthScreen/`), `src/hooks/`, `src/providers/`, `src/utils/`. A component file is PascalCase and named for its one export, so a component is found by name alone.
+- Files are organised by role, not by feature: `src/app/`, `src/pages/` (one folder per route), `src/components/` (`base/`, `composite/`, `layout/`, `utility/`; a component with children is a folder of its name, such as `composite/screens/AuthScreen/`), `src/hooks/`, `src/providers/`, `src/utils/`. A component file is PascalCase and named for its one export, so a component is found by name alone.
 - A new error code or rule id needs an entry in the front end's copy map in the same change as the back end's closed set.
 - Front-end tests render the whole app at a path with MSW faking the network ([ADR 0004](0004-quality-gates-and-test-seams.md)); a request a test did not declare fails it.

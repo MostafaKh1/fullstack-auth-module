@@ -17,7 +17,7 @@ export type Session = {
 
 /*
  * The field rules of docs/requirements.md. The front end enforces the same rules in
- * `frontend/src/components/composite/AuthScreen/AuthScreenFieldRules.ts`; change both in the same commit, and both copies of the
+ * `frontend/src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`; change both in the same commit, and both copies of the
  * worked-examples table (`backend/src/test/support/field-rules.examples.ts`). Every check's error is its rule id (ADR 0002).
  */
 

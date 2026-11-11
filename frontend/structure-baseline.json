@@ -1,9 +1,5 @@
 [
-  "file-casing components/composite/AuthScreen/auth-screen-api-failure.ts",
   "helper-concern utils/api-client.ts",
   "helper-concern utils/api-error.ts",
-  "helper-concern utils/api-types.generated.ts",
-  "kind-folder components/composite/AuthScreen",
-  "screen-folder components/composite/AuthScreen",
-  "single-use-child components/composite/AuthScreen/AuthScreenPasswordChecklist.tsx"
+  "helper-concern utils/api-types.generated.ts"
 ]

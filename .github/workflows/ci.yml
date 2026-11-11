@@ -16,7 +16,7 @@ env:
   # CI never commits, so it needs no git hooks.
   HUSKY: "0"
 
-# MongoDB is pinned to 8.2 (here and in compose.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
+# MongoDB is pinned to 8.2 (here and in compose.mongo.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
 jobs:
   lint:
     name: Lint and format
@@ -135,6 +135,10 @@ jobs:
             e2e/playwright-report/
             e2e/test-results/
           retention-days: 7
+      # compose.yaml requires the signing secret; every later compose command reads it from the job's environment.
+      - name: Generate the stack's access-token secret
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Build the images and wait for the stack's health checks
         run: docker compose up --build --detach --wait
         # The MongoDB service container already holds host port 27017.

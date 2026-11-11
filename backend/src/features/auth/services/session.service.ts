@@ -60,7 +60,7 @@ export class SessionService {
     return this.rotate(credential);
   }
 
-  async revoke(sessionId: string, reason: RevokedReason): Promise<void> {
+  private async revoke(sessionId: string, reason: RevokedReason): Promise<void> {
     await this.sessions.revoke(sessionId, reason, this.clock.now());
   }
 

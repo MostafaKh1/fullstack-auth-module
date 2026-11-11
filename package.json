@@ -7,8 +7,8 @@
   },
   "scripts": {
     "setup": "npm ci && npm ci --prefix backend && npm ci --prefix frontend && npm ci --prefix e2e",
-    "db:up": "docker compose up -d --wait mongo",
-    "db:down": "docker compose down",
+    "db:up": "docker compose -f compose.mongo.yaml up -d --wait mongo",
+    "db:down": "docker compose -f compose.mongo.yaml down",
     "dev": "concurrently --names backend,frontend --prefix-colors blue,magenta --kill-others-on-fail \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend && npm run typecheck --prefix e2e",
     "test": "npm test --prefix backend && npm test --prefix frontend",

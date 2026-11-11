@@ -1,7 +1,7 @@
 # Two independent npm apps under a thin root, without workspace tooling
 
 The repository holds two apps, `backend/` (NestJS) and `frontend/` (React), each with its own `package.json`, its own `package-lock.json` and its own `node_modules`, installed and run on its own with npm.
-The root `package.json` holds only shared tooling and convenience scripts that delegate into the apps with `npm --prefix <app>`: `setup` runs `npm ci` in the root and in each app; `dev` runs both apps' `dev` scripts side by side (through `concurrently`); `typecheck`, `test` and `build` run each app's script of the same name in turn; `db:up` starts the local MongoDB from `compose.yaml`.
+The root `package.json` holds only shared tooling and convenience scripts that delegate into the apps with `npm --prefix <app>`: `setup` runs `npm ci` in the root and in each app; `dev` runs both apps' `dev` scripts side by side (through `concurrently`); `typecheck`, `test` and `build` run each app's script of the same name in turn; `db:up` starts the local MongoDB from `compose.mongo.yaml`, which `compose.yaml` includes.
 Every app therefore owes the root a `dev`, `typecheck`, `test` and `build` script; the root scripts fail until both apps exist and provide them.
 
 The two apps share no code: the only contract between them is HTTP, and the field rules are duplicated on purpose as one table of worked examples in each app.

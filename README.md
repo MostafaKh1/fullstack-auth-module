@@ -17,13 +17,16 @@ The two apps share no code; HTTP is the only contract between them ([ADR 0003](d
 
 ### With Docker
 
+Compose needs a signing secret for the access tokens; it refuses to start without one. Put a random one in a `.env` file at the repository root, which Compose reads and git ignores:
+
 ```sh
+echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" > .env
 docker compose up --build
 ```
 
 Open http://localhost:8080. This builds both apps, starts MongoDB, the API and an nginx that serves the front end and proxies `/api`. If port 27017 is taken on your machine, set `MONGO_PORT` (for example `MONGO_PORT=27117 docker compose up --build`); only the published MongoDB port changes.
 
-The Compose file falls back to a demonstration-only `JWT_ACCESS_SECRET`; set your own for anything real.
+The stack runs with `NODE_ENV=production`, so the refresh cookie is `Secure`. Chrome and Firefox accept a `Secure` cookie on plain-HTTP `localhost`; Safari does not, so in Safari the Compose stack signs you in but a reload signs you out. Use Chrome or Firefox, or the development setup below, which does not set `Secure`.
 
 ### Without Docker for the apps
 
@@ -31,7 +34,7 @@ The Compose file falls back to a demonstration-only `JWT_ACCESS_SECRET`; set you
 npm run setup                                  # installs the root, backend, frontend and e2e dependencies
 cp backend/.env.example backend/.env           # local defaults; every variable is documented inside
 cp frontend/.env.example frontend/.env
-npm run db:up                                  # MongoDB alone, from compose.yaml
+npm run db:up                                  # MongoDB alone, from compose.mongo.yaml (no secret needed)
 npm run dev                                    # back end and front end together
 ```
 
@@ -70,7 +73,7 @@ frontend/    React app: pages/, components/, providers/ (the Session), hooks/, u
 e2e/         Playwright journeys, run against the real apps
 contract/    openapi.json, exported from the back end; the front end's API types are generated from it
 docs/        requirements.md (rules and traceability), spec/, adr/ (decisions), agents/
-compose.yaml MongoDB, API and front end as containers
+compose.yaml MongoDB (compose.mongo.yaml), API and front end as containers
 AI.md        how AI was used; AGENTS.md files hold the navigation for people and agents
 ```
 

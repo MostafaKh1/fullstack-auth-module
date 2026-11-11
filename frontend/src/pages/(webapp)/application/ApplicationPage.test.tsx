@@ -106,17 +106,25 @@ describe("Sign out", () => {
     expect(urlOf(router)).toBe("/?auth=sign-in");
   });
 
-  it("sends no access token to a later protected request", async () => {
+  it("sends the signed-out User's access token with no later request", async () => {
     const signOut = signOutSucceeds();
+    const sentWithSignIn: (string | null)[] = [];
+    const signInRefused = http.post("/api/auth/sign-in", ({ request }) => {
+      sentWithSignIn.push(request.headers.get("Authorization"));
+      return envelope("auth.invalid_credentials", 401);
+    });
     const { user } = await renderApp("/", {
-      handlers: [sessionEndsWith(signOut), currentUserIsAda, signOut.handler],
+      handlers: [sessionEndsWith(signOut), currentUserIsAda, signOut.handler, signInRefused],
     });
     await screen.findByText("Signed in as Ada Lovelace");
-
     await user.click(screen.getByRole("button", { name: "Sign out" }));
     await screen.findByRole("heading", { level: 1, name: "Sign in" });
 
-    await expect(getCurrentUser()).rejects.toMatchObject({ response: { status: 401 } });
+    await fillForm(user, { Email: ada.email, Password: adaPassword });
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await screen.findByRole("alert");
+    expect(sentWithSignIn).toEqual([null]);
   });
 
   it("does not show the previous User to the next one who signs in", async () => {

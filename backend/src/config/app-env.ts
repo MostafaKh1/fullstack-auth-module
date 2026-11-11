@@ -6,6 +6,9 @@ const origin = z.url().refine((value) => new URL(value).origin === value, {
   message: "must be an origin: scheme, host and optional port, with no path or trailing slash",
 });
 
+// Public in the repository, so anyone could forge access tokens signed with it.
+const PUBLISHED_EXAMPLE_SECRET = "dev-only-access-secret-change-me-0123456789";
+
 /** `backend/.env.example` documents each variable. */
 const environmentSchema = z
   .object({
@@ -45,6 +48,13 @@ const environmentSchema = z
     }
     if (env.NODE_ENV === "production" && !env.COOKIE_SECURE) {
       context.addIssue({ code: "custom", path: ["COOKIE_SECURE"], message: "must be true in production" });
+    }
+    if (env.NODE_ENV === "production" && env.JWT_ACCESS_SECRET === PUBLISHED_EXAMPLE_SECRET) {
+      context.addIssue({
+        code: "custom",
+        path: ["JWT_ACCESS_SECRET"],
+        message: "must not be the example value from backend/.env.example in production",
+      });
     }
     if (env.NODE_ENV === "production" && env.PASSWORD_HASH_COST < 17) {
       context.addIssue({

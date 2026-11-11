@@ -1,19 +1,8 @@
-# `docker compose up --build` serves the app at http://localhost:8080; `npm run db:up` starts MongoDB alone.
-services:
-  mongo:
-    image: mongo:8.2.6
-    restart: unless-stopped
-    ports:
-      - "${MONGO_PORT:-27017}:27017"
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+# `docker compose up --build` serves the app at http://localhost:8080; it needs JWT_ACCESS_SECRET (see README.md).
+include:
+  - compose.mongo.yaml
 
+services:
   backend:
     build: ./backend
     restart: unless-stopped
@@ -24,10 +13,10 @@ services:
       NODE_ENV: production
       PORT: "3000"
       MONGODB_URI: mongodb://mongo:27017/auth
-      # Fallback for demonstration only: set JWT_ACCESS_SECRET for any real deployment.
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-compose-only-access-secret-change-me-0123456789}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET to a random value of at least 32 characters (see README.md)}
       CORS_ORIGINS: http://localhost:8080
-      # Production requires Secure cookies; browsers accept them on http://localhost.
+      # Production requires Secure cookies. Chrome and Firefox accept them on http://localhost; Safari does not,
+      # so in Safari the stack signs in but cannot keep the Session across a reload.
       COOKIE_SECURE: "true"
       # nginx is the one proxy in front: throttle per client, not per proxy.
       TRUST_PROXY: "1"
@@ -42,6 +31,3 @@ services:
       BACKEND_URL: http://backend:3000
     ports:
       - "8080:8080"
-
-volumes:
-  mongo-data:

@@ -8,7 +8,7 @@ import { OriginCsrfGuard } from "../../common/guards/origin-csrf.guard";
 import { RouteValidationPipe } from "../../common/pipes/route-validation.pipe";
 import { AuthCookiesService } from "../../common/services/auth-cookies.service";
 import { type SignInBody, type SignUpBody, signInSchema, signUpSchema, type User } from "./auth.types";
-import { AuthService, type SignedIn } from "./services/auth.service";
+import { AuthService, type SignedInWithCredential } from "./services/auth.service";
 
 export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
@@ -69,7 +69,7 @@ export class AuthController {
     return this.respond(response, await this.authService.signIn({ ...body, userAgent: userAgent ?? null }));
   }
 
-  /** Authenticated by the refresh cookie and the Origin check, not an access token; throttled against secret guessing. */
+  /** The refresh cookie and the Origin check stand in for an access token; throttled against secret guessing. */
   @Public()
   @UseGuards(ThrottlerGuard, OriginCsrfGuard)
   @ApiCookieAuth()
@@ -103,11 +103,8 @@ export class AuthController {
   }
 
   /** Within the grace window there is no new credential, so the cookie the rotation set is left in place (ADR 0001). */
-  private respond(response: Response, signedIn: SignedIn): AuthResponse {
-    if (signedIn.refreshCredential) {
-      const { value, idleExpiresAt } = signedIn.refreshCredential;
-      this.authCookies.setRefreshCookie(response, value, idleExpiresAt);
-    }
+  private respond(response: Response, signedIn: SignedInWithCredential): AuthResponse {
+    if (signedIn.refreshCredential) this.authCookies.setRefreshCookie(response, signedIn.refreshCredential);
     return { accessToken: signedIn.accessToken, expiresIn: signedIn.expiresIn, user: signedIn.user };
   }
 }

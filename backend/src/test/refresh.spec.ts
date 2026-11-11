@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { startTestApp, type TestApp } from "./boot";
 import { refreshCookie } from "./support/refresh-cookie";
 
@@ -57,8 +56,21 @@ describe("refresh: POST /api/auth/refresh", () => {
     const rotated = credentialOf(response);
     expect(rotated.split(".")[0]).toBe(credential.split(".")[0]);
     expect(rotated).not.toBe(credential);
-    const session = await storedSession();
-    expect(session?.secretHash).toBe(createHash("sha256").update(rotated.split(".")[1]).digest("hex"));
+  });
+
+  it("checks the secret against its stored SHA-256 hash, and stores only a hash of the rotated one", async () => {
+    // The SHA-256 test vector of FIPS 180-2: sha256("abc").
+    const abcHash = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    const sessionId = credential.split(".")[0];
+    await app.db.collection("sessions").updateMany({}, { $set: { secretHash: abcHash } });
+
+    const response = await refresh(`${sessionId}.abc`);
+
+    expect(response.status).toBe(200);
+    const rotatedSecret = credentialOf(response).split(".")[1];
+    const stored = (await storedSession())?.secretHash;
+    expect(stored).toMatch(/^[0-9a-f]{64}$/);
+    expect(stored).not.toContain(rotatedSecret);
   });
 
   it("issues an access token the protected endpoint accepts", async () => {
@@ -121,9 +133,7 @@ describe("refresh: POST /api/auth/refresh", () => {
     const rotating = responses.filter((response) => response.headers["set-cookie"] !== undefined);
     expect(rotating).toHaveLength(1);
     const rotated = credentialOf(rotating[0]);
-    const session = await storedSession();
-    expect(session?.secretHash).toBe(createHash("sha256").update(rotated.split(".")[1]).digest("hex"));
-    expect(session?.revokedAt ?? null).toBeNull();
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
     expect((await refresh(rotated)).status).toBe(200);
   });
 

@@ -250,3 +250,10 @@ What survived from the discarded attempt, because it was learned rather than wri
   - CI on GitHub.
   - Contrast, which was checked by calculation and by eye only.
   - axe still names the email field from its placeholder, so a broken label there alone goes unreported.
+
+### Sign up screen on shadcn/ui (#33)
+
+- **AI-generated:** the Sign up form rebuilt on `Form`, `Input`, `PasswordInput` and `Button` as the Sign in form is, with the live password checklist moved onto the theme tokens (`bg-muted`, `text-muted-foreground`, `bg-primary`) and placed inside the password field's `FormItem` under its message; two axe tests on Sign up (empty, every field in error); the hand-rolled password field of the Sign up folder deleted. Followed `tdd`.
+- **Verified:** the axe tests passed on the hand-rolled form, so they could not be red by themselves; they were seen failing with the old `TextField` label pointed at a missing id (`label: #_r_8m_`, and the whole file failing on label lookups), then the change was reverted and the tests committed. Front-end tests went from 5 files / 155 to 5 files / 157; every existing Sign up assertion (the worked-examples rows, the checklist, show/hide) passes unchanged. Lint, format, structure check, typecheck and build pass. Both journeys pass on spare ports (3160 and 5190, because 5174 was taken).
+- **Fixed:** `frontend/AGENTS.md` still said the forms pass errors to `TextField`; corrected, and its not-migrated list now says only the Application page uses `HandRolledButton` and no screen uses `TextField`.
+- **Not verified:** CI on GitHub; contrast, which jsdom does not compute (the checklist's met state is now foreground text with a filled tick, not green).

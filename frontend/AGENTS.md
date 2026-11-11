@@ -47,7 +47,7 @@ The building blocks come from shadcn/ui on Radix ([ADR 0011](../docs/adr/0011-sh
 
 - **Adding one**: `npx shadcn@latest add <name>` from `frontend/` (`components.json` holds style new-york, base colour slate, CSS variables). Then move it into its base kind folder, PascalCase with one export per file (a family becomes a component folder); point its `cn` import at `@/utils/cn`; replace its `radix-ui` import with a primitive (adding the `@radix-ui/react-<part>` package and its wrapper if none exists); uninstall the `cn` and `radix-ui` packages the CLI adds; drop the parts and variants no screen uses; hold it to the comment rule. Add only what a screen needs now.
 - **Colours** are the theme tokens in `src/index.css` (`bg-primary`, `text-muted-foreground`, `border-input`): shadcn's variables mapped through `@theme inline`. Dark values switch on `prefers-color-scheme`, so there is no `.dark` class and no toggle. Change a colour there, not in a component.
-- **Not migrated yet**: `base/inputs/TextField.tsx`, `base/buttons/HandRolledButton.tsx` and `composite/banners-and-notifications/Alert.tsx` are the hand-rolled components Sign up and the Application page still use. Nothing new uses them; they go when the last screen moves.
+- **Not migrated yet**: `base/inputs/TextField.tsx`, `base/buttons/HandRolledButton.tsx` and `composite/banners-and-notifications/Alert.tsx` are the hand-rolled components. Only the Application page uses `HandRolledButton` now; no screen uses `TextField`; both forms still use `Alert`. They go with the cleanup ticket.
 
 ## Component folders
 
@@ -98,7 +98,7 @@ Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/
 
 - A failed request rejects with the envelope; the caller reads its `code`, never its `message`.
 - `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ApiErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
-- Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenApiFailure.ts`). A field error holds the code; `FormMessage` renders `errorCopy(code)` (the hand-rolled forms pass it to `TextField`).
+- Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenApiFailure.ts`). A field error holds the code; `FormMessage` renders `errorCopy(code)`.
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
 - The field rules are `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`, the front end's copy; the back end's is `backend/src/features/auth/auth.types.ts`. Change both, and both worked-examples tables (`AuthScreenFieldRules.examples.ts` here), in the same commit.
 

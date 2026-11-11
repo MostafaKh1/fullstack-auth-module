@@ -6,7 +6,7 @@ Every component that is not a page, in four sections, styled with Tailwind and C
 
 The first match wins:
 
-1. A route guard or other app chrome that wraps pages -> `layout/<group>/`.
+1. A route guard, a switch that picks a page by URL, or other app chrome around pages -> `layout/<group>/`.
 2. A loading state, fallback or other small cross-cutting piece with no design-system role -> `utility/`.
 3. A single-purpose control driven only by props (a button, an input, a badge) -> `base/<kind>/`.
 4. Anything built from base components, or that knows about the Session, a form schema or an endpoint -> `composite/<group>/`.
@@ -14,7 +14,7 @@ The first match wins:
 
 ## Conventions
 
-- One component per file, `<Name>.tsx` exporting `<Name>`, named. A section's subfolders are kebab-case and plural, named for a kind (`buttons/`, `inputs/`, `route-guards/`, `banners-and-notifications/`).
+- One component per file, `<Name>.tsx` exporting `<Name>`, named. A section's subfolders are kebab-case and plural, named for a kind (`buttons/`, `inputs/`, `route-guards/`, `route-switches/`, `banners-and-notifications/`).
 - A component with children of its own becomes a folder named after it (`AuthScreen/`), holding `AuthScreen.tsx` and children prefixed `AuthScreen…`; its non-component helpers are kebab-case and prefixed (`auth-screen-api-failure.ts`).
 - Variants are a `cva(...)` declared above the component; `Props` is `VariantProps<typeof x> & { className?: string; ... }`, and the root's classes are `cn(x({ ...variants }), className)`.
 - Use the native element with the right role (`<button>`, `<p role="status">`) so tests and assistive tech find it by role.
@@ -32,19 +32,19 @@ Compound UI built from `base/` and `utility/`; it may use `src/hooks/` and `src/
 
 - `banners-and-notifications/Alert.tsx`: `Alert`, a `role="alert"` message (`tone`: `error`).
 - `auth/AuthScreen/` ([ADR 0008](../../../docs/adr/0008-front-end-session-handling.md)):
-  - `AuthScreen.tsx`: `AuthScreen`, the frame of both forms (a brand panel beside a card).
+  - `AuthScreen.tsx`: `AuthScreen`, the full-screen frame of both forms (a brand panel beside a card); its `title` is also the page's `<title>`.
   - `AuthScreenSignUpForm.tsx`, `AuthScreenSignInForm.tsx`: the forms, React Hook Form with the field rules as resolver; a success calls `startSession()`.
-  - `AuthScreenPasswordField.tsx` (show/hide toggle), `AuthScreenPasswordChecklist.tsx` (the live checklist), `AuthScreenSwitchLink.tsx` (a link to the other form that keeps the return path).
+  - `AuthScreenPasswordField.tsx` (show/hide toggle), `AuthScreenPasswordChecklist.tsx` (the live checklist), `AuthScreenSwitchLink.tsx` (a link to the other form: it swaps only `auth`, keeps `returnTo`, and replaces the history entry).
   - `AuthScreenFieldRules.ts`: `signUpSchema`, `signInSchema`, `passwordRule`; errors are rule ids. The front end's copy of the field rules; the back end's is `backend/src/auth/auth.types.ts`; change both in the same commit.
   - `AuthScreenFieldRules.examples.ts`: the worked-examples table, identical to `backend/src/test/support/field-rules.examples.ts`; the page tests run every row.
   - `auth-screen-api-failure.ts`: `applyApiFailure`, a failed request's issues onto fields or the form alert (`FORM_ALERT`).
-  - `auth-screen-return-path.ts`: `ReturnState` and `returnPath()`, the path a guard carries in location state.
 
 ## `layout/`
 
 Wrappers around pages, not content; they may use `src/hooks/` and the other sections. Canonical example: `route-guards/RequireSession.tsx`.
 
-- `route-guards/RequireSession.tsx`, `route-guards/RequireSignedOut.tsx`: the two guards wrapped around elements in `src/app/routes.tsx`; both show `PageLoader` while the Session is `restoring`.
+- `route-guards/RequireSession.tsx`, `route-guards/RequireSignedOut.tsx`: the two guards wrapped around elements in `src/app/routes.tsx`; both show `PageLoader` while the Session is `restoring`. `RequireSession` sends a signed-out visitor to `/?auth=sign-in&returnTo=<the URL asked for>`; `RequireSignedOut` sends a signed-in User to `signedInDestination()` ([ADR 0009](../../../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)).
+- `route-switches/AuthFormSwitch.tsx`: `AuthFormSwitch`, what `/` shows by its `auth` search parameter (its `signIn`, `signUp` or `children`). `route-switches/AuthPathRedirect.tsx`: `AuthPathRedirect`, an old `/sign-in` or `/sign-up` URL sent on to its new one, keeping `returnTo`. Pages arrive as props, so `layout/` never imports `pages/`.
 
 ## `utility/`
 

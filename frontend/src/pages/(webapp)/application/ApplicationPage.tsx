@@ -9,6 +9,7 @@ export function ApplicationPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <title>The application</title>
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
         <div className="mx-auto flex h-16 max-w-4xl items-center gap-2 px-4 font-semibold tracking-tight sm:px-6">
           <span

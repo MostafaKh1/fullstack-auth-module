@@ -127,6 +127,7 @@ Each one is enforced on both the front end and the back end.
 - Shows the exact heading "Welcome to the application.", with a secondary "Signed in as {name}" line.
 - Reachable only while signed in; anyone else is redirected to Sign in and returned to the page afterwards.
 - A signed-in User who opens Sign in or Sign up is redirected to the Application page.
+- Sign in and Sign up are addressed as `/?auth=sign-in` and `/?auth=sign-up` on the application's root URL. The return path travels as `returnTo` and is followed only when it is a same-site path, so it cannot be used as an open redirect ([ADR 0009](adr/0009-auth-forms-addressed-by-search-parameter.md)).
 - A page reload keeps the User signed in.
 
 ### Sign out
@@ -152,20 +153,20 @@ Email verification, password reset, "remember me", social sign-in, a signed-in-d
 
 ## Traceability
 
-| Requirement                               | Implemented in | Verified by |
-| ----------------------------------------- | -------------- | ----------- |
-| React or Vue, TypeScript                  |                |             |
-| Sign up form: email, name, password rules |                |             |
-| Sign in form: email, password             |                |             |
-| Application page with the welcome message |                |             |
-| Sign out ends the session                 |                |             |
-| NestJS + MongoDB                          |                |             |
-| Sign up and sign in endpoints, same rules |                |             |
-| At least one protected endpoint           |                |             |
-| README                                    |                |             |
-| AI.md                                     |                |             |
-| Bonus: logging                            |                |             |
-| Bonus: error handling                     |                |             |
-| Bonus: testing                            |                |             |
-| Bonus: CI/CD                              |                |             |
-| Bonus: API documentation                  |                |             |
+| Requirement                               | Implemented in                                                                                                                            | Verified by                |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| React or Vue, TypeScript                  |                                                                                                                                           |                            |
+| Sign up form: email, name, password rules | `/?auth=sign-up`: `frontend/src/pages/(auth)/sign-up/SignUpPage.tsx`                                                                      | `SignUpPage.test.tsx`      |
+| Sign in form: email, password             | `/?auth=sign-in`: `frontend/src/pages/(auth)/sign-in/SignInPage.tsx`                                                                      | `SignInPage.test.tsx`      |
+| Application page with the welcome message | `/`: `frontend/src/pages/(webapp)/application/ApplicationPage.tsx`; the redirects and `returnTo`: `frontend/src/app/routes.tsx`, ADR 0009 | `ApplicationPage.test.tsx` |
+| Sign out ends the session                 |                                                                                                                                           |                            |
+| NestJS + MongoDB                          |                                                                                                                                           |                            |
+| Sign up and sign in endpoints, same rules |                                                                                                                                           |                            |
+| At least one protected endpoint           |                                                                                                                                           |                            |
+| README                                    |                                                                                                                                           |                            |
+| AI.md                                     |                                                                                                                                           |                            |
+| Bonus: logging                            |                                                                                                                                           |                            |
+| Bonus: error handling                     |                                                                                                                                           |                            |
+| Bonus: testing                            |                                                                                                                                           |                            |
+| Bonus: CI/CD                              |                                                                                                                                           |                            |
+| Bonus: API documentation                  |                                                                                                                                           |                            |

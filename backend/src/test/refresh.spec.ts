@@ -141,20 +141,38 @@ describe("refresh: POST /api/auth/refresh", () => {
     expect((await refresh(credentialOf(first))).body.code).toBe("auth.session_expired");
   });
 
-  it("revokes the Session when a credential older than the previous one is replayed, even within the grace window", async () => {
+  it("refuses a credential older than the previous one with 401 auth.session_expired, leaving the Session live", async () => {
     const first = await refresh();
     const second = await refresh(credentialOf(first));
 
-    const replay = await refresh(credential);
+    const stale = await refresh(credential);
 
-    expect(replay.status).toBe(401);
-    expect(replay.body.code).toBe("auth.session_expired");
-    expect((await storedSession())?.revokedReason).toBe("reuse-detected");
-    const me = await app
-      .http()
-      .get("/api/users/me")
-      .set("Authorization", `Bearer ${second.body.accessToken}`);
-    expect(me.status).toBe(401);
+    expect(stale.status).toBe(401);
+    expect(stale.body.code).toBe("auth.session_expired");
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
+    expect((await refresh(credentialOf(second))).status).toBe(200);
+  });
+
+  it("leaves a Session live when its id is presented with a guessed secret", async () => {
+    const sessionId = credential.split(".")[0];
+
+    const guessed = await refresh(`${sessionId}.x`);
+
+    expect(guessed.status).toBe(401);
+    expect(guessed.body.code).toBe("auth.session_expired");
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
+    expect((await refresh()).status).toBe(200);
+  });
+
+  it("leaves a Session live when a guessed secret is presented within the grace window", async () => {
+    const first = await refresh();
+    const sessionId = credential.split(".")[0];
+
+    const guessed = await refresh(`${sessionId}.x`);
+
+    expect(guessed.status).toBe(401);
+    expect((await storedSession())?.revokedAt ?? null).toBeNull();
+    expect((await refresh(credentialOf(first))).status).toBe(200);
   });
 
   it("refuses a revoked Session with 401 auth.session_expired", async () => {

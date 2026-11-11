@@ -6,7 +6,7 @@ type Props = Omit<ComponentProps<typeof TextField>, "type" | "trailing"> & {
   children?: ReactNode;
 };
 
-export function AuthScreenPasswordField(props: Props) {
+export function AuthScreenSignUpFormPasswordField(props: Props) {
   const [visible, setVisible] = useState(false);
 
   return (

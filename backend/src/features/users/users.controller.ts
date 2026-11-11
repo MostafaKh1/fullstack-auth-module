@@ -1,9 +1,9 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiBearerAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { ApiErrors } from "../../common/decorators/api-errors.decorator";
-import { CurrentAuth } from "../../common/decorators/current-auth.decorator";
-import type { AuthContext } from "../../common/services/access-token.service";
-import type { User } from "../auth/auth.types";
+import { ApiErrors } from "@/common/decorators/api-errors.decorator";
+import { CurrentAuth } from "@/common/decorators/current-auth.decorator";
+import type { AuthContext } from "@/common/services/access-token.service";
+import type { User } from "@/features/auth/auth.types";
 import { UsersService } from "./users.service";
 
 @ApiTags("users")

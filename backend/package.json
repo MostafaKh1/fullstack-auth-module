@@ -7,13 +7,13 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "dev": "node --watch --env-file-if-exists=.env -r ts-node/register/transpile-only src/main.ts",
+    "dev": "node --watch --env-file-if-exists=.env -r ts-node/register/transpile-only -r tsconfig-paths/register src/main.ts",
     "start": "node --env-file-if-exists=.env dist/main.js",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "jest",
-    "openapi": "ts-node --transpile-only src/docs/export-openapi.ts",
-    "openapi:check": "ts-node --transpile-only src/docs/export-openapi.ts --check"
+    "openapi": "ts-node --transpile-only -r tsconfig-paths/register src/docs/export-openapi.ts",
+    "openapi:check": "ts-node --transpile-only -r tsconfig-paths/register src/docs/export-openapi.ts --check"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.9",
@@ -44,6 +44,8 @@
     "supertest": "^7.3.2",
     "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.9.10",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "~5.9"
   }
 }

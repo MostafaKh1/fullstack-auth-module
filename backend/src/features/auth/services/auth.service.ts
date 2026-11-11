@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { ApiError } from "../../../common/errors/api-error";
-import { AccessTokenService, type AuthContext } from "../../../common/services/access-token.service";
-import { PasswordHashService } from "../../../common/services/password-hash.service";
-import { ClockService } from "../../../core/clock.service";
-import { UserRepository } from "../../../database/repositories/user.repository";
-import type { SignInBody, SignUpBody, User } from "../auth.types";
+import { ApiError } from "@/common/errors/api-error";
+import { AccessTokenService, type AuthContext } from "@/common/services/access-token.service";
+import { PasswordHashService } from "@/common/services/password-hash.service";
+import { ClockService } from "@/core/clock.service";
+import { UserRepository } from "@/database/repositories/user.repository";
+import type { SignInBody, SignUpBody, User } from "@/features/auth/auth.types";
 import { type IssuedRefreshCredential, SessionService } from "./session.service";
 
 /** `refreshCredential` is `null` only for a refresh accepted within the grace window (ADR 0001). */

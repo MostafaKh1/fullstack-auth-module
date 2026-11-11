@@ -1,18 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { PinoLogger } from "nestjs-pino";
-import { ApiError } from "../../../common/errors/api-error";
-import { isSessionLive } from "../../../common/guards/access-token.guard";
-import type { AuthContext } from "../../../common/services/access-token.service";
-import { AppConfigService } from "../../../config/app-config.service";
-import { ClockService } from "../../../core/clock.service";
-import { SessionRepository } from "../../../database/repositories/session.repository";
-import type { RevokedReason } from "../auth.types";
+import { ApiError } from "@/common/errors/api-error";
+import { isSessionLive } from "@/common/guards/access-token.guard";
+import type { AuthContext } from "@/common/services/access-token.service";
+import { AppConfigService } from "@/config/app-config.service";
+import { ClockService } from "@/core/clock.service";
+import { SessionRepository } from "@/database/repositories/session.repository";
+import type { RevokedReason } from "@/features/auth/auth.types";
 import {
   mintRefreshCredential,
   parseRefreshCredential,
   type RefreshCredential,
   secretMatches,
-} from "../refresh-credential";
+} from "@/features/auth/refresh-credential";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

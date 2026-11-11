@@ -2,8 +2,8 @@ import "reflect-metadata";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../app.module";
-import { parseConfig } from "../config/app-env";
+import { AppModule } from "@/app.module";
+import { parseConfig } from "@/config/app-env";
 import { buildOpenApiDocument } from "./api-document";
 
 const CONTRACT = resolve(__dirname, "../../../contract/openapi.json");

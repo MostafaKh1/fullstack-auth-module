@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AppConfigService } from "../config/app-config.service";
-import { SESSION_MODEL, sessionSchema } from "./collections/session.collection";
-import { USER_MODEL, userSchema } from "./collections/user.collection";
+import { AppConfigService } from "@/config/app-config.service";
+import { SESSION_MODEL, sessionSchema } from "@/database/collections/session.collection";
+import { USER_MODEL, userSchema } from "@/database/collections/user.collection";
+import { SessionRepository } from "@/database/repositories/session.repository";
+import { UserRepository } from "@/database/repositories/user.repository";
 import { DatabaseHealth } from "./database-health";
-import { SessionRepository } from "./repositories/session.repository";
-import { UserRepository } from "./repositories/user.repository";
 
 @Module({
   imports: [

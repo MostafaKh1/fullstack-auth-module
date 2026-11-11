@@ -1,4 +1,6 @@
 {
   "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  // Not used by tsc -b: the shadcn CLI resolves components.json's aliases from here.
+  "compilerOptions": { "paths": { "@/*": ["./src/*"] } }
 }

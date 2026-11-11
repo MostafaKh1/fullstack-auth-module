@@ -38,5 +38,5 @@ _Avoid_: Dashboard, home, landing page
 
 Two avoided words stay where something outside this glossary fixes them:
 
-- **`auth.unauthenticated`**: the error code is part of the API contract in `docs/spec/auth-module.md`; it means a request carried no valid access token, not a failed Sign in.
+- **`auth.unauthenticated`**: the error code is part of the API contract in `docs/spec/auth-module.md`; it means a request carried no valid access token (on refresh and Sign out, no refresh cookie or more than one), not a failed Sign in.
 - **"An account with this email already exists"**: the sentence for `user.email_taken` is quoted verbatim from `docs/requirements.md`.

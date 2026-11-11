@@ -26,16 +26,14 @@ export class AuthCookiesService {
     this.writeRefreshCookie(response, "", 0, new Date(0));
   }
 
-  /**
-   * Refuses a request carrying the cookie more than once: a site on a shared parent domain can plant one with a more
-   * specific path, which the browser sends first, and no order tells ours apart from it (ADR 0001).
-   */
   readRefreshCookie(request: Request): string | null {
     const values = (request.headers.cookie ?? "").split(";").flatMap((pair) => {
       const separator = pair.indexOf("=");
       if (separator === -1 || pair.slice(0, separator).trim() !== REFRESH_COOKIE) return [];
       return [pair.slice(separator + 1).trim()];
     });
+    // A site on a shared parent domain can plant a second one with a more specific path, which the browser sends
+    // first, and nothing in the header tells ours apart from it (ADR 0001).
     if (values.length > 1) {
       throw new ApiError("auth.unauthenticated", { message: "More than one refresh cookie was sent." });
     }

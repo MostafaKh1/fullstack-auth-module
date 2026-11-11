@@ -33,7 +33,6 @@ async function signInThroughTheForm(user: Awaited<ReturnType<typeof renderApp>>[
   await user.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
-/** `GET /api/users/me`: Ada for `token` only, `401 auth.unauthenticated` otherwise, recording each Authorization sent. */
 function currentUserIsAdaWith(token: string) {
   const seen: (string | null)[] = [];
   const handler = http.get("/api/users/me", ({ request }) => {
@@ -46,36 +45,31 @@ function currentUserIsAdaWith(token: string) {
   return { handler, seen };
 }
 
-/**
- * `POST /api/auth/refresh`: the boot restore answers Ada at once; every later refresh is held until `release()`,
- * then answers Ada with `refreshedAccessToken`. `answered` settles once a held refresh has been answered.
- */
+function signal() {
+  let fire: () => void = () => {};
+  const fired = new Promise<void>((resolve) => {
+    fire = resolve;
+  });
+  return { fired, fire: () => fire() };
+}
+
+// The boot restore answers Ada at once; every later refresh is held until `release()`, then answers Ada with
+// `refreshedAccessToken`.
 function laterRefreshesHeld() {
   const calls = { count: 0 };
-  let reachedHeld: () => void = () => {};
-  const reached = new Promise<void>((resolve) => {
-    reachedHeld = resolve;
-  });
-  let release: () => void = () => {};
-  const released = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  let answeredHeld: () => void = () => {};
-  const answered = new Promise<void>((resolve) => {
-    answeredHeld = resolve;
-  });
+  const [reached, released, answered] = [signal(), signal(), signal()];
   const handler = http.post("/api/auth/refresh", async () => {
     calls.count += 1;
     if (calls.count === 1) return signedInAsAda();
-    reachedHeld();
-    await released;
-    answeredHeld();
+    reached.fire();
+    await released.fired;
+    answered.fire();
     return HttpResponse.json({ accessToken: refreshedAccessToken, expiresIn: 900, user: ada });
   });
-  return { handler, calls, reached, answered, release: () => release() };
+  return { handler, calls, reached: reached.fired, answered: answered.fired, release: released.fire };
 }
 
-/** Lets a response that reached the app run every reaction it causes, so a test can see that nothing happened. */
+// A test proving that a response changed nothing must let every reaction to it run first; there is no event to await.
 async function settle() {
   await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
 }
@@ -321,6 +315,7 @@ describe("Sign out", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
     expect(urlOf(router)).toBe("/?auth=sign-in");
     expect(seen).toHaveLength(2);
+    expect(refresh.calls.count).toBe(1);
   });
 });
 

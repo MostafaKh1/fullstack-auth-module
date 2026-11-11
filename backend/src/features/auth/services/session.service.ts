@@ -64,25 +64,24 @@ export class SessionService {
     await this.sessions.revoke(sessionId, reason, this.clock.now());
   }
 
-  /**
-   * Idempotent; a Session id alone ends nothing, the secret must match. The secret a refresh replaced within the
-   * grace window matches too: a Sign out racing that refresh carries it, and must still end the Session (ADR 0001).
-   */
+  /** Idempotent; a Session id alone ends nothing, the secret must match. */
   async revokeForCredential(presented: string | null): Promise<void> {
     const credential = presented ? parseRefreshCredential(presented) : null;
     if (!credential) return;
     const found = await this.sessions.findWithSecretHashesById(credential.sessionId);
     if (!found) return;
+    // A Sign out racing a refresh carries the secret that refresh replaced, and must still end the Session (ADR 0001).
     const justReplaced =
-      secretMatches(credential, found.previousSecretHash) &&
-      isWithinGrace(
-        found.previousReplacedAt,
-        this.clock.now(),
-        this.config.get("refreshGraceSeconds") * 1000,
-      );
+      secretMatches(credential, found.previousSecretHash) && this.isWithinGrace(found, this.clock.now());
     if (!secretMatches(credential, found.secretHash) && !justReplaced) return;
     await this.revoke(credential.sessionId, "sign-out");
     this.logger.info({ userId: found.session.userId, sessionId: credential.sessionId }, "session.signed_out");
+  }
+
+  /** Two tabs refreshing together must not read as replay (ADR 0001). */
+  private isWithinGrace({ previousReplacedAt }: { previousReplacedAt: Date | null }, now: Date): boolean {
+    const graceMs = this.config.get("refreshGraceSeconds") * 1000;
+    return previousReplacedAt !== null && now.getTime() - previousReplacedAt.getTime() <= graceMs;
   }
 
   private async rotate(credential: RefreshCredential): Promise<RefreshedSession> {
@@ -113,8 +112,7 @@ export class SessionService {
     // Any other secret proves nothing (the Session id is readable from the access token), so it changes nothing (ADR 0001).
     if (!secretMatches(credential, found.previousSecretHash)) throw sessionExpired();
 
-    const graceMs = this.config.get("refreshGraceSeconds") * 1000;
-    if (isWithinGrace(found.previousReplacedAt, now, graceMs)) return { claims, issued: null };
+    if (this.isWithinGrace(found, now)) return { claims, issued: null };
 
     // A replaced secret replayed after the grace window: only a holder of a real credential has it, and the
     // credential has been used twice, so one of the two holders is a thief and the Session ends (ADR 0001).
@@ -126,11 +124,6 @@ export class SessionService {
 
 function slidIdleExpiry(now: Date, idleTtlMs: number, absoluteExpiresAt: Date): Date {
   return new Date(Math.min(now.getTime() + idleTtlMs, absoluteExpiresAt.getTime()));
-}
-
-/** Two tabs refreshing together must not read as replay (ADR 0001). */
-function isWithinGrace(replacedAt: Date | null, now: Date, graceMs: number): boolean {
-  return replacedAt !== null && now.getTime() - replacedAt.getTime() <= graceMs;
 }
 
 function sessionExpired(): ApiError {

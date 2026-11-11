@@ -52,6 +52,7 @@ export function SessionProvider({ children }: Props) {
 
   useEffect(() => {
     listenForSessionChanges(listener);
+    resumeRefreshing();
     void refreshSessionOnce();
     // Unmounting ends the app, so its token goes with it.
     return () => {

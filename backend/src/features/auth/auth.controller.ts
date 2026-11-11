@@ -89,7 +89,7 @@ export class AuthController {
     return this.respond(response, signedIn);
   }
 
-  /** Idempotent: the cookie is cleared whether or not it held a live Session; only two of them are refused. */
+  /** Idempotent: the cookie is cleared whether or not it held a live Session, unless it was sent twice (ADR 0001). */
   @Public()
   @UseGuards(OriginCsrfGuard)
   @ApiCookieAuth()

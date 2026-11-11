@@ -10,7 +10,7 @@ import {
   heldUntilReleased,
   signedInAsAda,
 } from "../../../tests/support/auth-fixtures";
-import { expectedCopy, unreachableCopy } from "../../../tests/support/expected-copy";
+import { expectedCopy, expectedErrorCopy, unreachableCopy } from "../../../tests/support/expected-copy";
 import { enterField, fillForm } from "../../../tests/support/fill-form";
 import { renderApp } from "../../../tests/support/render-app";
 
@@ -100,6 +100,17 @@ describe("Sign in page", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       expectedCopy["request.rate_limited"] as string,
     );
+  });
+
+  it.each(Object.entries(expectedErrorCopy))("shows its own sentence for %s", async (code, sentence) => {
+    const { user } = await renderApp("/?auth=sign-in", {
+      handlers: [http.post("/api/auth/sign-in", () => envelope(code, 400))],
+    });
+
+    await fillForm(user, validForm);
+    await user.click(signInButton());
+
+    expect(await screen.findByText(sentence)).toBeInTheDocument();
   });
 
   it("shows a readable message when the server cannot be reached", async () => {

@@ -289,6 +289,39 @@ describe("Sign out", () => {
     expect(urlOf(router)).toBe("/?auth=sign-in");
     expect(currentUser.seen).toEqual([`Bearer ${accessToken}`]);
   });
+
+  it("does not let a request refused while signing out restore the Session", async () => {
+    const signOut = heldUntilReleased(
+      "post",
+      "/api/auth/sign-out",
+      () => new Response(null, { status: 204 }),
+    );
+    const refresh = laterRefreshesHeld();
+    const seen: (string | null)[] = [];
+    // The access token expires once the page has shown Ada.
+    const currentUser = http.get("/api/users/me", ({ request }) => {
+      seen.push(request.headers.get("Authorization"));
+      return seen.length === 1 ? HttpResponse.json(ada) : envelope("auth.unauthenticated", 401);
+    });
+    const { user, router } = await renderApp("/", {
+      handlers: [refresh.handler, currentUser, signOut.handler],
+    });
+    await screen.findByText("Signed in as Ada Lovelace");
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    const refused = expect(getCurrentUser()).rejects.toThrow();
+    await waitFor(() => expect(seen).toHaveLength(2));
+    await settle();
+    signOut.release();
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    refresh.release();
+    await settle();
+
+    await refused;
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(urlOf(router)).toBe("/?auth=sign-in");
+    expect(seen).toHaveLength(2);
+  });
 });
 
 describe("the Session survives reloads", () => {

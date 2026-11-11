@@ -1,5 +1,5 @@
+import { refreshCookie } from "@/test/support/refresh-cookie";
 import { startTestApp, type TestApp } from "./boot";
-import { refreshCookie } from "./support/refresh-cookie";
 
 const ada = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
 

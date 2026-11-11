@@ -1,4 +1,4 @@
-import type { ClockService } from "../../core/clock.service";
+import type { ClockService } from "@/core/clock.service";
 
 export class FakeClock implements ClockService {
   constructor(private current: Date) {}

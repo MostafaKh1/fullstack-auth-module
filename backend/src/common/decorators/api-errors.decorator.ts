@@ -1,6 +1,6 @@
 import { applyDecorators } from "@nestjs/common";
 import { ApiResponse } from "@nestjs/swagger";
-import { ERROR_CODES, type ErrorCode } from "../errors/error-codes";
+import { ERROR_CODES, type ErrorCode } from "@/common/errors/error-codes";
 
 export function ApiErrors(...codes: ErrorCode[]): MethodDecorator & ClassDecorator {
   const byStatus = new Map<number, ErrorCode[]>();

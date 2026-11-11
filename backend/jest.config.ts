@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: "node",
   rootDir: ".",
   testMatch: ["<rootDir>/src/test/**/*.spec.ts"],
+  moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
   transform: { "^.+\\.ts$": "ts-jest" },
   testTimeout: 30_000,
 };

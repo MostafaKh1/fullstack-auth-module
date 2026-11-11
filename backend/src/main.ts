@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import pino from "pino";
+import { InvalidConfigError, loadConfig } from "@/config/app-env";
 import { AppModule } from "./app.module";
 import { configureApp } from "./app.setup";
-import { InvalidConfigError, loadConfig } from "./config/app-env";
 
 async function bootstrap(): Promise<void> {
   const config = loadConfig();

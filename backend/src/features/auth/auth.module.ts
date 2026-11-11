@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { CommonModule } from "../../common/common.module";
-import { AppConfigService } from "../../config/app-config.service";
-import { PersistenceModule } from "../../database/persistence.module";
+import { CommonModule } from "@/common/common.module";
+import { AppConfigService } from "@/config/app-config.service";
+import { PersistenceModule } from "@/database/persistence.module";
+import { AuthService } from "@/features/auth/services/auth.service";
+import { SessionService } from "@/features/auth/services/session.service";
 import { AuthController } from "./auth.controller";
-import { AuthService } from "./services/auth.service";
-import { SessionService } from "./services/session.service";
 
 @Module({
   imports: [

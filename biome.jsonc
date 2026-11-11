@@ -57,6 +57,10 @@
                 },
                 "patterns": [
                   {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
+                  {
                     "group": ["**/database/collections/**"],
                     "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
                   },
@@ -81,6 +85,10 @@
                   "express": "A service knows nothing about HTTP: the controller extracts the request and sets the cookie.",
                 },
                 "patterns": [
+                  {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
                   {
                     "group": ["**/database/collections/**"],
                     "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
@@ -110,8 +118,33 @@
                 },
                 "patterns": [
                   {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
+                  {
                     "group": ["**/database/**", "**/clock.service", "**/app-config.service"],
                     "message": "A controller is the API only: the business rule, the time and the configuration belong in a service.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    // Every back-end file, tests included, imports across folders through @/.
+    {
+      "includes": ["backend/src/test/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
                   },
                 ],
               },

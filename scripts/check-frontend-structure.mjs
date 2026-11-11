@@ -21,12 +21,19 @@ const MAY_IMPORT = {
   utility: [],
 };
 const NEVER_IMPORTED_BY_COMPONENTS = ["pages", "app", "tests"];
-const ONLY_UTILS = ["primitives", "base", "utility"];
+// What a section may import outside components/: base reads form context through a hook and its contexts.
+const OUTSIDE_COMPONENTS = {
+  primitives: ["utils"],
+  base: ["utils", "hooks", "providers"],
+  utility: ["utils"],
+};
 
 const PASCAL = /^[A-Z][A-Za-z0-9]*$/;
 const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 const KIND = /^[a-z][a-z0-9]*(-[a-z0-9]+)*s$/;
 const HOOK = /^use[A-Z][A-Za-z0-9]*$/;
+// A hook of one component carries its folder's prefix: AuthScreenUseThing.ts.
+const PREFIXED_HOOK = /^[A-Z][A-Za-z0-9]*?Use[A-Z][A-Za-z0-9]*$/;
 const SOURCE = /\.(ts|tsx|js|jsx)$/;
 const TEST = /\.test\.[tj]sx?$/;
 
@@ -200,6 +207,26 @@ for (const item of items) {
     !item.isDir &&
     SOURCE.test(name) &&
     segs[0] !== "hooks" &&
+    !TEST.test(name) &&
+    PREFIXED_HOOK.test(stemOf(name))
+  ) {
+    const folder = segs.slice(0, -1).join("/");
+    if (!isComponentFolder(folder) || !startsWithPrefix(stemOf(name), `${segs.at(-2)}Use`)) {
+      violate(
+        "hook-location",
+        item.rel,
+        "a hook is useX in hooks/, or <Folder>UseX in its single component's folder",
+      );
+      continue;
+    }
+    if (importersOf(item.rel).length >= 2) {
+      violate("hook-shared", item.rel, "a hook used by two or more files lives in hooks/ as useX");
+    }
+  }
+  if (
+    !item.isDir &&
+    SOURCE.test(name) &&
+    segs[0] !== "hooks" &&
     HOOK.test(stemOf(name)) &&
     !TEST.test(name)
   ) {
@@ -289,8 +316,12 @@ for (const [file, targets] of imports) {
       }
     } else if (NEVER_IMPORTED_BY_COMPONENTS.includes(tsegs[0])) {
       violate("section-imports", file, `components may not import ${tsegs[0]}/`);
-    } else if (ONLY_UTILS.includes(section) && tsegs[0] !== "utils") {
-      violate("section-imports", file, `${section} may import only utils/ outside components/`);
+    } else if (OUTSIDE_COMPONENTS[section] && !OUTSIDE_COMPONENTS[section].includes(tsegs[0])) {
+      violate(
+        "section-imports",
+        file,
+        `${section} may import only ${OUTSIDE_COMPONENTS[section].join(", ")} outside components/`,
+      );
     }
   }
 }

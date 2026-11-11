@@ -12,7 +12,7 @@ Imports point down this table only. A layer may skip the ones between (a page ma
 | Pages      | `src/pages/`      | one screen per route, composing components                                                                  |
 | Components | `src/components/` | every component that is not a page, in five sections (see below)                                            |
 | Hooks      | `src/hooks/`      | hooks two or more components or pages use                                                                   |
-| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session)                                                 |
+| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session), and the contexts a hook reads                  |
 | Utils      | `src/utils/`      | framework-free helpers: `api/` (the HTTP client and one module per resource), `auth-url/`, `cn()`, the copy |
 
 `src/tests/` is the rendered-app harness and sits outside the stack (see "Tests"). `src/main.tsx` is the browser entry; it and the harness build the app from the same `src/app/` files, so tests run the real providers and routes.
@@ -24,14 +24,14 @@ Take the first that fits. Each line names the file to copy where one exists.
 1. **A screen at a URL** -> `src/pages/<group>/<route>/<Name>Page.tsx`, plus its entry in `src/app/routes.tsx` (the only place a route is added; a route guard wraps elements there). A parenthesised group (`(auth)`, `(webapp)`) groups screens by who sees them and adds nothing to the URL; the route folder is named for the path or, for Sign in and Sign up (both at `/`), for their `auth` value ([ADR 0009](../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)). A protected screen goes inside `RequireSession`. Copy `src/pages/(auth)/sign-in/SignInPage.tsx`.
 2. **A component** -> `src/components/`, in the first section that fits, in this order:
    1. `primitives/`: an accessible, behaviour-only building block that owns roles, focus and keyboard handling and knows nothing of the app. Flat: `primitives/<Name>.tsx`, no folders. Each wraps one Radix part, and nothing else imports `@radix-ui` (Biome rejects it). Copy `primitives/Slot.tsx`.
-   2. `base/<kind>/`: a styled atom driven only by props, built on primitives, usually from shadcn/ui (see "shadcn/ui"). Copy `base/buttons/Button.tsx`; a family of parts is a component folder with one part per file: copy `base/cards/Card/`.
+   2. `base/<kind>/`: a styled atom, built on primitives, usually from shadcn/ui, that knows nothing of the app: it is driven by props, and the `Form*` parts also read the form's context through `useFormField` (see "shadcn/ui"). Copy `base/buttons/Button.tsx`; a family of parts is a component folder with one part per file: copy `base/cards/Card/`.
    3. `composite/<kind>/`: a compound component, or anything that knows about the Session, a form schema or an endpoint. A screen (`<Name>Screen`) goes in `composite/screens/`: copy `composite/screens/AuthScreen/`.
    4. `layout/<kind>/`: application chrome and routing pieces, such as route guards and route switches. Pages arrive as props. Copy `layout/route-guards/RequireSession.tsx`.
    5. `utility/`: a small cross-cutting piece with no design role (a loading state, a fallback). Copy `utility/PageLoader.tsx`.
 
    UI one page alone uses still goes here: pages hold no components of their own. A feature module that two or more routes share has no section yet; agree its place in the spec before adding one.
 
-3. **A hook** used by two or more components or pages -> `src/hooks/useX.ts` (copy `useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file).
+3. **A hook** used by two or more components or pages -> `src/hooks/useX.ts` (copy `useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file); the structure check treats a `<Folder>UseX` file as a hook, and moves it to `hooks/` once two files use it. Copy `useFormField.ts`: the `Form*` parts share it, and its two contexts sit in `src/providers/` so the hook can import them.
 4. **An app-wide context** -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider), mounted in `src/app/App.tsx` inside the query client. Copy `SessionProvider.tsx`.
 5. **A call to an endpoint** -> a function in `src/utils/api/<resource>-api.ts` (`auth-api.ts` for `/auth/*`, `users-api.ts` for `/users/*`), next to the request and response types it uses. Copy `users-api.ts`.
 6. **Any other helper** -> a kebab-case module in `src/utils/` (copy `cn.ts`), or in the concern folder it belongs to. Three helpers at the top of `src/utils/` that start with the same word make a concern: they move into `src/utils/<concern>/`, which then holds every helper of that concern, as `api/` holds the resource modules and the refresh interceptor and `auth-url/` holds the `returnTo` rule. `cn.ts` and `error-copy.ts` stay at the top.
@@ -39,7 +39,7 @@ Take the first that fits. Each line names the file to copy where one exists.
 
 ### Sections import in one direction
 
-Dependencies point from app-aware toward behaviour-only: base imports primitives; composite imports primitives, base and utility; layout imports all four; primitives and utility import no other section. Primitives, base and utility import nothing in the app outside `components/` but `src/utils/`. No component imports `pages/`, `app/` or `tests/`.
+Dependencies point from app-aware toward behaviour-only: base imports primitives; composite imports primitives, base and utility; layout imports all four; primitives and utility import no other section. Primitives and utility import nothing in the app outside `components/` but `src/utils/`; base imports also `hooks/` and `providers/`, for the form context its `Form*` parts read. No component imports `pages/`, `app/` or `tests/`.
 
 ## shadcn/ui
 
@@ -63,7 +63,7 @@ The case of a file name says what it holds:
 
 - **Inside a component folder**, every file is PascalCase with the folder's prefix, whatever it holds: a component, a non-component module (`AuthScreenApiFailure.ts`), a worked-examples table (`AuthScreenFieldRules.examples.ts`), a test.
 - **A component, page, provider or the app shell** is PascalCase, named after the one component it exports: `Button.tsx` exports `Button`, `SignInPage.tsx` exports `SignInPage`. A page is `<Name>Page.tsx`.
-- **A hook** is `useX.ts` in camelCase: `useSession.ts` exports `useSession`.
+- **A hook** is `useX.ts` in camelCase: `useSession.ts` exports `useSession`; a hook of one component is `<Folder>UseX.ts`, PascalCase like the rest of its folder.
 - **Everything else outside component folders** is kebab-case: helpers, contexts, test support (`api-client.ts`, `session-context.ts`, `render-app.tsx`). Folders outside `components/` are kebab-case.
 - One public component or hook per file. Exports, `Props`, `className` and variants follow [CODING_STANDARDS.md](../CODING_STANDARDS.md) ("Architecture: front end"); for variants copy `Button.tsx`.
 - Use the native element with the right role (`<button>`, `<p role="status">`) so tests and assistive tech find it by role.

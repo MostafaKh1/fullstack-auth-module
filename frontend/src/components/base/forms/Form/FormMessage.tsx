@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
+import { useFormField } from "@/hooks/useFormField";
 import { cn } from "@/utils/cn";
 import { errorCopy } from "@/utils/error-copy";
-import { useFormField } from "./FormUseFormField";
 
 type Props = Omit<ComponentProps<"p">, "children">;
 

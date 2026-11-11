@@ -1,22 +1,23 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { testEnv } from "./boot";
 
 const backendRoot = path.resolve(__dirname, "..", "..");
+// The arguments that let plain Node run the TypeScript entry point; the end-to-end suite starts the API with the same file.
+const registerArgs: string[] = JSON.parse(
+  readFileSync(path.join(backendRoot, "node-register-args.json"), "utf8"),
+);
 
 type Exit = { code: number | null; output: string };
 
 /** Starts the real entry point, `src/main.ts`, with exactly the given environment. */
 function startApi(env: Record<string, string>): Promise<Exit> {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      process.execPath,
-      ["-r", "ts-node/register/transpile-only", "-r", "tsconfig-paths/register", "src/main.ts"],
-      {
-        cwd: backendRoot,
-        env: { PATH: process.env.PATH ?? "", SystemRoot: process.env.SystemRoot ?? "", ...env },
-      },
-    );
+    const child = spawn(process.execPath, [...registerArgs, "src/main.ts"], {
+      cwd: backendRoot,
+      env: { PATH: process.env.PATH ?? "", SystemRoot: process.env.SystemRoot ?? "", ...env },
+    });
     let output = "";
     child.stdout.on("data", (chunk: Buffer) => {
       output += chunk.toString("utf8");

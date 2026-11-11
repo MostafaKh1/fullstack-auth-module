@@ -246,6 +246,43 @@ describe("structure check", () => {
     );
   });
 
+  it("palette-colour: components, pages and the app use theme tokens, never a Tailwind palette colour", () => {
+    const withClass = (className) => `export const a = <p className="${className}" />;
+`;
+    for (const className of [
+      "text-indigo-600",
+      "hover:bg-slate-100",
+      "dark:text-indigo-400",
+      "bg-fuchsia-500/25",
+      "focus-visible:outline-indigo-500",
+      "from-rose-50",
+    ]) {
+      fails(
+        { "components/composite/screens/AuthScreen/AuthScreen.tsx": withClass(className) },
+        "palette-colour",
+        "components/composite/screens/AuthScreen/AuthScreen.tsx",
+      );
+    }
+    fails(
+      { "pages/not-found/NotFoundPage.tsx": withClass("border-red-500") },
+      "palette-colour",
+      "pages/not-found/NotFoundPage.tsx",
+    );
+    fails({ "app/App.tsx": withClass("fill-blue-600") }, "palette-colour", "app/App.tsx");
+  });
+
+  it("accepts theme tokens, and palette-like words that are not classes", () => {
+    const { status, out } = check({
+      "components/composite/screens/AuthScreen/AuthScreen.tsx": `import { AuthScreenForm } from "./AuthScreenForm";
+import { AuthScreenFieldRules } from "./AuthScreenFieldRules";
+export const a = <p className="bg-primary text-muted-foreground border-input ring-ring/50 text-destructive" title="red-1 text-red" />;
+`,
+      "pages/not-found/NotFoundPage.tsx": `export const notRed = "agreen-5 bg-black text-white";
+`,
+    });
+    assert.equal(status, 0, out);
+  });
+
   it("relative-import: ./ only between children of a component folder, never ../", () => {
     fails(
       { "providers/SessionProvider.tsx": 'import { SessionContext } from "./session-context";\n' },

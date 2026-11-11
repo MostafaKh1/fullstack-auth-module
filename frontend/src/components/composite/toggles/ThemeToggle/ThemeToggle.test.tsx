@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { http } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { accessibilityViolations } from "@/tests/support/accessibility";
 import { currentUserIsAda, signedInAsAda } from "@/tests/support/auth-fixtures";
 import { renderApp } from "@/tests/support/render-app";
@@ -10,6 +10,8 @@ const toggle = () => screen.getByRole("button", { name: "Dark mode" });
 const signedIn = () => [http.post("/api/auth/refresh", () => signedInAsAda()), currentUserIsAda];
 
 describe("Theme toggle", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("opens in light mode on a first visit, whatever the system prefers", async () => {
     vi.spyOn(window, "matchMedia").mockImplementation(
       (query) => ({ matches: query.includes("dark"), media: query }) as MediaQueryList,
@@ -18,7 +20,6 @@ describe("Theme toggle", () => {
 
     expect(isDark()).toBe(false);
     expect(toggle()).toHaveAttribute("aria-pressed", "false");
-    vi.restoreAllMocks();
   });
 
   it("opens in light mode when browser storage is unavailable", async () => {
@@ -33,7 +34,6 @@ describe("Theme toggle", () => {
     expect(isDark()).toBe(false);
     await user.click(toggle());
     expect(isDark()).toBe(true);
-    vi.restoreAllMocks();
   });
 
   it("switches to dark and back, and aria-pressed follows", async () => {

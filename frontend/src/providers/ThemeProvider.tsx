@@ -14,12 +14,10 @@ export function ThemeProvider({ children }: Props) {
   }, [theme]);
 
   const toggleTheme = useCallback(() => {
-    setTheme((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      remember(next);
-      return next;
-    });
-  }, []);
+    const next = theme === "dark" ? "light" : "dark";
+    remember(next);
+    setTheme(next);
+  }, [theme]);
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
   return <ThemeContext value={value}>{children}</ThemeContext>;
@@ -29,7 +27,6 @@ function storedTheme(): Theme {
   try {
     return localStorage.getItem(themeStorageKey) === "dark" ? "dark" : "light";
   } catch {
-    // Blocked storage is a first visit: light.
     return "light";
   }
 }

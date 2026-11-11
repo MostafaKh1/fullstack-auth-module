@@ -189,6 +189,11 @@ describe("structure check", () => {
     fails({ "hooks/FormUseThing.ts": stub }, "hook-name", "hooks/FormUseThing.ts");
   });
 
+  it("accepts a component whose name merely contains Use", () => {
+    const { status, out } = check({ "components/base/buttons/ButtonUseCase.tsx": stub });
+    assert.equal(status, 0, out);
+  });
+
   it("hook-shared: a <Folder>UseX hook used by two or more files moves to hooks/", () => {
     fails(
       {
@@ -302,6 +307,8 @@ describe("structure check", () => {
       "bg-fuchsia-500/25",
       "focus-visible:outline-indigo-500",
       "from-rose-50",
+      "bg-white/10",
+      "ring-black",
     ]) {
       fails(
         { "components/composite/screens/AuthScreen/AuthScreen.tsx": withClass(className) },
@@ -323,7 +330,7 @@ describe("structure check", () => {
 import { AuthScreenFieldRules } from "./AuthScreenFieldRules";
 export const a = <p className="bg-primary text-muted-foreground border-input ring-ring/50 text-destructive" title="red-1 text-red" />;
 `,
-      "pages/not-found/NotFoundPage.tsx": `export const notRed = "agreen-5 bg-black text-white";
+      "pages/not-found/NotFoundPage.tsx": `export const notRed = "agreen-5 whitespace-nowrap text-whiteish";
 `,
     });
     assert.equal(status, 0, out);

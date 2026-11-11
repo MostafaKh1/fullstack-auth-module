@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
-import { Button } from "@/components/base/buttons/Button";
+import { HandRolledButton } from "@/components/base/buttons/HandRolledButton";
 import { TextField } from "@/components/base/inputs/TextField";
 import { Alert } from "@/components/composite/banners-and-notifications/Alert";
 import { applyApiFailure } from "@/components/composite/screens/AuthScreen/AuthScreenApiFailure";
@@ -64,9 +64,9 @@ export function AuthScreenSignUpForm() {
       >
         <AuthScreenSignUpFormPasswordChecklist password={password} className="mt-1" />
       </AuthScreenPasswordField>
-      <Button type="submit" pending={isSubmitting} className="mt-1 w-full">
+      <HandRolledButton type="submit" pending={isSubmitting} className="mt-1 w-full">
         {isSubmitting ? "Signing up…" : "Sign up"}
-      </Button>
+      </HandRolledButton>
     </form>
   );
 }

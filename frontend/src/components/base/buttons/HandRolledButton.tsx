@@ -35,7 +35,15 @@ type Props = VariantProps<typeof button> &
     pending?: boolean;
   };
 
-export function Button({ variant, size, pending = false, disabled, className, children, ...props }: Props) {
+export function HandRolledButton({
+  variant,
+  size,
+  pending = false,
+  disabled,
+  className,
+  children,
+  ...props
+}: Props) {
   return (
     <button
       type="button"

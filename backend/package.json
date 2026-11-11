@@ -1,0 +1,49 @@
+{
+  "name": "auth-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sign up / Sign in API: NestJS 11 on Express 5 with MongoDB.",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env -r ts-node/register/transpile-only src/main.ts",
+    "start": "node --env-file-if-exists=.env dist/main.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "jest",
+    "openapi": "ts-node --transpile-only src/docs/export-openapi.ts",
+    "openapi:check": "ts-node --transpile-only src/docs/export-openapi.ts --check"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.2.9",
+    "@nestjs/core": "^11.2.9",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/mongoose": "^11.0.4",
+    "@nestjs/platform-express": "^11.2.9",
+    "@nestjs/swagger": "^11.4.8",
+    "@nestjs/throttler": "^6.7.1",
+    "helmet": "^8.3.0",
+    "mongoose": "^8.24.8",
+    "nestjs-pino": "^4.6.1",
+    "pino": "^9.14.0",
+    "pino-http": "^10.5.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.2.9",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.20.5",
+    "@types/supertest": "^7.2.1",
+    "jest": "^29.7.0",
+    "mongodb": "^6.22.0",
+    "mongodb-memory-server": "^11.3.0",
+    "supertest": "^7.3.2",
+    "ts-jest": "^29.4.15",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9"
+  }
+}

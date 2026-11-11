@@ -1,0 +1,19 @@
+# MongoDB alone, for local development (`npm run db:up`); `compose.yaml` includes it for the whole stack.
+# Kept apart so starting the database needs none of the stack's secrets.
+services:
+  mongo:
+    image: mongo:8.2.6
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mongo-data:

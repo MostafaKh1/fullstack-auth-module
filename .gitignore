@@ -1,3 +1,26 @@
 node_modules/
+
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Environment: commit only the examples
+.env
+.env.*
+!.env.example
+
+*.log
+npm-debug.log*
+
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code
 .claude/worktrees/
 .claude/settings.local.json

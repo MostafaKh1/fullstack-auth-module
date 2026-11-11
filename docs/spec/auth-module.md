@@ -88,7 +88,7 @@ The back end keeps one Session per signed-in device, accepts only signed-in User
 - NestJS 11 on Express 5, MongoDB through Mongoose, Zod v4 for request validation and configuration, pino for structured logs.
 - Module tiers, lowest first: configuration and logging and shared providers (the clock), then the database (models and repositories), then authentication infrastructure (token service, password hasher, global guard), then the feature modules (auth, users, health). A module imports only from a lower tier; feature modules export nothing.
 - Three doors: the database is reached only through injected repositories; configuration only through the configuration service, parsed with Zod at boot so an invalid environment stops the process with every bad variable named; the current time only through an injectable clock, so expiry and grace windows are testable.
-- One business operation per handler with a single `execute` method: Sign up, Sign in, refresh, Sign out, get current User, check health. Controllers extract the request, call one handler, and own the cookie, which is transport.
+- Controllers are the API only, services hold the business logic, repositories are the data-access layer (ADR 0010): `AuthService` (Sign up, Sign in, refresh, Sign out), `SessionService`, `UsersService` (get current User), `HealthService`. Controllers extract the request, call one service method, and set the cookie through `AuthCookiesService`, which owns the cookie policy.
 - Authentication is deny-by-default: a global guard requires a valid access token on every route unless the route is marked public. Public routes: Sign up, Sign in, refresh, Sign out, health.
 - Passwords are stored as scrypt hashes from Node's built-in crypto, with the cost (log2 N, default 17) and a per-password salt encoded in the hash. Password hashes are excluded from every default query projection.
 - Sign in with an unknown email still verifies against a decoy hash, so both failures cost the same time and return the same code.
@@ -98,7 +98,7 @@ The back end keeps one Session per signed-in device, accepts only signed-in User
 - A Session is a database record and the authority on whether a User is signed in. Its fields: the User it belongs to, the SHA-256 hash of the current refresh secret, the hash of the immediately previous secret and when it was replaced, an idle expiry that slides forward on refresh, an absolute expiry that never moves, a revoked-at time and reason (`sign-out` or `reuse-detected`), the user agent, and its creation time. Mongo removes a Session after its idle expiry.
 - The refresh credential is `<sessionId>.<secret>`, where the secret is 32 random bytes; only the secret's hash is stored.
 - The access token is a 15 minute HS256 JWT carrying the User id and the Session id, with its times taken from the clock. The guard also checks that the token's Session is live, one indexed read per protected request, so Sign out takes effect immediately.
-- Refresh rotates the secret in one conditional update, slides the idle expiry by 7 days without passing the 30 day absolute cap, and accepts the immediately previous secret for 10 seconds after a rotation so two tabs refreshing together are not mistaken for replay. Any other replay revokes the Session as `reuse-detected`.
+- Refresh rotates the secret in one conditional update, slides the idle expiry by 7 days without passing the 30 day absolute cap, and accepts the immediately previous secret for 10 seconds after a rotation so two tabs refreshing together are not mistaken for replay. The previous secret presented after that window revokes the Session as `reuse-detected`; any other wrong secret is refused and changes nothing.
 - The refresh cookie is `httpOnly`, `SameSite=Lax`, scoped to the auth routes' path, `Secure` in production, with a lifetime matching the Session's idle expiry.
 - The cookie routes (refresh and Sign out) also check `Origin`: a request whose `Origin` is not a configured front-end origin is refused; a request with no `Origin` is let through, since only browsers carry the cookie.
 - Each Sign up and each Sign in starts a new Session. Sign out revokes only the current Session and is idempotent.
@@ -108,21 +108,21 @@ The back end keeps one Session per signed-in device, accepts only signed-in User
 
 All routes sit under `/api`.
 
-| Method | Path             | Auth                   | Request                     | Success                                            |
-| ------ | ---------------- | ---------------------- | --------------------------- | -------------------------------------------------- |
-| POST   | `/auth/sign-up`  | Public, throttled      | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie    |
-| POST   | `/auth/sign-in`  | Public, throttled      | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie    |
-| POST   | `/auth/refresh`  | Refresh cookie, Origin | none                        | `200 { accessToken, expiresIn, user }` + new cookie |
-| POST   | `/auth/sign-out` | Refresh cookie, Origin | none                        | `204`, cookie cleared                              |
-| GET    | `/users/me`      | Access token           | none                        | `200 { id, email, name, createdAt }`               |
-| GET    | `/health`        | Public                 | none                        | `200 { status, database }`; `503` when the database is down |
+| Method | Path             | Auth                              | Request                     | Success                                                     |
+| ------ | ---------------- | --------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| POST   | `/auth/sign-up`  | Public, throttled                 | `{ email, name, password }` | `201 { accessToken, expiresIn, user }` + cookie             |
+| POST   | `/auth/sign-in`  | Public, throttled                 | `{ email, password }`       | `200 { accessToken, expiresIn, user }` + cookie             |
+| POST   | `/auth/refresh`  | Refresh cookie, Origin, throttled | none                        | `200 { accessToken, expiresIn, user }` + new cookie         |
+| POST   | `/auth/sign-out` | Refresh cookie, Origin            | none                        | `204`, cookie cleared                                       |
+| GET    | `/users/me`      | Access token                      | none                        | `200 { id, email, name, createdAt }`                        |
+| GET    | `/health`        | Public                            | none                        | `200 { status, database }`; `503` when the database is down |
 
 - `user` in auth responses has the same shape as `/users/me`.
 - Every error is the envelope of ADR 0002, `{ code, status, traceId, retryable, issues?, message? }`, produced by one global exception filter. `traceId` is the request id, also returned as the `X-Request-Id` header and reused when the caller supplies one. `message` is a developer hint omitted in production.
 - The closed set of codes: `request.validation_failed` (400), `request.malformed` (400), `request.too_large` (413), `request.rate_limited` (429), `auth.unauthenticated` (401), `auth.invalid_credentials` (401), `auth.session_expired` (401), `auth.origin_rejected` (403), `route.not_found` (404), `user.email_taken` (409), `server.internal` (500), `server.unavailable` (503).
 - Validation issues are `{ path, code }`, where `code` is a rule id: `field.required`, `email.invalid`, `email.too_long`, `name.too_short`, `name.too_long`, `name.invalid_characters`, `password.too_short`, `password.too_long`, `password.missing_letter`, `password.missing_number`, `password.missing_special`.
 - A taken email, including from two concurrent Sign ups, is caught by the unique index and answered `409 user.email_taken`.
-- Security: `helmet` headers, a CORS allowlist from configuration with credentials, throttling of Sign up and Sign in per IP, a small request body cap. Swagger UI documents every route, its schemas and its error codes, and can call the protected endpoint with a Bearer token.
+- Security: `helmet` headers, a CORS allowlist from configuration with credentials, throttling of Sign up, Sign in and refresh per IP, a small request body cap. Swagger UI documents every route, its schemas and its error codes, and can call the protected endpoint with a Bearer token.
 
 ### Field rules
 
@@ -139,7 +139,7 @@ Per [docs/requirements.md](../requirements.md), enforced identically by both app
 - One API client attaches the access token as `Bearer`; components call one function per endpoint, never the client directly.
 - The Session lives in one React context with three states: restoring, signed in, signed out. The access token is kept in memory only.
 - On boot the app calls refresh once and shows a full-page loading state until it settles. Concurrent `401 auth.unauthenticated` responses share one refresh, then each request retries once; a failed refresh clears the Session locally.
-- Routes: Sign up, Sign in, and the Application page. A guard sends a signed-out visitor to Sign in carrying the intended path and returns them there afterwards; a second guard sends a signed-in User away from Sign in and Sign up.
+- URLs (ADR 0009): Sign in is `/?auth=sign-in` and Sign up `/?auth=sign-up`, each a full-screen form (not a dialog) whose page title names it; an unknown `auth` value shows Sign in. `/` without `auth` is the Application page; a signed-out visitor there is sent, history replaced, to `/?auth=sign-in`. The links between the forms swap only `auth`, keep `returnTo`, and replace the history entry. A guard sends a signed-out visitor at a protected page to `/?auth=sign-in&returnTo=<that page, URL-encoded>`; after Sign in or Sign up the User goes to `returnTo` when it is a same-site path (it starts with `/`, not `//` or `/\`, has no scheme or host, and carries no `auth`), otherwise to `/`. A signed-in User at an auth URL goes to its safe `returnTo`, otherwise has `auth` and `returnTo` removed and sees the Application page. The old `/sign-in` and `/sign-up` redirect to their new URLs, keeping `returnTo`.
 - Forms validate on blur and on submit, show server issues on their fields and a taken email on the email field, and show anything else as a form-level alert. The Sign up form shows the password rules as a live checklist.
 - Every user-facing sentence lives in the front end, keyed by error code or rule id, with a generic fallback; the server's `message` is never shown.
 - The Application page shows the exact heading "Welcome to the application.", "Signed in as {name}" loaded from the protected endpoint, and a Sign out button.

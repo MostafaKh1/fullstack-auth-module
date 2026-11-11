@@ -1,0 +1,33 @@
+# `docker compose up --build` serves the app at http://localhost:8080; it needs JWT_ACCESS_SECRET (see README.md).
+include:
+  - compose.mongo.yaml
+
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      MONGODB_URI: mongodb://mongo:27017/auth
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET to a random value of at least 32 characters (see README.md)}
+      CORS_ORIGINS: http://localhost:8080
+      # Production requires Secure cookies. Chrome and Firefox accept them on http://localhost; Safari does not,
+      # so in Safari the stack signs in but cannot keep the Session across a reload.
+      COOKIE_SECURE: "true"
+      # nginx is the one proxy in front: throttle per client, not per proxy.
+      TRUST_PROXY: "1"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_URL: http://backend:3000
+    ports:
+      - "8080:8080"

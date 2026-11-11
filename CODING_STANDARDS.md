@@ -9,26 +9,29 @@ Anything Biome, Prettier or the TypeScript compiler already enforces is not repe
 
 Every back-end capability has exactly one door, and the door is injected:
 
-- **The database is reached only through a repository** (`UserRepository`, `SessionRepository`). Nothing outside `src/database/` imports `mongoose` or a model. A repository injects its model and nothing else: repositories have no outward edges.
+- **The database is reached only through a repository** (`UserRepository`, `SessionRepository`). Nothing outside `src/database/` imports `mongoose` or a collection. A repository injects its model and nothing else: repositories have no outward edges.
 - **Configuration is read only through `AppConfigService`.** No file outside `src/config/` reads `process.env`. The environment is parsed with Zod at boot and the process crashes on an invalid value, so a misconfiguration fails at start-up and not under load.
-- **The current time and randomness come from where they can be controlled in tests.** Token, secret and expiry logic takes `now` from an injected clock or as an argument, never `Date.now()` buried in a helper.
+- **The current time and randomness come from where they can be controlled in tests.** Token, secret and expiry logic takes `now` from the injected `ClockService` or as an argument, never `Date.now()` buried in a helper.
 
-### One operation, one handler
+### Controller, service, repository
 
-- A business operation is one `@Injectable()` class in `src/features/<feature>/handlers/<operation>.handler.ts`, with `execute` as its **only** public method.
-- A handler knows nothing about HTTP: no `Request`, `Response`, cookies, status codes or decorators from `@nestjs/common` beyond `Injectable`. It throws `ApiError` with a code from the closed set and returns plain data.
-- A handler holds the operation's ordering and failure policy, and reaches the database through repositories.
-- Pure logic shared by handlers is a module-level `export function` in a sibling `*.rules.ts`.
+The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.md). Biome's `noRestrictedImports` (`biome.jsonc`) enforces the import rules marked _(lint)_.
 
-### Controllers are transport
+| Layer                                                       | Owns                                                                                                                                                            | Never                                                                                        |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Controller (`<module>.controller.ts`)                       | the route, extracting body, headers and the current User, calling **one** service method, calling `AuthCookiesService`, mapping the result to the response type | business decisions, `ClockService`, `AppConfigService`, repositories _(lint)_                |
+| Service (`<name>.service.ts`)                               | the operation's rules, ordering and failure policy, throwing `ApiError`                                                                                         | `Request`, `Response`, `express` _(lint)_, cookies _(lint)_, status codes, Mongoose _(lint)_ |
+| Repository (`database/repositories/<entity>.repository.ts`) | queries and writes for one collection, mapping documents onto the domain types                                                                                  | business rules, other collections                                                            |
 
-- One controller per feature, one method per route. A method extracts the request (body, current Session, cookie), calls **one** handler, and shapes the response.
-- Setting or clearing the refresh cookie is transport, so it happens in the controller, never in a handler.
-- The controller method's field for an injected handler carries a `Handler` suffix (`signUpHandler`).
+- A module's business logic is one service named for its area (`AuthService`, `UsersService`, `HealthService`), with one public method per operation (`signUp`, `getCurrentUser`). A rule several operations share is a service of its own (`SessionService`) or a private function in the service's file, never a free-floating rules file.
+- A service throws `ApiError` with a code from the closed set and returns plain data typed with the domain types (`User`, `Session` in `src/features/auth/auth.types.ts`, `AuthContext` in `src/common/services/access-token.service.ts`), never a type from `src/database/`.
+- Setting or reading the refresh cookie is transport: the controller calls `AuthCookiesService`, which owns the whole cookie policy. A service returns the credential and never sees the response.
+- A controller's field for an injected service is the class name in camelCase (`authService`).
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule` and `LoggingModule` (global) -> `DatabaseModule` (models and repositories) -> `AuthModule` (token service, global guard) -> feature modules (`auth`, `users`, `health`).
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the token, password and cookie services, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). `src/common/` holds what the global guard or more than one feature needs, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `pipes/`, `services/`), and imports nothing from a feature.
+- A repository imports the domain types from `src/features/auth/auth.types.ts` as types only, so no runtime edge points to a higher tier.
 - A module imports only from a lower tier. A feature module exports nothing and never imports another feature module. `forwardRef` is never needed and never used.
 
 ### Authentication is deny-by-default
@@ -58,11 +61,11 @@ Every back-end capability has exactly one door, and the door is injected:
 
 ## Architecture: front end
 
-- Pages live in `src/pages/`, one per route, default-exported only where the router requires it; every other component is a **named** export.
+- Pages live in `src/pages/`, one `<Name>Page.tsx` per route, default-exported only where the router requires it; every other component is a **named** export.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
-- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/api/`.
-- Forms use React Hook Form with the Zod schema from `src/features/auth/schemas.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/<resource>-api.ts`.
+- Forms use React Hook Form with the Zod schema from `src/components/composite/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules
@@ -75,14 +78,52 @@ Every back-end capability has exactly one door, and the door is injected:
 - Tests live at the agreed seams only: the back end's HTTP API, the front end's rendered app with the network faked by MSW, and the Playwright journeys. A test that reaches past a seam into a private method or a collaborator mock is rewritten at the seam.
 - Expected values come from the spec or a worked example, never recomputed the way the code computes them.
 - Back-end integration tests seed data through the raw collection, never through the repository under test, so a broken write and a broken read cannot agree with each other.
-- A test name reads as a behaviour in glossary terms: `"a replayed refresh credential revokes the Session"`, not `"refresh() throws"`.
+- A test name reads as a behaviour in glossary terms: `"a replayed previous refresh credential revokes the Session"`, not `"refresh() throws"`.
 
 ## Comments
 
-- Code is the documentation. A comment explains a _why_ the code cannot say: a security reason, a library gotcha, a deliberate deviation.
-- Doc headers stay short and say what the thing is for.
-- A comment never narrates a change ("changed X to Y"); that belongs in the commit message.
+A comment earns its place by saying a _why_ the code cannot say. Where the code can explain itself, there is no comment.
+
+- **Keep or write one** for a security property, a library or platform gotcha, a deliberate deviation from the obvious approach, a non-obvious trade-off, or a constraint from an ADR (cite it).
+- **Delete one that restates** the symbol's name or the next line.
+- **Delete or rewrite one that narrates** a change or history ("changed X to Y", "now", "no longer", "used to", a ticket number). That belongs in the commit message.
+- **Doc headers** only on exported symbols whose purpose is not obvious from their name and type, and one line. A reason that needs more is a why-comment, not a header.
+- **Tests**: the test's name says the behaviour. A comment in a test only explains a non-obvious setup.
+
+A good comment gives the reason, and cites the ADR when it rests on one:
+
+```ts
+// A replaced secret replayed after the grace window: two parties hold the credential, so the Session ends (ADR 0001).
+```
+
+A good doc header is one line that says what the name cannot:
+
+```ts
+/** Deny by default. One read of the Session by primary key per request, so Sign out takes effect at once (ADR 0001). */
+```
+
+A bad comment restates the code, or says what changed:
+
+```ts
+/** Gets the current user. */
+async getCurrentUser(userId: string) {}
+// Now uses scrypt instead of argon2 (ticket 12).
+```
+
+The narration above becomes a reason, or nothing:
+
+```ts
+// scrypt from `node:crypto`: a native addon such as argon2 is blocked on the development machine (ADR 0007).
+```
+
+In a test, a good comment explains the setup, and a bad one repeats the name:
+
+```ts
+// Cheap hashing: these rows test the field rules, not the hash.
+// Signs the User in.
+```
 
 ## Naming
 
+- File and folder names follow each app's naming rule ([backend/AGENTS.md](backend/AGENTS.md), [frontend/AGENTS.md](frontend/AGENTS.md), "Naming and exports"): a file's name says what it exports, and a class or component is named for its file.
 - Domain names come from [GLOSSARY.md](GLOSSARY.md): `signUp`, `signIn`, `signOut`, `Session`, `User`. Avoided synonyms (`login`, `register`, `account`) do not appear in identifiers, routes, copy or test names.

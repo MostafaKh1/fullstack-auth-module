@@ -33,3 +33,10 @@ _Avoid_: Ban, kick, invalidation
 **Application page**:
 The page only a signed-in User can see, carrying the welcome message.
 _Avoid_: Dashboard, home, landing page
+
+## Named exceptions
+
+Two avoided words stay where something outside this glossary fixes them:
+
+- **`auth.unauthenticated`**: the error code is part of the API contract in `docs/spec/auth-module.md`; it means a request carried no valid access token, not a failed Sign in.
+- **"An account with this email already exists"**: the sentence for `user.email_taken` is quoted verbatim from `docs/requirements.md`.

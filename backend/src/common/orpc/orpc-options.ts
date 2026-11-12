@@ -1,3 +1,4 @@
+import { ERROR_CODES, type ErrorCode, type ValidationIssue } from "@app/contract/error-envelope";
 import { ORPCError, type ORPCModuleConfig } from "@orpc/nest";
 import { ValidationError } from "@orpc/server";
 import {
@@ -6,12 +7,7 @@ import {
 } from "@orpc/server/plugins";
 import type { Request } from "express";
 import { ApiError } from "@/common/errors/api-error.js";
-import {
-  ERROR_CODES,
-  type ErrorCode,
-  errorEnvelope,
-  type ValidationIssue,
-} from "@/common/errors/error-codes.js";
+import { errorEnvelope } from "@/common/errors/error-envelope.js";
 import { invalidRequest } from "@/common/errors/invalid-request.js";
 
 declare module "@orpc/nest" {

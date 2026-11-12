@@ -6,6 +6,4 @@ skills-lock.json
 .claude/skills/
 .agents/skills/
 
-# Generated from contract/openapi.json.
-frontend/src/utils/api/api-types.generated.ts
 contract/openapi.json

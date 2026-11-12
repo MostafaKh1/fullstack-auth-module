@@ -1,4 +1,102 @@
 {
+  "info": {
+    "title": "Auth API",
+    "description": "Sign up, Sign in, refresh, Sign out and the signed-in User.",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refresh_credential"
+      }
+    },
+    "schemas": {
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "request.validation_failed",
+              "request.malformed",
+              "request.too_large",
+              "request.rate_limited",
+              "auth.unauthenticated",
+              "auth.invalid_credentials",
+              "auth.session_expired",
+              "auth.origin_rejected",
+              "route.not_found",
+              "user.email_taken",
+              "server.internal",
+              "server.unavailable"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "traceId": {
+            "type": "string",
+            "description": "The request id, also the X-Request-Id header."
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    ]
+                  }
+                },
+                "code": {
+                  "type": "string",
+                  "description": "A rule id such as password.missing_number."
+                }
+              },
+              "required": [
+                "path",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "message": {
+            "description": "A developer hint, omitted in production.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "traceId",
+          "retryable"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
   "openapi": "3.1.1",
   "paths": {
     "/api/auth/sign-up": {
@@ -598,6 +696,64 @@
         ]
       }
     },
+    "/api/health": {
+      "get": {
+        "operationId": "health.check",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "200": {
+            "description": "The database answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "ok"
+                    },
+                    "database": {
+                      "const": "up"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "database"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "503",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "server.unavailable"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me": {
       "get": {
         "operationId": "users.me",
@@ -669,161 +825,6 @@
             "bearer": []
           }
         ]
-      }
-    },
-    "/api/health": {
-      "get": {
-        "operationId": "health.check",
-        "tags": [
-          "health"
-        ],
-        "responses": {
-          "200": {
-            "description": "The database answers.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "const": "ok"
-                    },
-                    "database": {
-                      "const": "up"
-                    }
-                  },
-                  "required": [
-                    "status",
-                    "database"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "503",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ErrorEnvelope"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "server.unavailable"
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "info": {
-    "title": "Auth API",
-    "description": "Sign up, Sign in, refresh, Sign out and the signed-in User.",
-    "version": "1.0.0",
-    "contact": {}
-  },
-  "tags": [],
-  "servers": [],
-  "components": {
-    "securitySchemes": {
-      "bearer": {
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "type": "http"
-      },
-      "cookie": {
-        "type": "apiKey",
-        "in": "cookie",
-        "name": "refresh_credential"
-      }
-    },
-    "schemas": {
-      "ErrorEnvelope": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "code",
-          "status",
-          "traceId",
-          "retryable"
-        ],
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": [
-              "request.validation_failed",
-              "request.malformed",
-              "request.too_large",
-              "request.rate_limited",
-              "auth.unauthenticated",
-              "auth.invalid_credentials",
-              "auth.session_expired",
-              "auth.origin_rejected",
-              "route.not_found",
-              "user.email_taken",
-              "server.internal",
-              "server.unavailable"
-            ]
-          },
-          "status": {
-            "type": "integer"
-          },
-          "traceId": {
-            "type": "string",
-            "description": "The request id, also the X-Request-Id header."
-          },
-          "retryable": {
-            "type": "boolean"
-          },
-          "issues": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "path",
-                "code"
-              ],
-              "properties": {
-                "path": {
-                  "type": "array",
-                  "items": {
-                    "oneOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "integer"
-                      }
-                    ]
-                  }
-                },
-                "code": {
-                  "type": "string",
-                  "description": "A rule id such as password.missing_number."
-                }
-              }
-            }
-          },
-          "message": {
-            "type": "string",
-            "description": "A developer hint, omitted in production."
-          }
-        }
       }
     }
   }

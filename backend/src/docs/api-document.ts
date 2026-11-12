@@ -1,67 +1,54 @@
 import { contract } from "@app/contract";
+import { errorEnvelopeSchema } from "@app/contract/error-envelope";
 import type { INestApplication } from "@nestjs/common";
-import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
+import { SwaggerModule } from "@nestjs/swagger";
 import { OpenAPIGenerator } from "@orpc/openapi";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import helmet from "helmet";
-import { ERROR_CODES, errorEnvelopeSchema } from "@/common/errors/error-codes.js";
+import { z } from "zod";
 
-type PathItem = OpenAPIObject["paths"][string];
+type OpenApiDocument = Awaited<ReturnType<OpenAPIGenerator["generate"]>>;
+type PathItem = NonNullable<OpenApiDocument["paths"]>[string];
 
-// Response objects are closed, so `api-docs.spec.ts` fails when a route sends a field the document does not describe.
-const SCHEMAS = {
-  ErrorEnvelope: {
-    type: "object",
-    additionalProperties: false,
-    required: ["code", "status", "traceId", "retryable"],
-    properties: {
-      code: { type: "string", enum: Object.keys(ERROR_CODES) },
-      status: { type: "integer" },
-      traceId: { type: "string", description: "The request id, also the X-Request-Id header." },
-      retryable: { type: "boolean" },
-      issues: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["path", "code"],
-          properties: {
-            path: { type: "array", items: { oneOf: [{ type: "string" }, { type: "integer" }] } },
-            code: { type: "string", description: "A rule id such as password.missing_number." },
-          },
-        },
-      },
-      message: { type: "string", description: "A developer hint, omitted in production." },
-    },
-  },
-};
-
-/** The routes declared in the contract, at their paths under the `api` prefix. */
-async function contractPaths(): Promise<OpenAPIObject["paths"]> {
-  const generator = new OpenAPIGenerator({ schemaConverters: [new ZodToJsonSchemaConverter()] });
-  const document = await generator.generate(contract, {
-    customErrorResponseBodySchema: (definedErrors) =>
-      errorEnvelopeSchema(definedErrors.map(([code]) => code)),
-  });
-  return Object.fromEntries(
-    Object.entries(document.paths ?? {}).map(([path, item]) => [`/api${path}`, item as PathItem]),
-  );
+/** A component is a schema of its own, so the `$schema` keyword Zod adds is dropped. */
+function errorEnvelopeJsonSchema(): Record<string, unknown> {
+  const { $schema: _dialect, ...schema } = z.toJSONSchema(errorEnvelopeSchema);
+  return schema;
 }
 
-// Until every route is declared in the contract, the document is the Nest one with the contract's routes laid over
-// it; oRPC writes OpenAPI 3.1 schemas (`const`), so the merged document says 3.1.
-export async function buildOpenApiDocument(app: INestApplication): Promise<OpenAPIObject> {
-  const options = new DocumentBuilder()
-    .setTitle("Auth API")
-    .setDescription("Sign up, Sign in, refresh, Sign out and the signed-in User.")
-    .setVersion("1.0.0")
-    .addBearerAuth(undefined, "bearer")
-    .addCookieAuth("refresh_credential")
-    .build();
-  const document = SwaggerModule.createDocument(app, options);
-  document.openapi = "3.1.1";
-  document.paths = { ...document.paths, ...(await contractPaths()) };
-  document.components = { ...document.components, schemas: { ...document.components?.schemas, ...SCHEMAS } };
+const ERROR_ENVELOPE_REF = { $ref: "#/components/schemas/ErrorEnvelope" };
+
+/** The whole API document, built from the contract alone: no server, no database. */
+export async function buildOpenApiDocument(): Promise<OpenApiDocument> {
+  const generator = new OpenAPIGenerator({ schemaConverters: [new ZodToJsonSchemaConverter()] });
+  const document = await generator.generate(contract, {
+    info: {
+      title: "Auth API",
+      description: "Sign up, Sign in, refresh, Sign out and the signed-in User.",
+      version: "1.0.0",
+    },
+    components: {
+      securitySchemes: {
+        bearer: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+        cookie: { type: "apiKey", in: "cookie", name: "refresh_credential" },
+      },
+      schemas: { ErrorEnvelope: errorEnvelopeJsonSchema() as never },
+    },
+    // A response lists the codes it can carry; the rest of the envelope is the shared component.
+    customErrorResponseBodySchema: (definedErrors) => ({
+      allOf: [
+        ERROR_ENVELOPE_REF,
+        {
+          type: "object",
+          properties: { code: { type: "string", enum: definedErrors.map(([code]) => code) } },
+        },
+      ],
+    }),
+  });
+  // Paths are written relative to the `api` prefix the back end sets.
+  document.paths = Object.fromEntries(
+    Object.entries(document.paths ?? {}).map(([path, item]) => [`/api${path}`, item as PathItem]),
+  );
   return document;
 }
 
@@ -80,5 +67,7 @@ export async function setupApiDocs(app: INestApplication): Promise<void> {
       },
     }),
   );
-  SwaggerModule.setup("api/docs", app, await buildOpenApiDocument(app), { jsonDocumentUrl: "api/docs-json" });
+  SwaggerModule.setup("api/docs", app, (await buildOpenApiDocument()) as never, {
+    jsonDocumentUrl: "api/docs-json",
+  });
 }

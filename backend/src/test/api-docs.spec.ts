@@ -51,8 +51,12 @@ describe("the API documentation", () => {
     ]);
   });
 
-  it("documents Sign up from its procedure in the contract", () => {
-    expect(document.paths["/api/auth/sign-up"].post).toMatchObject({ operationId: "auth.signUp" });
+  it("documents the auth routes from their procedures in the contract", () => {
+    const operationIds = ["sign-up", "sign-in", "refresh", "sign-out"].map(
+      (route) => (document.paths[`/api/auth/${route}`].post as { operationId?: string }).operationId,
+    );
+
+    expect(operationIds).toEqual(["auth.signUp", "auth.signIn", "auth.refresh", "auth.signOut"]);
   });
 
   it("documents each request body from the Zod schema, with the field rules", () => {
@@ -60,11 +64,7 @@ describe("the API documentation", () => {
     const signIn = document.paths["/api/auth/sign-in"].post.requestBody?.content["application/json"].schema;
 
     expect(signUp).toMatchObject({ type: "object", required: ["email", "name", "password"] });
-    expect(signIn).toEqual({ $ref: "#/components/schemas/SignInRequest" });
-    expect(document.components.schemas.SignInRequest).toMatchObject({
-      type: "object",
-      required: ["email", "password"],
-    });
+    expect(signIn).toMatchObject({ type: "object", required: ["email", "password"] });
   });
 
   it("documents the success statuses and the error codes", () => {
@@ -85,6 +85,14 @@ describe("the API documentation", () => {
     expect(document.components.securitySchemes).toMatchObject({ bearer: { type: "http", scheme: "bearer" } });
     expect(document.paths["/api/users/me"].get.security).toEqual([{ bearer: [] }]);
     expect(document.paths["/api/auth/sign-in"].post.security).toBeUndefined();
+  });
+
+  it("marks the cookie routes as needing the refresh cookie", () => {
+    expect(document.components.securitySchemes).toMatchObject({
+      cookie: { type: "apiKey", in: "cookie", name: "refresh_credential" },
+    });
+    expect(document.paths["/api/auth/refresh"].post.security).toEqual([{ cookie: [] }]);
+    expect(document.paths["/api/auth/sign-out"].post.security).toEqual([{ cookie: [] }]);
   });
 
   it("is the document checked in as contract/openapi.json", () => {

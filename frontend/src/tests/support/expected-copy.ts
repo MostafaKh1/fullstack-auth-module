@@ -1,9 +1,8 @@
 import { ERROR_CODES, type ErrorCode } from "@app/contract/error-envelope";
 
-/** Every error code in the closed set, from the contract. */
 export const contractErrorCodes: string[] = Object.keys(ERROR_CODES);
 
-// Typed against the contract, so a missing code also fails the typecheck. The sentences for
+// A code missing here fails the typecheck. The sentences for
 // `auth.invalid_credentials` and `user.email_taken` are quoted verbatim from docs/requirements.md.
 export const expectedErrorCopy: Record<string, string> = {
   "request.validation_failed": "Some fields need attention. Check them, then try again.",

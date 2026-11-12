@@ -32,7 +32,7 @@ contract/
 2. Run `npm run build -w contract` and `npm run openapi -w backend`, and fix whatever the typechecks now report.
 3. Commit `openapi.json` with the change.
 
-A back-end test and the `contract` job in CI fail when `openapi.json` differs from what the back end generates, .
+A back-end test and the `contract` job in CI fail when `openapi.json` differs from what the back end generates.
 
 ## The field rules
 

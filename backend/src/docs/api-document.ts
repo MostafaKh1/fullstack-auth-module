@@ -16,6 +16,7 @@ function errorEnvelopeJsonSchema(): Record<string, unknown> {
   return schema;
 }
 
+// The generator types its input as OpenAPI 3.1 objects, which Zod's JSON Schema output and Swagger's 3.0 types do not match.
 const ERROR_ENVELOPE_REF = { $ref: "#/components/schemas/ErrorEnvelope" };
 
 /** The whole API document, built from the contract alone: no server, no database. */
@@ -34,7 +35,6 @@ export async function buildOpenApiDocument(): Promise<OpenApiDocument> {
       },
       schemas: { ErrorEnvelope: errorEnvelopeJsonSchema() as never },
     },
-    // A response lists the codes it can carry; the rest of the envelope is the shared component.
     customErrorResponseBodySchema: (definedErrors) => ({
       allOf: [
         ERROR_ENVELOPE_REF,

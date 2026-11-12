@@ -1,4 +1,4 @@
-import type { ErrorCode, ErrorEnvelope, ValidationIssue } from "@app/contract/error-envelope";
+import type { ErrorEnvelope, ValidationIssue } from "@app/contract/error-envelope";
 import { ORPCError } from "@orpc/client";
 import { clientErrorCode } from "@/utils/error-copy";
 
@@ -29,6 +29,3 @@ export function apiErrorEnvelope(error: unknown): ApiErrorEnvelope | null {
 export function apiFailureCode(error: unknown): string {
   return apiErrorEnvelope(error)?.code ?? clientErrorCode.unreachable;
 }
-
-/** The closed set of error codes, from the contract. */
-export type ApiErrorCode = ErrorCode;

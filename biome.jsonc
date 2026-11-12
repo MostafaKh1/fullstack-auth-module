@@ -2,8 +2,12 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   // Biome lints; Prettier formats (ADR 0004). The formatter stays off so the two never fight.
   "formatter": { "enabled": false },
-  // The back end's layering rules that noRestrictedImports cannot express (ADR 0005).
+  // The back end's layering rules that noRestrictedImports cannot express (ADR 0005; the contract's, ADR 0012).
   "plugins": [
+    {
+      "path": "./contract/lint/no-cross-feature-import.grit",
+      "includes": ["contract/src/features/**"],
+    },
     { "path": "./backend/lint/no-cross-feature-import.grit", "includes": ["backend/src/features/**"] },
     {
       "path": "./backend/lint/no-feature-import-below-features.grit",

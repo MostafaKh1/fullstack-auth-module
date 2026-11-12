@@ -6,6 +6,8 @@ The repository becomes one npm workspace (`backend`, `frontend`, `e2e`, `contrac
 
 What stays on the wire is unchanged: plain REST routes under `/api` with their existing methods and paths (oRPC's OpenAPI codec, never its RPC protocol), so the refresh cookie's `Path=/api/auth`, the proxies, the throttler's per-route counters and the browser journeys are untouched. Errors keep the envelope of ADR 0002: oRPC's error body encoder writes `{code, status, traceId, retryable, issues?}` with our codes and rule ids, the client's decoder reads it, and a Zod failure is mapped to `request.validation_failed` with `issues: [{path, code}]`. Guards stay Nest guards on the `@Implement` methods (`AccessTokenGuard`, `OriginCsrfGuard`, `ThrottlerGuard`, `@Public()`); the refresh cookie is written through oRPC's response headers; our JSON body parser and its limit stay in front of oRPC's. `openapi.json` stays in the same folder as the package's generated output, and Swagger UI at `/api/docs` remains, both generated from the contract by oRPC's `OpenAPIGenerator` instead of the Nest decorators.
 
+The package is laid out as the back end is: `common/` for what several features share (the error envelope, the User shape, the route-security helpers) and `features/<name>/` for each feature's procedures and its own rules, with `contract.ts` as the router. A feature imports only `common/`, never another feature (lint). Imports name the folder, not the layout: `@app/contract/common/<file>` and `@app/contract/<feature>/<file>`.
+
 ## Considered options
 
 - **Keep the apps independent (ADR 0003).** No workspace, but the field rules and their examples stay duplicated and change in two places.

@@ -1,8 +1,8 @@
 import type { RouteObject } from "react-router";
-import { RequireSession } from "@/components/layout/route-guards/RequireSession";
-import { RequireSignedOut } from "@/components/layout/route-guards/RequireSignedOut";
-import { AuthFormSwitch } from "@/components/layout/route-switches/AuthFormSwitch";
-import { AuthPathRedirect } from "@/components/layout/route-switches/AuthPathRedirect";
+import { RequireSession } from "@/features/auth/components/layout/route-guards/RequireSession";
+import { RequireSignedOut } from "@/features/auth/components/layout/route-guards/RequireSignedOut";
+import { AuthFormSwitch } from "@/features/auth/components/layout/route-switches/AuthFormSwitch";
+import { AuthPathRedirect } from "@/features/auth/components/layout/route-switches/AuthPathRedirect";
 import { SignInPage } from "@/pages/(auth)/sign-in/SignInPage";
 import { SignUpPage } from "@/pages/(auth)/sign-up/SignUpPage";
 import { ApplicationPage } from "@/pages/(webapp)/application/ApplicationPage";

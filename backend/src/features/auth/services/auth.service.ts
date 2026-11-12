@@ -1,10 +1,10 @@
+import type { SignInBody, SignUpBody } from "@app/contract/field-rules";
 import { Injectable } from "@nestjs/common";
 import { ApiError } from "@/common/errors/api-error.js";
 import { AccessTokenService, type AuthContext } from "@/common/services/access-token.service.js";
 import type { User } from "@/common/types/user.types.js";
 import { ClockService } from "@/core/clock.service.js";
 import { UserRepository } from "@/database/repositories/user.repository.js";
-import type { SignInBody, SignUpBody } from "@/features/auth/auth.types.js";
 import { PasswordHashService } from "./password-hash.service.js";
 import { type IssuedRefreshCredential, SessionService } from "./session.service.js";
 

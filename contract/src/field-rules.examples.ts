@@ -1,11 +1,9 @@
 /**
  * The worked examples of the field rules in docs/requirements.md, one row per case.
  *
- * The back end keeps an identical copy of this table (`backend/src/test/support/field-rules.examples.ts`) and its
- * tests run every row too. A rule changes in both copies, and in both apps' rules, in the same commit
- * (CODING_STANDARDS.md, "Validation rules").
+ * Both apps' suites run every row against the rules in `field-rules.ts`.
  *
- * `input: undefined` means the field is left out of the request (on a form: left empty).
+ * `input: undefined` means the field is left out of the request.
  * A valid row may name `stored`: the value the User is saved with.
  * An invalid row lists every rule id the value breaks, in the order the rules are listed in the requirements.
  */

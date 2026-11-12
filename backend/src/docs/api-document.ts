@@ -1,4 +1,5 @@
 import { contract } from "@app/contract";
+import { signInSchema, signUpSchema } from "@app/contract/field-rules";
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { OpenAPIGenerator } from "@orpc/openapi";
@@ -6,7 +7,6 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import helmet from "helmet";
 import { z } from "zod";
 import { ERROR_CODES, errorEnvelopeSchema } from "@/common/errors/error-codes.js";
-import { signInSchema, signUpSchema } from "@/features/auth/auth.types.js";
 
 type SchemaObject = NonNullable<NonNullable<OpenAPIObject["components"]>["schemas"]>[string];
 type PathItem = OpenAPIObject["paths"][string];

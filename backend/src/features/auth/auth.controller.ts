@@ -1,3 +1,4 @@
+import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "@app/contract/field-rules";
 import { Body, Controller, Headers, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiCookieAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ThrottlerGuard } from "@nestjs/throttler";
@@ -7,7 +8,6 @@ import { Public } from "@/common/decorators/auth.decorator.js";
 import type { User } from "@/common/types/user.types.js";
 import { type AuthOutcome, AuthService } from "@/features/auth/services/auth.service.js";
 import { AuthCookiesService } from "@/features/auth/services/auth-cookies.service.js";
-import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./auth.types.js";
 import { OriginCsrfGuard } from "./origin-csrf.guard.js";
 import { RouteValidationPipe } from "./route-validation.pipe.js";
 

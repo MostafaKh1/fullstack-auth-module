@@ -1,4 +1,4 @@
-import { signInExamples } from "@/test/support/field-rules.examples.js";
+import { signInExamples } from "@app/contract/field-rules.examples";
 import { refreshCookie } from "@/test/support/refresh-cookie.js";
 import { startTestApp, type TestApp } from "./boot.js";
 

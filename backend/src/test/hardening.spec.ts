@@ -116,4 +116,24 @@ describe("security headers, CORS, body cap and malformed JSON", () => {
     expect(response.body).toEqual(ENVELOPE("request.malformed", 400));
     expect(response.body.traceId).toBe(response.headers["x-request-id"]);
   });
+
+  it("answers a JSON body in an unsupported charset with 400 request.malformed, and logs no error", async () => {
+    // A parser error can be logged before the request logger has tagged the request: look at every line it writes.
+    const linesBefore = app.logs().length;
+
+    const response = await app
+      .http()
+      .post("/api/auth/sign-in")
+      .set("X-Request-Id", "unsupported-charset")
+      .set("Content-Type", "application/json; charset=latin1")
+      .send('{"email": "a@b.co", "password": "x"}');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ ...ENVELOPE("request.malformed", 400), traceId: "unsupported-charset" });
+    const errors = app
+      .logs()
+      .slice(linesBefore)
+      .filter((entry) => entry.level >= 50);
+    expect(errors).toEqual([]);
+  });
 });

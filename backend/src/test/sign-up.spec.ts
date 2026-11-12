@@ -7,6 +7,7 @@ const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
 const valid = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
+const frontEnd = "http://localhost:5173";
 
 describe("Sign up", () => {
   let app: TestApp;
@@ -208,6 +209,37 @@ describe("Sign up", () => {
     expect(response.status).toBe(400);
     expect(response.body.code).toBe("request.malformed");
     expect(await app.db.collection("users").countDocuments()).toBe(0);
+  });
+
+  it("answers 400 request.malformed for a form-encoded body, without a cookie, and creates no User", async () => {
+    const response = await app.http().post("/api/auth/sign-up").type("form").send(valid);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({ code: "request.malformed", status: 400 });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect(await app.db.collection("users").countDocuments()).toBe(0);
+  });
+
+  describe("the Origin check", () => {
+    it("refuses a foreign Origin with 403 auth.origin_rejected, without a cookie, and creates no User", async () => {
+      const response = await app
+        .http()
+        .post("/api/auth/sign-up")
+        .set("Origin", "https://evil.example")
+        .send(valid);
+
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject({ code: "auth.origin_rejected", status: 403 });
+      expect(response.headers["set-cookie"]).toBeUndefined();
+      expect(await app.db.collection("users").countDocuments()).toBe(0);
+    });
+
+    it("accepts a configured front-end Origin", async () => {
+      const response = await app.http().post("/api/auth/sign-up").set("Origin", frontEnd).send(valid);
+
+      expect(response.status).toBe(201);
+      expect(refreshCookie(response.headers["set-cookie"])).toMatch(/^refresh_credential=/);
+    });
   });
 
   it("reports every broken field at once", async () => {

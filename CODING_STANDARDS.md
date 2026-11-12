@@ -38,7 +38,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 - A global guard requires a valid access token on every route.
 - A route opts out with `@Public()`, and only the Sign up, Sign in, refresh, Sign out and health routes do.
-- The refresh and Sign out routes authenticate with the refresh cookie and also pass the `Origin` check.
+- The refresh and Sign out routes authenticate with the refresh cookie. Every route that sets or reads it (Sign up, Sign in, refresh, Sign out) passes the `Origin` check, after the throttler where both apply.
 
 ### Errors
 

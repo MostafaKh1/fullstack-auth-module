@@ -19,7 +19,7 @@ export class AuthController {
   ) {}
 
   @Public()
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard, OriginCsrfGuard)
   @Implement(contract.auth.signUp)
   signUp() {
     return implement(contract.auth.signUp).handler(async ({ input, context }) => {
@@ -29,7 +29,7 @@ export class AuthController {
   }
 
   @Public()
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard, OriginCsrfGuard)
   @Implement(contract.auth.signIn)
   signIn() {
     return implement(contract.auth.signIn).handler(async ({ input, context }) => {

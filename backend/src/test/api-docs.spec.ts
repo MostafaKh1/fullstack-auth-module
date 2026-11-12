@@ -59,6 +59,14 @@ describe("the API documentation", () => {
     expect(operationIds).toEqual(["auth.signUp", "auth.signIn", "auth.refresh", "auth.signOut"]);
   });
 
+  it("documents the current User from its procedure in the contract", () => {
+    const operation = document.paths["/api/users/me"].get as { operationId?: string; responses: object };
+
+    expect(operation.operationId).toBe("users.me");
+    expect(Object.keys(operation.responses)).toEqual(expect.arrayContaining(["200", "401"]));
+    expect(JSON.stringify(operation.responses)).toContain("auth.unauthenticated");
+  });
+
   it("documents each request body from the Zod schema, with the field rules", () => {
     const signUp = document.paths["/api/auth/sign-up"].post.requestBody?.content["application/json"].schema;
     const signIn = document.paths["/api/auth/sign-in"].post.requestBody?.content["application/json"].schema;

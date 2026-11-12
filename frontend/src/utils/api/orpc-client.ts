@@ -4,7 +4,7 @@ import { type ContractRouterClient, isContractProcedure, validateORPCError } fro
 import type { JsonifiedClient } from "@orpc/openapi-client";
 import { OpenAPILink } from "@orpc/openapi-client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { currentAccessToken } from "@/utils/api/api-client";
+import { currentAccessToken } from "@/utils/api/access-token";
 import { isErrorEnvelope } from "@/utils/api/api-error";
 import { refreshSessionOnce, shouldRefreshAndRetry } from "@/utils/api/session-refresh";
 
@@ -12,6 +12,9 @@ type ContractClient = JsonifiedClient<ContractRouterClient<typeof contract>>;
 
 /** What Sign up, Sign in and refresh answer: the access token and the User. */
 export type SignedIn = Awaited<ReturnType<ContractClient["auth"]["refresh"]>>;
+
+/** A User as the client sees it: its date is an ISO string. */
+export type User = SignedIn["user"];
 
 const procedureAt = (path: readonly string[]) => {
   const found = path.reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], contract);

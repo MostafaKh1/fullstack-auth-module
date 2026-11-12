@@ -600,21 +600,46 @@
     },
     "/api/users/me": {
       "get": {
-        "operationId": "UsersController_me",
-        "parameters": [],
+        "operationId": "users.me",
+        "tags": [
+          "users"
+        ],
         "responses": {
           "200": {
             "description": "The signed-in User.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "x-native-type": "date"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "name",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "401": {
-            "description": "Error codes: auth.unauthenticated",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -643,9 +668,6 @@
           {
             "bearer": []
           }
-        ],
-        "tags": [
-          "users"
         ]
       }
     },
@@ -730,31 +752,6 @@
       }
     },
     "schemas": {
-      "User": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "email",
-          "name",
-          "createdAt"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "ErrorEnvelope": {
         "type": "object",
         "additionalProperties": false,

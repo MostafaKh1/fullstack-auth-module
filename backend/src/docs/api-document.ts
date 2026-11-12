@@ -8,21 +8,8 @@ import { ERROR_CODES, errorEnvelopeSchema } from "@/common/errors/error-codes.js
 
 type PathItem = OpenAPIObject["paths"][string];
 
-const USER = {
-  type: "object",
-  additionalProperties: false,
-  required: ["id", "email", "name", "createdAt"],
-  properties: {
-    id: { type: "string" },
-    email: { type: "string" },
-    name: { type: "string" },
-    createdAt: { type: "string", format: "date-time" },
-  },
-};
-
 // Response objects are closed, so `api-docs.spec.ts` fails when a route sends a field the document does not describe.
 const SCHEMAS = {
-  User: USER,
   ErrorEnvelope: {
     type: "object",
     additionalProperties: false,

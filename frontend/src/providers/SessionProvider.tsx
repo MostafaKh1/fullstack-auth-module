@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { type Session, SessionContext } from "@/providers/session-context";
-import { setAccessToken } from "@/utils/api/api-client";
+import { setAccessToken } from "@/utils/api/access-token";
 import { orpc, type SignedIn } from "@/utils/api/orpc-client";
 import {
   listenForSessionChanges,

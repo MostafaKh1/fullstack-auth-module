@@ -1,6 +1,3 @@
-import { type AxiosError, type InternalAxiosRequestConfig, isAxiosError } from "axios";
-import { apiClient } from "@/utils/api/api-client";
-import { apiErrorEnvelope } from "@/utils/api/api-error";
 import type { SignedIn } from "@/utils/api/orpc-client";
 
 /** How the Session context refreshes and hears the outcome; it alone writes the access token (ADR 0008). */
@@ -11,8 +8,6 @@ export type SessionListener = {
   /** The refresh found no Session, or failed: the Session is over in this tab. */
   ended: () => void;
 };
-
-type RetriableConfig = InternalAxiosRequestConfig & { sessionRetried?: boolean };
 
 type InFlight = { owner: SessionListener; attempt: Promise<boolean>; discarded: boolean };
 
@@ -71,28 +66,9 @@ export function resumeRefreshing() {
   stopped = false;
 }
 
-/** Whether a refused request is refreshed for and sent once more; both clients apply this one rule. */
+/** Whether a refused request is refreshed for and sent once more. */
 // Only an expired or missing access token qualifies, never on an auth route (refresh among them), and only while an
 // app listens for the outcome.
 export function shouldRefreshAndRetry(code: string | undefined, isAuthRoute: boolean): boolean {
   return listener !== null && !isAuthRoute && code === "auth.unauthenticated";
-}
-
-// The same rule for the routes still on axios: refresh once, shared by every request refused meanwhile, then send
-// each request again, once.
-apiClient.interceptors.response.use(undefined, async (error: unknown) => {
-  if (!isAxiosError(error) || !isRetriable(error)) throw error;
-  const config = error.config as RetriableConfig;
-  if (!(await refreshSessionOnce())) throw error;
-  config.sessionRetried = true;
-  return apiClient.request(config);
-});
-
-function isRetriable(error: AxiosError): boolean {
-  const config = error.config as RetriableConfig | undefined;
-  return (
-    config !== undefined &&
-    !config.sessionRetried &&
-    shouldRefreshAndRetry(apiErrorEnvelope(error)?.code, config.url?.startsWith("/auth/") ?? false)
-  );
 }

@@ -12,9 +12,13 @@
       "types": "./dist/contract.d.ts",
       "default": "./dist/contract.js"
     },
+    "./common/*": {
+      "types": "./dist/common/*.d.ts",
+      "default": "./dist/common/*.js"
+    },
     "./*": {
-      "types": "./dist/*.d.ts",
-      "default": "./dist/*.js"
+      "types": "./dist/features/*.d.ts",
+      "default": "./dist/features/*.js"
     }
   },
   "files": [

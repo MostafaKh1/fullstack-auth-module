@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicRoute } from "../common/route-security.js";
+import { publicRoute } from "../../common/route-security.js";
 
 const healthSchema = z.strictObject({ status: z.literal("ok"), database: z.literal("up") });
 

@@ -8,7 +8,7 @@ const secured = (route: Route, scheme: Security): Route => {
   return {
     ...route,
     spec: (operation) => ({
-      ...(typeof own === "function" ? own(operation) : { ...operation, ...own }),
+      ...(typeof own === "function" ? own(operation) : operation),
       security: [{ [scheme]: [] }],
     }),
   };

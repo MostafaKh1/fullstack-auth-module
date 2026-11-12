@@ -70,7 +70,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ## Validation rules
 
-- The field rules exist once, in `contract/src/auth/auth.field-rules.ts`, with their table of worked examples (`auth.field-rules.examples.ts`): the back end's request schemas and the front end's forms both import them, and both suites run the same table. A rule or an example changes there, in one place ([contract/AGENTS.md](contract/AGENTS.md)).
+- The field rules exist once, in `contract/src/features/auth/auth.field-rules.ts`, with their table of worked examples (`auth.field-rules.examples.ts`): the back end's request schemas and the front end's forms both import them, and both suites run the same table. A rule or an example changes there, in one place ([contract/AGENTS.md](contract/AGENTS.md)).
 - The API is described once, by the contract: a route, its schemas and its error codes are declared there and nowhere else, and `contract/openapi.json` and Swagger UI are generated from it. A route that needs a second description (a decorator, a hand-written type) is not on the contract yet.
 - [docs/requirements.md](docs/requirements.md) is the authority. When code and that file disagree, the code is wrong.
 

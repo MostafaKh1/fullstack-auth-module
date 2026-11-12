@@ -6,7 +6,7 @@
   "plugins": [
     {
       "path": "./contract/lint/no-cross-feature-import.grit",
-      "includes": ["contract/src/**", "!contract/src/common/**", "!contract/src/contract.ts"],
+      "includes": ["contract/src/features/**"],
     },
     { "path": "./backend/lint/no-cross-feature-import.grit", "includes": ["backend/src/features/**"] },
     {

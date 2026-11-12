@@ -1,5 +1,5 @@
-import { bearerRoute } from "../common/route-security.js";
-import { userSchema } from "../common/user.js";
+import { bearerRoute } from "../../common/route-security.js";
+import { userSchema } from "../../common/user.js";
 
 export const usersContract = {
   me: bearerRoute({

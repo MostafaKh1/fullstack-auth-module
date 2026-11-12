@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { validationIssueSchema } from "../common/error-envelope.js";
-import { cookieRoute, publicRoute } from "../common/route-security.js";
-import { userSchema } from "../common/user.js";
+import { validationIssueSchema } from "../../common/error-envelope.js";
+import { cookieRoute, publicRoute } from "../../common/route-security.js";
+import { userSchema } from "../../common/user.js";
 import { signInSchema, signUpSchema } from "./auth.field-rules.js";
 
 const signedInSchema = z.strictObject({
@@ -23,7 +23,6 @@ const bodyErrors = {
   "request.too_large": { status: 413 },
 } as const;
 
-// The refresh cookie stands in for an access token on refresh and Sign out.
 export const authContract = {
   signUp: publicRoute({
     method: "POST",

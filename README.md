@@ -71,7 +71,7 @@ The apps use the contract package's build: `npm run setup` and the root scripts 
 ```
 backend/     NestJS API: features/ (auth, users, health), common/ (guards, filters, services), core/ (the clock),
              database/ (collections, repositories), config/, logging/, docs/, test/ (HTTP tests)
-frontend/    React app: pages/, components/, providers/ (the Session), hooks/, utils/ (API client), tests/ (harness)
+frontend/    React app: pages/, features/ (auth), components/, providers/, utils/ (API client), tests/ (harness)
 e2e/         Playwright journeys, run against the real apps
 contract/    @app/contract, the oRPC contract both apps build from, and openapi.json, generated from it
 docs/        requirements.md (rules and traceability), spec/, adr/ (decisions), agents/

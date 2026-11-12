@@ -1,4 +1,4 @@
-import type { SignInBody, SignUpBody } from "@app/contract/field-rules";
+import type { SignInBody, SignUpBody } from "@app/contract/auth/auth.field-rules";
 import { Injectable } from "@nestjs/common";
 import { ApiError } from "@/common/errors/api-error.js";
 import { AccessTokenService, type AuthContext } from "@/common/services/access-token.service.js";

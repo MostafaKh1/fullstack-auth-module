@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@app/contract/error-envelope";
+import type { ErrorCode } from "@app/contract/common/error-envelope";
 import { type ErrorRequestHandler, json, type RequestHandler } from "express";
 import { errorEnvelope } from "@/common/errors/error-envelope.js";
 import { assignRequestId } from "@/logging/request-id.js";

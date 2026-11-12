@@ -3,7 +3,7 @@ import {
   type ErrorCode,
   type ErrorEnvelope,
   type ValidationIssue,
-} from "@app/contract/error-envelope";
+} from "@app/contract/common/error-envelope";
 
 /** The one place an envelope is built; `message` is a developer hint, left out in production (ADR 0002). */
 export function errorEnvelope(

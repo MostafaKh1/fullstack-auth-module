@@ -66,7 +66,7 @@ features/<feature>/
 
 ### The auth feature
 
-- The request schemas are the contract's field rules (`@app/contract/field-rules`): each procedure's input, so a refused body answers through `invalidRequest()` (`common/errors/invalid-request.ts`): `400 request.validation_failed` with `{ path, code }` issues (`path` an array of keys), or `400 request.malformed` for a body that is not a JSON object; change a rule in `contract/`, never here. Every check's error is its rule id (`.max(254, "email.too_long")`).
+- The request schemas are the contract's field rules (`@app/contract/auth/auth.field-rules`): each procedure's input, so a refused body answers through `invalidRequest()` (`common/errors/invalid-request.ts`): `400 request.validation_failed` with `{ path, code }` issues (`path` an array of keys), or `400 request.malformed` for a body that is not a JSON object; change a rule in `contract/`, never here. Every check's error is its rule id (`.max(254, "email.too_long")`).
 - `refresh-credential.ts` is the only code that knows the `<sessionId>.<secret>` format; only `sha256(secret)` is stored.
 - `services/auth-cookies.service.ts`: `AuthCookiesService` owns the whole cookie policy: `httpOnly`, `SameSite=Lax`, scoped to `/api/auth`, `Secure` from `COOKIE_SECURE`, `Expires` at the Session's idle expiry with a matching `Max-Age` from `ClockService`. It reads the cookie from the request (`context.request`) and adds the `Set-Cookie` line to oRPC's `context.resHeaders`. It is the one service that touches the response, so the services lint rule skips that file alone.
 - `origin-csrf.guard.ts`: a foreign `Origin` answers `403 auth.origin_rejected`; a missing one passes. `services/password-hash.service.ts` is scrypt ([ADR 0007](../docs/adr/0007-password-hashing-with-scrypt.md)).
@@ -80,6 +80,8 @@ Parsed and validated once at boot in `src/config/app-env.ts` (the one reader of 
 
 Inject `PinoLogger` from `nestjs-pino` and call `setContext(ClassName.name)` in the constructor, as `src/common/filters/all-exceptions.filter.ts` does. Event names are dotted: `request.failed`, `session.started`. A secret-bearing field is added to `REDACTED_PATHS`, never masked at the call site. The request id (`src/logging/request-id.ts`) is on every line and is the envelope's `traceId`.
 
+Development output is pretty-printed (`pino-pretty`, a devDependency, switched on in `src/logging/logging.module.ts`); every other environment logs JSON.
+
 ## Tests
 
 The only test seam is the real application over HTTP (`api-docs.spec.ts` also pins `contract/openapi.json` to the generated document) against a throwaway MongoDB ([ADR 0004](../docs/adr/0004-quality-gates-and-test-seams.md)). Jest runs `src/test/**/*.spec.ts`; `tsconfig.build.json` excludes `src/test/`.
@@ -89,7 +91,7 @@ The only test seam is the real application over HTTP (`api-docs.spec.ts` also pi
 - Seed and inspect through `app.db`, never through the repository under test. Clear the collections a spec writes to between examples: several worked examples normalise to the same email.
 - Move time with `app.clock.set()` and `advance()` from `app.startedAt`. The clock starts at the real current time because MongoDB's TTL monitor deletes Sessions whose idle expiry has passed in real time.
 - Pass `{ PASSWORD_HASH_COST: "10" }` when a file signs up many Users and is not testing the hash itself.
-- The worked-examples table is `@app/contract/field-rules.examples`, shared with the front end; add a row there, never in a spec.
+- The worked-examples table is `@app/contract/auth/auth.field-rules.examples`, shared with the front end; add a row there, never in a spec.
 - Canonical example: `health.spec.ts`; `harness.spec.ts` pins the harness. The first run downloads a `mongod` binary into `~/.cache/mongodb-binaries`, shared by every checkout.
 
 ## Naming and exports

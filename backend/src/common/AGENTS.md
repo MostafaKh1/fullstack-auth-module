@@ -19,7 +19,7 @@ common/
 
 ## Where does this file belong?
 
-1. An error code -> `ERROR_CODES` in the contract's `error-envelope.ts` ([contract/AGENTS.md](../../../contract/AGENTS.md)); the envelope builder is `errors/error-envelope.ts`.
+1. An error code -> `ERROR_CODES` in the contract's `common/error-envelope.ts` ([contract/AGENTS.md](../../../contract/AGENTS.md)); the envelope builder is `errors/error-envelope.ts`.
 2. A decorator, guard or filter used by the global wiring or by more than one feature -> `<kind>s/<name>.<kind>.ts` here; one used by a single feature -> beside that feature's controller.
 3. A service more than one feature injects -> `services/<name>.service.ts`, listed in `common.module.ts`'s `providers` and `exports`; one a single feature uses -> that feature's `services/`, provided by its module.
 4. A domain type the repositories or more than one feature use -> `types/<entity>.types.ts`, one file per entity; a type only one feature uses stays in its `<feature>.types.ts`.
@@ -28,7 +28,7 @@ common/
 
 - The export is the file name in PascalCase plus the role (`access-token.guard.ts` -> `AccessTokenGuard`). A decorator file may export more than one decorator of the same concern (`auth.decorator.ts`).
 - A domain type is the application's view of a record: never a secret hash. The repositories import it with `import type`, so no runtime edge points up from `src/database/`.
-- A code is `<area>.<snake_case_condition>` (`auth.session_expired`), with its HTTP `status` and `retryable` in `ERROR_CODES` in the contract's `error-envelope.ts`; the spec's list in `docs/spec/auth-module.md` is the reference. Add it to the front end's copy map in the same commit.
+- A code is `<area>.<snake_case_condition>` (`auth.session_expired`), with its HTTP `status` and `retryable` in `ERROR_CODES` in the contract's `common/error-envelope.ts`; the spec's list in `docs/spec/auth-module.md` is the reference. Add it to the front end's copy map in the same commit.
 - A new failure is a new code thrown as `ApiError`, never a new exception class or filter. Inside a contract procedure, `orpc-options.ts` turns a 4xx `ApiError` into the typed error the contract declares, which oRPC's encoder writes as the envelope, and rethrows everything else to the global filter; a new code a procedure answers is also added to that procedure's `.errors()` in the contract. The filter maps errors Nest or Express raise themselves through `CODE_BY_STATUS` and turns anything else into `server.internal`, logged with its stack.
 - The guard needs only the access token and the Session record: it reads the Session through `SessionRepository` (so `CommonModule` imports `PersistenceModule`) and applies `isSessionLive`, the one liveness rule, which `SessionService` imports too.
 - Canonical example: `guards/access-token.guard.ts`.

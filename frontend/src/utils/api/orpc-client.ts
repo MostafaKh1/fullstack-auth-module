@@ -1,5 +1,5 @@
 import { contract } from "@app/contract";
-import type { ErrorEnvelope } from "@app/contract/error-envelope";
+import type { ErrorEnvelope } from "@app/contract/common/error-envelope";
 import { createORPCClient, ORPCError } from "@orpc/client";
 import { type ContractRouterClient, isContractProcedure, validateORPCError } from "@orpc/contract";
 import type { JsonifiedClient } from "@orpc/openapi-client";

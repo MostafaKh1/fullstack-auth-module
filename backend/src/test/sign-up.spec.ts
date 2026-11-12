@@ -1,5 +1,5 @@
 import { scrypt } from "node:crypto";
-import { signUpExamples } from "@app/contract/field-rules.examples";
+import { signUpExamples } from "@app/contract/auth/auth.field-rules.examples";
 import { refreshCookie } from "@/test/support/refresh-cookie.js";
 import { startTestApp, type TestApp } from "./boot.js";
 

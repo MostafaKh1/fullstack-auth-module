@@ -1,9 +1,9 @@
 import { Button } from "@/components/base/buttons/Button";
 import { Icon } from "@/components/base/icons/Icon";
-import { ThemeToggleUseTheme } from "./ThemeToggleUseTheme";
+import { useTheme } from "./ThemeToggleUseTheme";
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = ThemeToggleUseTheme();
+  const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
 
   return (

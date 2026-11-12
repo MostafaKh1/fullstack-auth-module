@@ -1,4 +1,4 @@
-import { ERROR_CODES, type ErrorCode, type ValidationIssue } from "@app/contract/error-envelope";
+import { ERROR_CODES, type ErrorCode, type ValidationIssue } from "@app/contract/common/error-envelope";
 import { ORPCError, type ORPCModuleConfig } from "@orpc/nest";
 import { ValidationError } from "@orpc/server";
 import {

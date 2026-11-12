@@ -12,7 +12,7 @@ Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB
 
 ## How the two apps meet
 
-The apps share one package, `@app/contract`: the oRPC contract both build from ([contract/AGENTS.md](contract/AGENTS.md)). Nothing else is shared; at runtime HTTP is the only link between them. Routes move into the contract one at a time (the health route first); until the last has moved, the rest are described by the back end's decorators as before.
+The workspace shares one package, `@app/contract`, the oRPC contract ([contract/AGENTS.md](contract/AGENTS.md)): the back end implements the routes declared there, and a route not declared there is described by the back end's Swagger decorators. The front end does not import it; its API types are generated from `contract/openapi.json`. At runtime HTTP is the only link between the apps.
 
 - **The API contract** is the "API contract" table in [docs/spec/auth-module.md](docs/spec/auth-module.md), the contract package, and its machine-readable form, the generated `contract/openapi.json` ([contract/AGENTS.md](contract/AGENTS.md)): every route under `/api`, every error as the envelope of [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md). The front end's API types are generated from it. A new error code or rule id lands in both apps in the same commit.
 - **The dev proxy**: Vite forwards `/api` to the back end (`API_PROXY_TARGET`, read in `frontend/vite.config.ts`), so the browser sees one origin in development, as it does behind a reverse proxy in production.

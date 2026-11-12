@@ -1,7 +1,7 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 
-export const healthSchema = z.strictObject({ status: z.literal("ok"), database: z.literal("up") });
+const healthSchema = z.strictObject({ status: z.literal("ok"), database: z.literal("up") });
 
 export type Health = z.infer<typeof healthSchema>;
 

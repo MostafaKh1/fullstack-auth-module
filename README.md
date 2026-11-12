@@ -6,7 +6,7 @@ A complete authentication module: a React front end where a User signs up, signs
 - **Back end** (`backend/`): NestJS 11, MongoDB through Mongoose, Zod, pino logging, Swagger.
 - **Quality**: three test seams (back-end HTTP, rendered front end, browser journeys), Biome and Prettier gates, CI, Docker images and a Compose stack.
 
-The repository is one npm workspace with one lockfile: the two apps, the browser journeys in `e2e/`, and `contract/`, the package `@app/contract` that holds the API contract written with oRPC, which the apps build from ([ADR 0012](docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)). At runtime HTTP is the only link between the apps.
+The repository is one npm workspace with one lockfile: the two apps, the browser journeys in `e2e/`, and `contract/`, the package `@app/contract` that holds the API contract written with oRPC, which the back end implements ([ADR 0012](docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)). At runtime HTTP is the only link between the apps.
 
 ## Prerequisites
 
@@ -73,7 +73,7 @@ backend/     NestJS API: features/ (auth, users, health), common/ (guards, filte
              database/ (collections, repositories), config/, logging/, docs/, test/ (HTTP tests)
 frontend/    React app: pages/, components/, providers/ (the Session), hooks/, utils/ (API client), tests/ (harness)
 e2e/         Playwright journeys, run against the real apps
-contract/    @app/contract, the oRPC contract both apps build from, and openapi.json, exported from the back end;
+contract/    @app/contract, the oRPC contract the back end implements, and openapi.json, exported from the back end;
              the front end's API types are generated from it
 docs/        requirements.md (rules and traceability), spec/, adr/ (decisions), agents/
 compose.yaml MongoDB (authenticated, unpublished), API and front end as containers; compose.mongo.yaml is the development database

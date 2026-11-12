@@ -5,8 +5,7 @@ import { OpenAPIGenerator } from "@orpc/openapi";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import helmet from "helmet";
 import { z } from "zod";
-import { errorEnvelopeSchema } from "@/common/decorators/api-errors.decorator.js";
-import { ERROR_CODES } from "@/common/errors/error-codes.js";
+import { ERROR_CODES, errorEnvelopeSchema } from "@/common/errors/error-codes.js";
 import { signInSchema, signUpSchema } from "@/features/auth/auth.types.js";
 
 type SchemaObject = NonNullable<NonNullable<OpenAPIObject["components"]>["schemas"]>[string];
@@ -75,7 +74,6 @@ const SCHEMAS = {
 async function contractPaths(): Promise<OpenAPIObject["paths"]> {
   const generator = new OpenAPIGenerator({ schemaConverters: [new ZodToJsonSchemaConverter()] });
   const document = await generator.generate(contract, {
-    info: { title: "Auth API", version: "1.0.0" },
     customErrorResponseBodySchema: (definedErrors) =>
       errorEnvelopeSchema(definedErrors.map(([code]) => code)),
   });

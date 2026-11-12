@@ -4,5 +4,3 @@ import { healthContract } from "./health.contract.js";
 export const contract = {
   health: healthContract,
 };
-
-export type { Health } from "./health.contract.js";

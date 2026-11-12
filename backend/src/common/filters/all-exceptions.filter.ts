@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@app/contract/error-envelope";
+import type { ErrorCode } from "@app/contract/common/error-envelope";
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { PinoLogger } from "nestjs-pino";

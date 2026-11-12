@@ -1,4 +1,4 @@
-import type { Health } from "@app/contract/health.contract";
+import type { Health } from "@app/contract/health/health.contract";
 import { Injectable } from "@nestjs/common";
 import { ApiError } from "@/common/errors/api-error.js";
 import { DatabaseHealth } from "@/database/database-health.js";

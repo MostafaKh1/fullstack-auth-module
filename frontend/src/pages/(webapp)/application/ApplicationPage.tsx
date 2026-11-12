@@ -8,7 +8,7 @@ import { CardDescription } from "@/components/base/cards/Card/CardDescription";
 import { CardHeader } from "@/components/base/cards/Card/CardHeader";
 import { CardTitle } from "@/components/base/cards/Card/CardTitle";
 import { ThemeToggle } from "@/components/composite/toggles/ThemeToggle/ThemeToggle";
-import { useSession } from "@/hooks/useSession";
+import { useSession } from "@/features/auth/hooks/useSession";
 import { apiFailureCode } from "@/utils/api/api-error";
 import { orpc } from "@/utils/api/orpc-client";
 import { errorCopy } from "@/utils/error-copy";

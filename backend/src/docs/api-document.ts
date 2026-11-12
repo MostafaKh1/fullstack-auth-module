@@ -1,5 +1,5 @@
 import { contract } from "@app/contract";
-import { errorEnvelopeSchema } from "@app/contract/error-envelope";
+import { errorEnvelopeSchema } from "@app/contract/common/error-envelope";
 import type { INestApplication } from "@nestjs/common";
 import { SwaggerModule } from "@nestjs/swagger";
 import { OpenAPIGenerator } from "@orpc/openapi";

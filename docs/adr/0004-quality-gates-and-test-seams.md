@@ -15,7 +15,7 @@ Tests live at three agreed seams and nowhere else:
 2. **The front end's rendered app**: the whole app with its router in Vitest and Testing Library, the network faked at the HTTP level with MSW, and any undeclared request failing the test.
 3. **A few Playwright journeys** against both real apps and a real database, to catch drift between the apps (paths, cookie scope, the dev proxy, CORS), not edge cases.
 
-The field rules are duplicated in each app ([ADR 0003](0003-two-npm-apps-without-workspace-tooling.md)), so each app keeps a copy of one table of worked examples taken from [docs/requirements.md](../requirements.md); the first two seams run every row, and the copies point at each other so a rule changes in both in the same commit.
+The field rules are written once, in the contract package ([ADR 0012](0012-shared-orpc-contract-in-an-npm-workspace.md)), with one table of worked examples taken from [docs/requirements.md](../requirements.md); the first two seams run every row from each app's suite, so a rule changes in one place and both apps are tested against it.
 
 ## Considered options
 

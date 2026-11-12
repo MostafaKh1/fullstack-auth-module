@@ -6,14 +6,14 @@ React 19 + Vite + TypeScript single-page app. Architecture and its reasons: [ADR
 
 Imports point down this table only. A layer may skip the ones between (a page may import `utils/`), never point up.
 
-| Layer      | Folder            | Owns                                                                                                        |
-| ---------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| App        | `src/app/`        | the providers around the router (`App.tsx`), the one route table, the query client                          |
-| Pages      | `src/pages/`      | one screen per route, composing components                                                                  |
-| Components | `src/components/` | every component that is not a page, in five sections (see below)                                            |
-| Hooks      | `src/hooks/`      | hooks two or more components or pages use                                                                   |
-| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session, the theme), and the contexts a hook reads       |
-| Utils      | `src/utils/`      | framework-free helpers: `api/` (the HTTP client and one module per resource), `auth-url/`, `cn()`, the copy |
+| Layer      | Folder            | Owns                                                                                                                           |
+| ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| App        | `src/app/`        | the providers around the router (`App.tsx`), the one route table, the query client                                             |
+| Pages      | `src/pages/`      | one screen per route, composing components                                                                                     |
+| Components | `src/components/` | every component that is not a page, in five sections (see below)                                                               |
+| Hooks      | `src/hooks/`      | hooks two or more components or pages use                                                                                      |
+| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session, the theme), and the contexts a hook reads                          |
+| Utils      | `src/utils/`      | framework-free helpers: `api/` (the oRPC client, the access token, the refresh, the error code), `auth-url/`, `cn()`, the copy |
 
 `src/tests/` is the rendered-app harness and sits outside the stack (see "Tests"). `src/main.tsx` is the browser entry; it and the harness build the app from the same `src/app/` files, so tests run the real providers and routes.
 
@@ -34,7 +34,7 @@ Take the first that fits. Each line names the file to copy where one exists.
 3. **A hook** used by two or more components or pages -> `src/hooks/useX.ts` (copy `useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file); the structure check treats a `<Folder>UseX` file as a hook, and moves it to `hooks/` once two files use it. Copy `useFormField.ts`: the `Form*` parts share it, and its two contexts sit in `src/providers/` so the hook can import them.
 4. **An app-wide context** -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider; the `Form*` parts' two contexts have no provider of their own, since `FormField` and `FormItem` provide them), mounted in `src/app/App.tsx` inside the query client. Copy `SessionProvider.tsx`.
 5. **A call to an endpoint** -> for a route in the contract, nothing: a page or component uses the oRPC client's TanStack Query helpers, `orpc.<feature>.<procedure>` from `src/utils/api/orpc-client.ts` (copy `AuthScreenSignUpForm.tsx`). A route not yet in the contract is added to it first, test first ([contract/AGENTS.md](../contract/AGENTS.md)); the app has no other HTTP client. A read is `useQuery(orpc.<feature>.<procedure>.queryOptions())` (copy `ApplicationPage.tsx`).
-6. **Any other helper** -> a kebab-case module in `src/utils/` (copy `cn.ts`), or in the concern folder it belongs to. Three helpers at the top of `src/utils/` that start with the same word make a concern: they move into `src/utils/<concern>/`, which then holds every helper of that concern, as `api/` holds the resource modules and the refresh interceptor and `auth-url/` holds the `returnTo` rule. `cn.ts` and `error-copy.ts` stay at the top.
+6. **Any other helper** -> a kebab-case module in `src/utils/` (copy `cn.ts`), or in the concern folder it belongs to. Three helpers at the top of `src/utils/` that start with the same word make a concern: they move into `src/utils/<concern>/`, which then holds every helper of that concern, as `api/` holds the client, the access token and the refresh, and `auth-url/` holds the `returnTo` rule. `cn.ts` and `error-copy.ts` stay at the top.
 7. **A test** -> beside the file it covers, named after it (see "Tests"). Copy `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
 
 ### Sections import in one direction
@@ -80,13 +80,13 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 
 ## State
 
-- **Server state** goes through TanStack Query: a page or hook calls `useQuery` / `useMutation` with the options oRPC's helpers build (`orpc.auth.signUp.mutationOptions()`), or, for a route not yet in the contract, over one function from `src/utils/api/`. Query keys are arrays led by the resource (`["users", "me"]`).
+- **Server state** goes through TanStack Query: a page or hook calls `useQuery` / `useMutation` with the options oRPC's helpers build (`orpc.auth.signUp.mutationOptions()`). Query keys are arrays led by the resource (`["users", "me"]`).
 - **Client state** is the Session context only (restoring, signed in, signed out) ([ADR 0008](../docs/adr/0008-front-end-session-handling.md)). A component reads it through `useSession()`, never `use(SessionContext)`; a context hook throws when its provider is missing. Anything else is local `useState` or form state.
 - The access token lives only in `src/utils/api/access-token.ts`'s memory, and `SessionProvider` is its only writer; the oRPC client reads it there (`currentAccessToken()`) for the Bearer header, for every request. A `401 auth.unauthenticated` on any route but the auth ones is answered once, centrally, never in a caller: the oRPC client's link interceptor (`orpc-client.ts`) refreshes through `refreshSessionOnce()` and sends the request again, once, by the rule `shouldRefreshAndRetry()`. `session-refresh.ts` shares one refresh among every caller and stops refreshing once Sign out begins; `SessionProvider` registers the listener that sends the refresh (its `orpc.auth.refresh` mutation) and hears its outcome.
 
 ## The API side
 
-- **The oRPC client** is `src/utils/api/orpc-client.ts`, the one client built from the contract ([ADR 0012](../docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)): oRPC's OpenAPI link at `/api` with credentials included, so the refresh cookie travels, the Bearer header, and a decoder that turns the envelope into an error with its code (`data.issues` for a validation failure) and the envelope as its `cause`; oRPC's own check then marks it `defined`, the contract's typed error, when the procedure declares that code. Its link interceptor is the refresh-and-retry of "State" above. It exports `orpc`, the TanStack Query helpers, `SignedIn`, what Sign up, Sign in and refresh answer, and `User`.
+- **The oRPC client** is `src/utils/api/orpc-client.ts`, the one client built from the contract ([ADR 0012](../docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)): oRPC's OpenAPI link at `/api` with credentials included, so the refresh cookie travels, the Bearer header, and a decoder that turns the envelope into an error with its code (`data.issues` for a validation failure); oRPC's own check then marks it `defined`, the contract's typed error, when the procedure declares that code. Its link interceptor is the refresh-and-retry of "State" above. It exports `orpc`, the TanStack Query helpers, `SignedIn`, what Sign up, Sign in and refresh answer, and `User`.
 - Nothing outside `src/utils/` imports `@orpc/client`; nothing in `src/utils/` imports React or another app folder.
 - A route is typed by the contract through the client. The error envelope's type and the closed set of error codes come from `@app/contract/error-envelope`, never restated. The front end imports no code from the back end ([contract/AGENTS.md](../contract/AGENTS.md)).
 - The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/auth-url/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
@@ -95,8 +95,8 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 
 Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/0002-api-errors-carry-codes-not-copy.md)):
 
-- A failed request rejects with the typed error decoded from the envelope; `apiErrorEnvelope()` in `utils/api/api-error.ts` reads the envelope from it, and the caller reads its `code`, never its `message`.
-- `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ApiErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
+- A failed request rejects with the typed error decoded from the envelope; a caller branches on its `code` and, for a `defined` one, its `data` (`isValidationFailure()` in `utils/api/api-error.ts`), never its `message`.
+- `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no error code of ours (no response, or a proxy's page) reads as `unreachableCopy`.
 - Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenFormApiFailure.ts`, which `AuthScreenForm` calls for both forms; `apiFailureCode` in `utils/api/api-error.ts` is the one rule from a failed request to its code, also used by the Application page). Every error message on a form is a code, the form-level alert's and a request with no envelope's (`clientErrorCode`) included, and is shown as `errorCopy(code)`: `FormMessage` for a field, `AuthScreenForm` for the alert.
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
 - The field rules and their worked-examples table are the contract's (`@app/contract/field-rules`, `@app/contract/field-rules.examples`): the forms resolve with them and the page tests run the table. Change a rule in `contract/`, not here.
@@ -126,7 +126,7 @@ Run from `frontend/`: `npm run dev`, `npm run typecheck`, `npm test`, `npm run b
 
 ## Gotchas
 
-- Rollup is overridden with `@rollup/wasm-node` in `package.json`: the development machine blocks unsigned native addons, so a dependency that ships a native `.node` binary cannot be added.
+- Rollup is overridden with `@rollup/wasm-node` in the root `package.json`: the development machine blocks unsigned native addons, so a dependency that ships a native `.node` binary cannot be added.
 - Field lengths are counted in code points (`[...value].length`), as the back end counts them, never with UTF-16 `.length`.
 - An `<input>` strips line breaks from its value, so a worked example containing one cannot reach the rules from a form; its test asserts that instead.
 - Tests pass `retry: false` to `createQueryClient`, so a failed query shows at once.

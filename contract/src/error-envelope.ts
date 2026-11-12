@@ -21,7 +21,7 @@ export type ErrorCode = keyof typeof ERROR_CODES;
 const errorCodes = Object.keys(ERROR_CODES) as [ErrorCode, ...ErrorCode[]];
 
 /** `path` is the keys from the body down to the field; `code` is a rule id such as `password.missing_number`. */
-const validationIssueSchema = z.strictObject({
+export const validationIssueSchema = z.strictObject({
   path: z.array(z.union([z.string(), z.int()])),
   code: z.string().describe("A rule id such as password.missing_number."),
 });

@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/client";
-import { isAxiosError } from "axios";
 import type { components } from "@/utils/api/api-types.generated";
 import { clientErrorCode } from "@/utils/error-copy";
 
@@ -19,12 +18,11 @@ export function isErrorEnvelope(body: unknown): body is ApiErrorEnvelope {
   );
 }
 
-/** The error envelope a failed request carries, from either client, or `null` when none arrived. */
+/** The error envelope a failed request carries, or `null` when none arrived. */
 export function apiErrorEnvelope(error: unknown): ApiErrorEnvelope | null {
   // No envelope means no response at all, or a response from something other than the API, so it is unreachable.
   // The oRPC client keeps the envelope it decoded an error from as that error's cause.
-  const body: unknown =
-    error instanceof ORPCError ? error.cause : isAxiosError(error) ? error.response?.data : undefined;
+  const body: unknown = error instanceof ORPCError ? error.cause : undefined;
   return isErrorEnvelope(body) ? body : null;
 }
 

@@ -10,11 +10,11 @@ import { CardTitle } from "@/components/base/cards/Card/CardTitle";
 import { ThemeToggle } from "@/components/composite/toggles/ThemeToggle/ThemeToggle";
 import { useSession } from "@/hooks/useSession";
 import { apiFailureCode } from "@/utils/api/api-error";
-import { getCurrentUser } from "@/utils/api/users-api";
+import { orpc } from "@/utils/api/orpc-client";
 import { errorCopy } from "@/utils/error-copy";
 
 export function ApplicationPage() {
-  const currentUser = useQuery({ queryKey: ["users", "me"], queryFn: getCurrentUser });
+  const currentUser = useQuery(orpc.users.me.queryOptions());
   const { endSession } = useSession();
   const [signingOut, setSigningOut] = useState(false);
 

@@ -1,13 +1,7 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { signInSchema, signUpSchema } from "./field-rules.js";
-
-const userSchema = z.strictObject({
-  id: z.string(),
-  email: z.string(),
-  name: z.string(),
-  createdAt: z.date(),
-});
+import { userSchema } from "./users.contract.js";
 
 const signedInSchema = z.strictObject({
   accessToken: z.string(),

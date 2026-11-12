@@ -2,7 +2,7 @@
 
 The return path in location state is superseded by [ADR 0009](0009-auth-forms-addressed-by-search-parameter.md): it now travels as a checked `returnTo` search parameter. The rest of this record stands.
 
-The access token from Sign up, Sign in or refresh is kept only in a module variable of the API client (`src/utils/api/api-client.ts`), which attaches it as `Authorization: Bearer` to every request; it is never written to `localStorage`, `sessionStorage` or a readable cookie, so an injected script cannot lift a credential that outlives the tab.
+The access token from Sign up, Sign in or refresh is kept only in a module variable (`src/utils/api/access-token.ts`), which the API client attaches as `Authorization: Bearer` to every request; it is never written to `localStorage`, `sessionStorage` or a readable cookie, so an injected script cannot lift a credential that outlives the tab.
 Whether the tab has a Session is one React context (`src/providers/SessionProvider.tsx`) with three states: `restoring` (the app is asking the back end whether the refresh cookie still holds a Session), `signed-in` (with the User), and `signed-out`; the context is the only writer of the token.
 Two route guards read it: `RequireSession` sends a signed-out visitor to Sign in carrying the path, query and hash they asked for in the router's location state, and `RequireSignedOut` sends a signed-in User away from Sign in and Sign up, to that carried path or the Application page; both show a full-page loading state while `restoring`, so the wrong page never flashes.
 Because `RequireSignedOut` does the redirect, a successful Sign up or Sign in only starts the Session; the forms never navigate themselves.

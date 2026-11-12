@@ -75,7 +75,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["UsersController_me"];
+        get: operations["users.me"];
         put?: never;
         post?: never;
         delete?: never;
@@ -104,13 +104,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        User: {
-            id: string;
-            email: string;
-            name: string;
-            /** Format: date-time */
-            createdAt: string;
-        };
         ErrorEnvelope: {
             /** @enum {string} */
             code: "request.validation_failed" | "request.malformed" | "request.too_large" | "request.rate_limited" | "auth.unauthenticated" | "auth.invalid_credentials" | "auth.session_expired" | "auth.origin_rejected" | "route.not_found" | "user.email_taken" | "server.internal" | "server.unavailable";
@@ -417,7 +410,7 @@ export interface operations {
             };
         };
     };
-    UsersController_me: {
+    "users.me": {
         parameters: {
             query?: never;
             header?: never;
@@ -432,10 +425,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["User"];
+                    "application/json": {
+                        id: string;
+                        email: string;
+                        name: string;
+                        /** Format: date-time */
+                        createdAt: string;
+                    };
                 };
             };
-            /** @description Error codes: auth.unauthenticated */
+            /** @description 401 */
             401: {
                 headers: {
                     [name: string]: unknown;

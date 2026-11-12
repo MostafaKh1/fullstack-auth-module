@@ -1,4 +1,4 @@
-import { type SignUpFields, signUpSchema } from "@app/contract/field-rules";
+import { type SignUpFields, signUpSchema } from "@app/contract/auth/auth.field-rules";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";

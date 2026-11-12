@@ -88,7 +88,7 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 
 - **The oRPC client** is `src/utils/api/orpc-client.ts`, the one client built from the contract ([ADR 0012](../docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)): oRPC's OpenAPI link at `/api` with credentials included, so the refresh cookie travels, the Bearer header, and a decoder that turns the envelope into an error with its code (`data.issues` for a validation failure); oRPC's own check then marks it `defined`, the contract's typed error, when the procedure declares that code. Its link interceptor is the refresh-and-retry of "State" above. It exports `orpc`, the TanStack Query helpers, `SignedIn`, what Sign up, Sign in and refresh answer, and `User`.
 - Nothing outside `src/utils/` imports `@orpc/client`; nothing in `src/utils/` imports React or another app folder.
-- A route is typed by the contract through the client. The error envelope's type and the closed set of error codes come from `@app/contract/error-envelope`, never restated. The front end imports no code from the back end ([contract/AGENTS.md](../contract/AGENTS.md)).
+- A route is typed by the contract through the client. The error envelope's type and the closed set of error codes come from `@app/contract/common/error-envelope`, never restated. The front end imports no code from the back end ([contract/AGENTS.md](../contract/AGENTS.md)).
 - The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/auth-url/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
 
 ## Copy and errors
@@ -99,7 +99,7 @@ Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/
 - `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no error code of ours (no response, or a proxy's page) reads as `unreachableCopy`.
 - Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenFormApiFailure.ts`, which `AuthScreenForm` calls for both forms; `apiFailureCode` in `utils/api/api-error.ts` is the one rule from a failed request to its code, also used by the Application page). Every error message on a form is a code, the form-level alert's and a request with no envelope's (`clientErrorCode`) included, and is shown as `errorCopy(code)`: `FormMessage` for a field, `AuthScreenForm` for the alert.
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
-- The field rules and their worked-examples table are the contract's (`@app/contract/field-rules`, `@app/contract/field-rules.examples`): the forms resolve with them and the page tests run the table. Change a rule in `contract/`, not here.
+- The field rules and their worked-examples table are the contract's (`@app/contract/auth/auth.field-rules`, `@app/contract/auth/auth.field-rules.examples`): the forms resolve with them and the page tests run the table. Change a rule in `contract/`, not here.
 
 ## Tests
 

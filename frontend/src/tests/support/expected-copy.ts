@@ -1,4 +1,4 @@
-import { ERROR_CODES, type ErrorCode } from "@app/contract/error-envelope";
+import { ERROR_CODES, type ErrorCode } from "@app/contract/common/error-envelope";
 
 export const contractErrorCodes: string[] = Object.keys(ERROR_CODES);
 

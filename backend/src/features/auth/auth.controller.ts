@@ -1,5 +1,5 @@
 import { contract } from "@app/contract";
-import type { SignedInResponse } from "@app/contract/auth.contract";
+import type { SignedInResponse } from "@app/contract/auth/auth.contract";
 import { Controller, Res, UseGuards } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { Implement, implement } from "@orpc/nest";

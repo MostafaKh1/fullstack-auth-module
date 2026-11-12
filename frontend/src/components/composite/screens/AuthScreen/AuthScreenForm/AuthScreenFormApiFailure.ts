@@ -1,4 +1,4 @@
-import type { ValidationIssue } from "@app/contract/error-envelope";
+import type { ValidationIssue } from "@app/contract/common/error-envelope";
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { apiFailureCode, isValidationFailure } from "@/utils/api/api-error";
 import { clientErrorCode } from "@/utils/error-copy";

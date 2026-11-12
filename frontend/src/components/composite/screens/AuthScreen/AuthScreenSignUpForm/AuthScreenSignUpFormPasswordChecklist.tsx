@@ -1,4 +1,4 @@
-import { passwordRule } from "@app/contract/field-rules";
+import { passwordRule } from "@app/contract/auth/auth.field-rules";
 import { useId } from "react";
 import { cn } from "@/utils/cn";
 

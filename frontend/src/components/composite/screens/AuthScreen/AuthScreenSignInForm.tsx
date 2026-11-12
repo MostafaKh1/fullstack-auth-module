@@ -8,7 +8,7 @@ import { FormItem } from "@/components/base/forms/Form/FormItem";
 import { FormLabel } from "@/components/base/forms/Form/FormLabel";
 import { FormMessage } from "@/components/base/forms/Form/FormMessage";
 import { PasswordInput } from "@/components/base/inputs/PasswordInput";
-import { signIn } from "@/utils/api/auth-api";
+import { orpc } from "@/utils/api/orpc-client";
 import { AuthScreenEmailField } from "./AuthScreenEmailField";
 import { AuthScreenForm } from "./AuthScreenForm/AuthScreenForm";
 
@@ -25,7 +25,7 @@ export function AuthScreenSignInForm() {
     <AuthScreenForm
       form={form}
       fields={fields}
-      mutation={{ mutationFn: signIn }}
+      mutation={orpc.auth.signIn.mutationOptions()}
       submitLabel="Sign in"
       pendingLabel="Signing in…"
     >

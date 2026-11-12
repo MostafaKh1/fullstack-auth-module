@@ -198,14 +198,32 @@
     },
     "/api/auth/sign-in": {
       "post": {
-        "operationId": "AuthController_signIn",
-        "parameters": [],
+        "operationId": "auth.signIn",
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignInRequest"
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 254,
+                    "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
               }
             }
           }
@@ -216,13 +234,56 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SignedIn"
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Seconds until the access token expires."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "name",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "expiresIn",
+                    "user"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "Error codes: request.validation_failed, request.malformed",
+            "description": "400",
             "content": {
               "application/json": {
                 "schema": {
@@ -248,7 +309,7 @@
             }
           },
           "401": {
-            "description": "Error codes: auth.invalid_credentials",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -273,7 +334,7 @@
             }
           },
           "413": {
-            "description": "Error codes: request.too_large",
+            "description": "413",
             "content": {
               "application/json": {
                 "schema": {
@@ -298,7 +359,7 @@
             }
           },
           "429": {
-            "description": "Error codes: request.rate_limited",
+            "description": "429",
             "content": {
               "application/json": {
                 "schema": {
@@ -322,29 +383,71 @@
               }
             }
           }
-        },
-        "tags": [
-          "auth"
-        ]
+        }
       }
     },
     "/api/auth/refresh": {
       "post": {
-        "operationId": "AuthController_refresh",
-        "parameters": [],
+        "operationId": "auth.refresh",
+        "tags": [
+          "auth"
+        ],
         "responses": {
           "200": {
             "description": "A rotated Session; the refresh cookie is replaced.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SignedIn"
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Seconds until the access token expires."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "name",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "expiresIn",
+                    "user"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "401": {
-            "description": "Error codes: auth.unauthenticated, auth.session_expired",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -370,7 +473,7 @@
             }
           },
           "403": {
-            "description": "Error codes: auth.origin_rejected",
+            "description": "403",
             "content": {
               "application/json": {
                 "schema": {
@@ -395,7 +498,7 @@
             }
           },
           "429": {
-            "description": "Error codes: request.rate_limited",
+            "description": "429",
             "content": {
               "application/json": {
                 "schema": {
@@ -424,22 +527,21 @@
           {
             "cookie": []
           }
-        ],
-        "tags": [
-          "auth"
         ]
       }
     },
     "/api/auth/sign-out": {
       "post": {
-        "operationId": "AuthController_signOut",
-        "parameters": [],
+        "operationId": "auth.signOut",
+        "tags": [
+          "auth"
+        ],
         "responses": {
           "204": {
             "description": "The Session ended and the refresh cookie is cleared."
           },
           "401": {
-            "description": "Error codes: auth.unauthenticated",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -464,7 +566,7 @@
             }
           },
           "403": {
-            "description": "Error codes: auth.origin_rejected",
+            "description": "403",
             "content": {
               "application/json": {
                 "schema": {
@@ -493,9 +595,6 @@
           {
             "cookie": []
           }
-        ],
-        "tags": [
-          "auth"
         ]
       }
     },
@@ -631,25 +730,6 @@
       }
     },
     "schemas": {
-      "SignInRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 254,
-            "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
-      },
       "User": {
         "type": "object",
         "additionalProperties": false,
@@ -672,27 +752,6 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "SignedIn": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "accessToken",
-          "expiresIn",
-          "user"
-        ],
-        "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "expiresIn": {
-            "type": "integer",
-            "description": "Seconds until the access token expires."
-          },
-          "user": {
-            "$ref": "#/components/schemas/User"
           }
         }
       },

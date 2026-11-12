@@ -1,20 +1,12 @@
 import { contract } from "@app/contract";
-import { signInSchema } from "@app/contract/field-rules";
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { OpenAPIGenerator } from "@orpc/openapi";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import helmet from "helmet";
-import { z } from "zod";
 import { ERROR_CODES, errorEnvelopeSchema } from "@/common/errors/error-codes.js";
 
-type SchemaObject = NonNullable<NonNullable<OpenAPIObject["components"]>["schemas"]>[string];
 type PathItem = OpenAPIObject["paths"][string];
-
-const requestSchema = (schema: z.ZodType): SchemaObject => {
-  const { $schema: _draft, ...rest } = z.toJSONSchema(schema, { io: "input", unrepresentable: "any" });
-  return rest as SchemaObject;
-};
 
 const USER = {
   type: "object",
@@ -28,21 +20,9 @@ const USER = {
   },
 };
 
-// Request schemas come from the Zod schemas. Response objects are closed, so `api-docs.spec.ts` fails when a route
-// sends a field the document does not describe.
+// Response objects are closed, so `api-docs.spec.ts` fails when a route sends a field the document does not describe.
 const SCHEMAS = {
-  SignInRequest: requestSchema(signInSchema),
   User: USER,
-  SignedIn: {
-    type: "object",
-    additionalProperties: false,
-    required: ["accessToken", "expiresIn", "user"],
-    properties: {
-      accessToken: { type: "string" },
-      expiresIn: { type: "integer", description: "Seconds until the access token expires." },
-      user: { $ref: "#/components/schemas/User" },
-    },
-  },
   ErrorEnvelope: {
     type: "object",
     additionalProperties: false,

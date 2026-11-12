@@ -29,7 +29,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AuthController_signIn"];
+        post: operations["auth.signIn"];
         delete?: never;
         options?: never;
         head?: never;
@@ -45,7 +45,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AuthController_refresh"];
+        post: operations["auth.refresh"];
         delete?: never;
         options?: never;
         head?: never;
@@ -61,7 +61,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AuthController_signOut"];
+        post: operations["auth.signOut"];
         delete?: never;
         options?: never;
         head?: never;
@@ -104,22 +104,12 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        SignInRequest: {
-            email: string;
-            password: string;
-        };
         User: {
             id: string;
             email: string;
             name: string;
             /** Format: date-time */
             createdAt: string;
-        };
-        SignedIn: {
-            accessToken: string;
-            /** @description Seconds until the access token expires. */
-            expiresIn: number;
-            user: components["schemas"]["User"];
         };
         ErrorEnvelope: {
             /** @enum {string} */
@@ -232,7 +222,7 @@ export interface operations {
             };
         };
     };
-    AuthController_signIn: {
+    "auth.signIn": {
         parameters: {
             query?: never;
             header?: never;
@@ -241,7 +231,10 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SignInRequest"];
+                "application/json": {
+                    email: string;
+                    password: string;
+                };
             };
         };
         responses: {
@@ -251,10 +244,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SignedIn"];
+                    "application/json": {
+                        accessToken: string;
+                        /** @description Seconds until the access token expires. */
+                        expiresIn: number;
+                        user: {
+                            id: string;
+                            email: string;
+                            name: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
                 };
             };
-            /** @description Error codes: request.validation_failed, request.malformed */
+            /** @description 400 */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -266,7 +270,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: auth.invalid_credentials */
+            /** @description 401 */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -278,7 +282,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: request.too_large */
+            /** @description 413 */
             413: {
                 headers: {
                     [name: string]: unknown;
@@ -290,7 +294,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: request.rate_limited */
+            /** @description 429 */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -304,7 +308,7 @@ export interface operations {
             };
         };
     };
-    AuthController_refresh: {
+    "auth.refresh": {
         parameters: {
             query?: never;
             header?: never;
@@ -319,10 +323,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SignedIn"];
+                    "application/json": {
+                        accessToken: string;
+                        /** @description Seconds until the access token expires. */
+                        expiresIn: number;
+                        user: {
+                            id: string;
+                            email: string;
+                            name: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
                 };
             };
-            /** @description Error codes: auth.unauthenticated, auth.session_expired */
+            /** @description 401 */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -334,7 +349,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: auth.origin_rejected */
+            /** @description 403 */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -346,7 +361,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: request.rate_limited */
+            /** @description 429 */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -360,7 +375,7 @@ export interface operations {
             };
         };
     };
-    AuthController_signOut: {
+    "auth.signOut": {
         parameters: {
             query?: never;
             header?: never;
@@ -376,7 +391,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Error codes: auth.unauthenticated */
+            /** @description 401 */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -388,7 +403,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: auth.origin_rejected */
+            /** @description 403 */
             403: {
                 headers: {
                     [name: string]: unknown;

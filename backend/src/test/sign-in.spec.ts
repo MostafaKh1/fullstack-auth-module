@@ -143,6 +143,49 @@ describe("Sign in", () => {
 
     expect(JSON.stringify(app.logs())).not.toContain(password);
   });
+
+  it("answers 400 request.malformed for a form-encoded body with valid credentials, and starts no Session", async () => {
+    const sessionsBefore = await app.db.collection("sessions").countDocuments();
+
+    const response = await app
+      .http()
+      .post("/api/auth/sign-in")
+      .type("form")
+      .send({ email: ada.email, password: ada.password });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({ code: "request.malformed", status: 400 });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect(await app.db.collection("sessions").countDocuments()).toBe(sessionsBefore);
+  });
+
+  describe("the Origin check", () => {
+    it("refuses a foreign Origin with 403 auth.origin_rejected for valid credentials, and starts no Session", async () => {
+      const sessionsBefore = await app.db.collection("sessions").countDocuments();
+
+      const response = await app
+        .http()
+        .post("/api/auth/sign-in")
+        .set("Origin", "https://evil.example")
+        .send({ email: ada.email, password: ada.password });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject({ code: "auth.origin_rejected", status: 403 });
+      expect(response.headers["set-cookie"]).toBeUndefined();
+      expect(await app.db.collection("sessions").countDocuments()).toBe(sessionsBefore);
+    });
+
+    it("accepts a configured front-end Origin", async () => {
+      const response = await app
+        .http()
+        .post("/api/auth/sign-in")
+        .set("Origin", "http://localhost:5173")
+        .send({ email: ada.email, password: ada.password });
+
+      expect(response.status).toBe(200);
+      expect(refreshCookie(response.headers["set-cookie"])).toMatch(/^refresh_credential=/);
+    });
+  });
 });
 
 describe("Sign in field rules: the worked examples", () => {

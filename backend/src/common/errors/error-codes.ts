@@ -40,3 +40,13 @@ export function errorEnvelope(
   if (!detail.isProduction) envelope.message = detail.message;
   return envelope;
 }
+
+/** The envelope's schema in the API document, narrowed to the codes one response can carry. */
+export function errorEnvelopeSchema(codes: string[]) {
+  return {
+    allOf: [
+      { $ref: "#/components/schemas/ErrorEnvelope" },
+      { type: "object", properties: { code: { type: "string", enum: codes } } },
+    ],
+  };
+}

@@ -1,5 +1,5 @@
 import { PinoLogger } from "nestjs-pino";
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 describe("structured logs", () => {
   let app: TestApp;

@@ -1,8 +1,8 @@
 import { type DynamicModule, Global, Module } from "@nestjs/common";
 import { LoggerModule } from "nestjs-pino";
 import type { DestinationStream } from "pino";
-import { AppConfigService } from "@/config/app-config.service";
-import { assignRequestId } from "./request-id";
+import { AppConfigService } from "@/config/app-config.service.js";
+import { assignRequestId } from "./request-id.js";
 
 /**
  * Every path whose value is a secret. New secret-bearing fields are added here, never hand-masked.

@@ -1,8 +1,8 @@
 import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { isValidObjectId, type Model, Types } from "mongoose";
-import type { RevokedReason, Session } from "@/common/types/session.types";
-import { SESSION_MODEL, type SessionDocument } from "@/database/collections/session.collection";
+import type { RevokedReason, Session } from "@/common/types/session.types.js";
+import { SESSION_MODEL, type SessionDocument } from "@/database/collections/session.collection.js";
 
 /** A Session with the hashes refresh compares against; only `findWithSecretHashesById` returns one. */
 type SessionWithSecretHashes = {

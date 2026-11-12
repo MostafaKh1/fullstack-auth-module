@@ -1,10 +1,15 @@
+import { contract } from "@app/contract";
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
-import type { SchemaObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
+import { OpenAPIGenerator } from "@orpc/openapi";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import helmet from "helmet";
 import { z } from "zod";
-import { ERROR_CODES } from "@/common/errors/error-codes";
-import { signInSchema, signUpSchema } from "@/features/auth/auth.types";
+import { ERROR_CODES, errorEnvelopeSchema } from "@/common/errors/error-codes.js";
+import { signInSchema, signUpSchema } from "@/features/auth/auth.types.js";
+
+type SchemaObject = NonNullable<NonNullable<OpenAPIObject["components"]>["schemas"]>[string];
+type PathItem = OpenAPIObject["paths"][string];
 
 const requestSchema = (schema: z.ZodType): SchemaObject => {
   const { $schema: _draft, ...rest } = z.toJSONSchema(schema, { io: "input", unrepresentable: "any" });
@@ -39,12 +44,6 @@ const SCHEMAS = {
       user: { $ref: "#/components/schemas/User" },
     },
   },
-  Health: {
-    type: "object",
-    additionalProperties: false,
-    required: ["status", "database"],
-    properties: { status: { type: "string", enum: ["ok"] }, database: { type: "string", enum: ["up"] } },
-  },
   ErrorEnvelope: {
     type: "object",
     additionalProperties: false,
@@ -71,7 +70,21 @@ const SCHEMAS = {
   },
 };
 
-export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
+/** The routes declared in the contract, at their paths under the `api` prefix. */
+async function contractPaths(): Promise<OpenAPIObject["paths"]> {
+  const generator = new OpenAPIGenerator({ schemaConverters: [new ZodToJsonSchemaConverter()] });
+  const document = await generator.generate(contract, {
+    customErrorResponseBodySchema: (definedErrors) =>
+      errorEnvelopeSchema(definedErrors.map(([code]) => code)),
+  });
+  return Object.fromEntries(
+    Object.entries(document.paths ?? {}).map(([path, item]) => [`/api${path}`, item as PathItem]),
+  );
+}
+
+// Until every route is declared in the contract, the document is the Nest one with the contract's routes laid over
+// it; oRPC writes OpenAPI 3.1 schemas (`const`), so the merged document says 3.1.
+export async function buildOpenApiDocument(app: INestApplication): Promise<OpenAPIObject> {
   const options = new DocumentBuilder()
     .setTitle("Auth API")
     .setDescription("Sign up, Sign in, refresh, Sign out and the signed-in User.")
@@ -80,12 +93,14 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .addCookieAuth("refresh_credential")
     .build();
   const document = SwaggerModule.createDocument(app, options);
+  document.openapi = "3.1.1";
+  document.paths = { ...document.paths, ...(await contractPaths()) };
   document.components = { ...document.components, schemas: { ...document.components?.schemas, ...SCHEMAS } };
   return document;
 }
 
 /** Swagger UI needs inline scripts and styles, so only its path relaxes the Content-Security-Policy. */
-export function setupApiDocs(app: INestApplication): void {
+export async function setupApiDocs(app: INestApplication): Promise<void> {
   app.use(
     "/api/docs",
     helmet({
@@ -99,5 +114,5 @@ export function setupApiDocs(app: INestApplication): void {
       },
     }),
   );
-  SwaggerModule.setup("api/docs", app, buildOpenApiDocument(app), { jsonDocumentUrl: "api/docs-json" });
+  SwaggerModule.setup("api/docs", app, await buildOpenApiDocument(app), { jsonDocumentUrl: "api/docs-json" });
 }

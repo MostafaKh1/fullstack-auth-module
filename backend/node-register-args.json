@@ -1,1 +1,1 @@
-["-r", "ts-node/register/transpile-only", "-r", "tsconfig-paths/register"]
+["--import", "./register-ts.mjs"]

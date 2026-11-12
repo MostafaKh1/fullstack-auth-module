@@ -1,8 +1,7 @@
+import type { Health } from "@app/contract/health.contract";
 import { Injectable } from "@nestjs/common";
-import { ApiError } from "@/common/errors/api-error";
-import { DatabaseHealth } from "@/database/database-health";
-
-export type Health = { status: "ok"; database: "up" };
+import { ApiError } from "@/common/errors/api-error.js";
+import { DatabaseHealth } from "@/database/database-health.js";
 
 @Injectable()
 export class HealthService {

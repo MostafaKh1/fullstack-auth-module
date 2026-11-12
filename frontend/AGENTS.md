@@ -88,7 +88,7 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 
 - Nothing outside `src/utils/` imports axios; nothing in `src/utils/` imports React or another app folder.
 - An API function is named verb-first (`getCurrentUser`, `signUp`), takes plain arguments and returns `response.data`; a failure rejects with the envelope. Paths are relative to the client's `/api` base URL (`"/users/me"`).
-- Request and response types are generated from `contract/openapi.json` into `src/utils/api/api-types.generated.ts` (`npm run generate:api`); the `*-api.ts` modules alias them (`components["schemas"]["User"]`), never restate a shape. The apps share no code, only that file ([contract/AGENTS.md](../contract/AGENTS.md)).
+- Request and response types are generated from `contract/openapi.json` into `src/utils/api/api-types.generated.ts` (`npm run generate:api`); the `*-api.ts` modules alias them (`components["schemas"]["User"]`), never restate a shape. The front end imports no code from the back end or from the contract package; that file is its only view of the API ([contract/AGENTS.md](../contract/AGENTS.md)).
 - The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/auth-url/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
 
 ## Copy and errors
@@ -118,7 +118,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 ## Container
 
-`Dockerfile` builds the static files and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
+`Dockerfile` builds the static files from the repository root (the workspace lockfile and the contract package are there) and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
 
 ## Commands
 

@@ -4,11 +4,11 @@ import { Test } from "@nestjs/testing";
 import { type Db, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import request from "supertest";
-import { AppModule } from "@/app.module";
-import { configureApp } from "@/app.setup";
-import { parseConfig } from "@/config/app-env";
-import { ClockService } from "@/core/clock.service";
-import { FakeClock } from "@/test/support/fake-clock";
+import { AppModule } from "@/app.module.js";
+import { configureApp } from "@/app.setup.js";
+import { parseConfig } from "@/config/app-env.js";
+import { ClockService } from "@/core/clock.service.js";
+import { FakeClock } from "@/test/support/fake-clock.js";
 
 type LogLine = Record<string, unknown> & { level: number; msg?: string };
 
@@ -76,7 +76,7 @@ export async function startTestApp(env: Record<string, string> = {}): Promise<Te
     .compile();
 
   const app: INestApplication = moduleRef.createNestApplication({ bufferLogs: true });
-  configureApp(app);
+  await configureApp(app);
   await app.init();
 
   const client = await MongoClient.connect(uri);

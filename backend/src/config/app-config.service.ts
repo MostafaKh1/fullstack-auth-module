@@ -1,4 +1,4 @@
-import type { AppConfig } from "./app-env";
+import type { AppConfig } from "./app-env.js";
 
 export class AppConfigService {
   constructor(private readonly config: AppConfig) {}

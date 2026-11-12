@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "@/app.module";
-import { parseConfig } from "@/config/app-env";
-import { buildOpenApiDocument } from "./api-document";
+import { AppModule } from "@/app.module.js";
+import { parseConfig } from "@/config/app-env.js";
+import { buildOpenApiDocument } from "./api-document.js";
 
-const CONTRACT = resolve(__dirname, "../../../contract/openapi.json");
+const CONTRACT = fileURLToPath(new URL("../../../contract/openapi.json", import.meta.url));
 
 /** Preview mode scans the routes without instantiating providers, so no database is needed. */
 async function renderContract(): Promise<string> {
@@ -18,7 +18,7 @@ async function renderContract(): Promise<string> {
   });
   const app = await NestFactory.create(AppModule.forRoot(config), { preview: true, logger: false });
   app.setGlobalPrefix("api");
-  const text = `${JSON.stringify(buildOpenApiDocument(app), null, 2)}\n`;
+  const text = `${JSON.stringify(await buildOpenApiDocument(app), null, 2)}\n`;
   await app.close();
   return text;
 }
@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   if (process.argv.includes("--check")) {
     if (readFileSync(CONTRACT, "utf8") !== text) {
       process.stderr.write(
-        "contract/openapi.json is stale: run `npm run openapi --prefix backend` and commit it.\n",
+        "contract/openapi.json is stale: run `npm run openapi -w backend` and commit it.\n",
       );
       process.exitCode = 1;
     }

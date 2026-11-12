@@ -1,14 +1,14 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import pino from "pino";
-import { InvalidConfigError, loadConfig } from "@/config/app-env";
-import { AppModule } from "./app.module";
-import { configureApp } from "./app.setup";
+import { InvalidConfigError, loadConfig } from "@/config/app-env.js";
+import { AppModule } from "./app.module.js";
+import { configureApp } from "./app.setup.js";
 
 async function bootstrap(): Promise<void> {
   const config = loadConfig();
   const app = await NestFactory.create(AppModule.forRoot(config), { bufferLogs: true });
-  configureApp(app);
+  await configureApp(app);
   await app.listen(config.port);
 }
 

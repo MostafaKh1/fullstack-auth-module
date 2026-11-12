@@ -1,4 +1,4 @@
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 function signInFrom(app: TestApp, clientIp: string) {
   return app

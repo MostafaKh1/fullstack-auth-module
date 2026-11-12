@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB back end (`backend/`), as two independent npm apps under a thin root ([ADR 0003](docs/adr/0003-two-npm-apps-without-workspace-tooling.md)).
+Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB back end (`backend/`) in one npm workspace with the API contract package `@app/contract` (`contract/`) and the browser journeys (`e2e/`) ([ADR 0012](docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)).
 
 ## Before you change anything
 
@@ -12,9 +12,9 @@ Sign up / Sign in module: a React front end (`frontend/`) and a NestJS + MongoDB
 
 ## How the two apps meet
 
-The apps share no code; HTTP is the only contract between them.
+The workspace shares one package, `@app/contract`, the oRPC contract ([contract/AGENTS.md](contract/AGENTS.md)): the back end implements the routes declared there, and a route not declared there is described by the back end's Swagger decorators. The front end does not import it; its API types are generated from `contract/openapi.json`. At runtime HTTP is the only link between the apps.
 
-- **The API contract** is the "API contract" table in [docs/spec/auth-module.md](docs/spec/auth-module.md) and its machine-readable form, the generated `contract/openapi.json` ([contract/AGENTS.md](contract/AGENTS.md)): every route under `/api`, every error as the envelope of [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md). The front end's API types are generated from it. A new error code or rule id lands in both apps in the same commit.
+- **The API contract** is the "API contract" table in [docs/spec/auth-module.md](docs/spec/auth-module.md), the contract package, and its machine-readable form, the generated `contract/openapi.json` ([contract/AGENTS.md](contract/AGENTS.md)): every route under `/api`, every error as the envelope of [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md). The front end's API types are generated from it. A new error code or rule id lands in both apps in the same commit.
 - **The dev proxy**: Vite forwards `/api` to the back end (`API_PROXY_TARGET`, read in `frontend/vite.config.ts`), so the browser sees one origin in development, as it does behind a reverse proxy in production.
 - **The Session cookie**: the refresh credential travels in an `httpOnly` cookie scoped to `/api/auth`; the access token lives only in front-end memory ([ADR 0001](docs/adr/0001-session-record-with-short-lived-access-token.md)). The one-origin proxy is what makes the cookie and the `Origin` check behave the same in both environments.
 - **The field rules** exist once per app, each copy pointing at the other ([CODING_STANDARDS.md](CODING_STANDARDS.md), "Validation rules").
@@ -26,7 +26,7 @@ The apps share no code; HTTP is the only contract between them.
 - `docs/requirements.md` (the rules), `docs/spec/` (the spec, mirrored from its issue), `docs/adr/` (decisions and their reasons), `docs/agents/` (how agents use the tracker and the domain docs).
 - [e2e/AGENTS.md](e2e/AGENTS.md): the Playwright journeys (`npm run e2e`). Each app also has a production `Dockerfile`, and `docker compose up --build` runs the whole stack.
 - [AI.md](AI.md): one entry per ticket of what was AI-generated, what was verified, what was fixed.
-- The root `package.json` only delegates into the apps; lint (`npm run lint`) and format (`npm run format:check`) run from the root over both ([ADR 0004](docs/adr/0004-quality-gates-and-test-seams.md)).
+- **The workspace**: the root `package.json` declares the four workspaces and holds the one lockfile; install with `npm ci` at the root (`npm run setup`), add a dependency with `npm install <pkg> -w <workspace>`, never inside an app. Its scripts run each workspace's script of the same name (`-w <workspace>`), building the contract first, because the apps consume its compiled `dist/`; `dev` also runs the contract's compiler in watch mode. Both Dockerfiles build from the repository root. Lint (`npm run lint`) and format (`npm run format:check`) run from the root over everything ([ADR 0004](docs/adr/0004-quality-gates-and-test-seams.md)).
 
 ## Workflow
 

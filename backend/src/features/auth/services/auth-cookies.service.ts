@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { ApiError } from "@/common/errors/api-error";
-import { AppConfigService } from "@/config/app-config.service";
-import { ClockService } from "@/core/clock.service";
+import { ApiError } from "@/common/errors/api-error.js";
+import { AppConfigService } from "@/config/app-config.service.js";
+import { ClockService } from "@/core/clock.service.js";
 
 const REFRESH_COOKIE = "refresh_credential";
 

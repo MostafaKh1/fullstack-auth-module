@@ -1,4 +1,4 @@
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 describe("GET /api/health", () => {
   let app: TestApp;

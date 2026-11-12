@@ -30,7 +30,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `services/`, `types/`), which imports nothing from a feature _(lint)_.
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard, oRPC's `ORPCModule`) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `services/`, `types/`), which imports nothing from a feature _(lint)_.
 - A repository imports the domain types from `src/common/types/` as types only, so no runtime edge points to a higher tier.
 - A module imports only from a lower tier. A feature module exports nothing, and a feature imports nothing from another feature _(lint)_. `forwardRef` is never needed and never used.
 
@@ -70,7 +70,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ## Validation rules
 
-- The field rules exist twice, once per app, because there is no shared package. Each copy carries a comment pointing at the other, and both suites test the same table of worked examples. A rule changes in both places in the same commit.
+- The field rules exist twice, once per app. Each copy carries a comment pointing at the other, and both suites test the same table of worked examples. A rule changes in both places in the same commit.
 - [docs/requirements.md](docs/requirements.md) is the authority. When code and that file disagree, the code is wrong.
 
 ## Tests

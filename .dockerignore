@@ -1,0 +1,11 @@
+# Both images build from the repository root (ADR 0012); each Dockerfile copies only the workspaces it needs.
+.git
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+e2e/playwright-report
+e2e/test-results

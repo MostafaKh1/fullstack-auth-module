@@ -91,7 +91,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["HealthController_check"];
+        get: operations["health.check"];
         put?: never;
         post?: never;
         delete?: never;
@@ -125,12 +125,6 @@ export interface components {
             /** @description Seconds until the access token expires. */
             expiresIn: number;
             user: components["schemas"]["User"];
-        };
-        Health: {
-            /** @enum {string} */
-            status: "ok";
-            /** @enum {string} */
-            database: "up";
         };
         ErrorEnvelope: {
             /** @enum {string} */
@@ -430,7 +424,7 @@ export interface operations {
             };
         };
     };
-    HealthController_check: {
+    "health.check": {
         parameters: {
             query?: never;
             header?: never;
@@ -445,10 +439,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Health"];
+                    "application/json": {
+                        /** @constant */
+                        status: "ok";
+                        /** @constant */
+                        database: "up";
+                    };
                 };
             };
-            /** @description Error codes: server.unavailable */
+            /** @description 503 */
             503: {
                 headers: {
                     [name: string]: unknown;

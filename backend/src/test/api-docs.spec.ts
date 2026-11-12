@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 type Operation = {
   security?: Record<string, string[]>[];
@@ -80,7 +80,9 @@ describe("the API documentation", () => {
   });
 
   it("is the document checked in as contract/openapi.json", () => {
-    const contract = JSON.parse(readFileSync(resolve(__dirname, "../../../contract/openapi.json"), "utf8"));
+    const contract = JSON.parse(
+      readFileSync(fileURLToPath(new URL("../../../contract/openapi.json", import.meta.url)), "utf8"),
+    );
 
     expect(contract).toEqual(document);
   });

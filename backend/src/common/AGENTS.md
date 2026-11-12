@@ -6,9 +6,9 @@ What the global wiring (the global guard, the filter, the body parser) or more t
 
 ```
 common/
-├── common.module.ts   # CommonModule: provides and exports AccessTokenService, registers the global AccessTokenGuard
+├── common.module.ts   # CommonModule: provides and exports AccessTokenService, registers the global AccessTokenGuard and ORPCModule
 ├── decorators/        # @Public() (auth.decorator.ts), @ApiErrors()
-├── errors/            # error-codes.ts (the closed set and errorEnvelope(), the one envelope builder), api-error.ts
+├── errors/            # error-codes.ts (the closed set, errorEnvelope(), the one envelope builder, and its schema for the document), api-error.ts
 ├── filters/           # the one global filter, registered in src/app.module.ts
 ├── middleware/        # the JSON body parser with its size cap and its envelope errors
 ├── guards/            # the global AccessTokenGuard and isSessionLive, the one liveness rule

@@ -61,7 +61,7 @@ A component that grows children becomes a folder named after it, holding an entr
 
 The case of a file name says what it holds:
 
-- **Inside a component folder**, every file is PascalCase with the folder's prefix, whatever it holds: a component, a non-component module (`AuthScreenFormApiFailure.ts`), a worked-examples table (`AuthScreenFieldRules.examples.ts`), a test.
+- **Inside a component folder**, every file is PascalCase with the folder's prefix, whatever it holds: a component, a non-component module (`AuthScreenFormApiFailure.ts`), a test.
 - **A component, page, provider or the app shell** is PascalCase, named after the one component it exports: `Button.tsx` exports `Button`, `SignInPage.tsx` exports `SignInPage`. A page is `<Name>Page.tsx`.
 - **A hook** is `useX.ts` in camelCase: `useSession.ts` exports `useSession`; a hook of one component is `<Folder>UseX.ts`, PascalCase like the rest of its folder.
 - **Everything else outside component folders** is kebab-case: helpers, contexts, test support (`api-client.ts`, `session-context.ts`, `render-app.tsx`). Folders outside `components/` are kebab-case.
@@ -72,7 +72,7 @@ The case of a file name says what it holds:
 
 ## Imports
 
-`@/` is `src/` (`paths` in `tsconfig.app.json`, `resolve.alias` in `vite.config.ts`, which Vitest inherits). Every import names its target from the root, `@/utils/cn`, so a file reads the same wherever it sits and a move rewrites one string. The one exception is a child of a component folder importing inside that folder with `./` (`./AuthScreenFieldRules`, `./AuthScreenSignUpForm/AuthScreenSignUpForm`). Biome rejects `../`; the structure check rejects `./` anywhere else.
+`@/` is `src/` (`paths` in `tsconfig.app.json`, `resolve.alias` in `vite.config.ts`, which Vitest inherits). Every import names its target from the root, `@/utils/cn`, so a file reads the same wherever it sits and a move rewrites one string. The one exception is a child of a component folder importing inside that folder with `./` (`./AuthScreenFormApiFailure`, `./AuthScreenSignUpForm/AuthScreenSignUpForm`). Biome rejects `../`; the structure check rejects `./` anywhere else.
 
 ## Pages
 
@@ -99,7 +99,7 @@ Every sentence a User reads is written in the front end ([ADR 0002](../docs/adr/
 - `code` becomes a sentence through the one copy map, `errorCopy()` in `src/utils/error-copy.ts`, with a generic fallback for an unknown code; its error-code half is typed against the contract (`ApiErrorCode`), as is `expectedErrorCopy` in `src/tests/support/expected-copy.ts`, so a new code fails the typecheck until both have a sentence; a failure with no envelope (no response, or a proxy's page) reads as `unreachableCopy`.
 - Each `issues` entry (`{ path, code }`) is set on its form field with React Hook Form's `setError`, and its rule id becomes the field's sentence through the same map; a taken email goes on the email field, anything else is a form-level alert (`applyApiFailure` in `AuthScreenFormApiFailure.ts`, which `AuthScreenForm` calls for both forms; `apiFailureCode` in `utils/api/api-error.ts` is the one rule from a failed request to its code, also used by the Application page). Every error message on a form is a code, the form-level alert's and a request with no envelope's (`clientErrorCode`) included, and is shown as `errorCopy(code)`: `FormMessage` for a field, `AuthScreenForm` for the alert.
 - Copy that is not an error (headings, labels) sits in the page or component that shows it, as `SignInPage.tsx` does.
-- The field rules are `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`, the front end's copy; the back end's is `backend/src/features/auth/auth.types.ts`. Change both, and both worked-examples tables (`AuthScreenFieldRules.examples.ts` here), in the same commit.
+- The field rules and their worked-examples table are the contract's (`@app/contract/field-rules`, `@app/contract/field-rules.examples`): the forms resolve with them and the page tests run the table. Change a rule in `contract/`, not here.
 
 ## Tests
 

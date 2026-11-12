@@ -65,12 +65,12 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
 - Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/api/<resource>-api.ts`.
-- Forms use React Hook Form with the Zod schema from `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Forms use React Hook Form with the contract's Zod schemas (`@app/contract/field-rules`) as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules
 
-- The field rules exist twice, once per app. Each copy carries a comment pointing at the other, and both suites test the same table of worked examples. A rule changes in both places in the same commit.
+- The field rules exist once, in `contract/src/field-rules.ts`, with their table of worked examples (`field-rules.examples.ts`): the back end's request schemas and the front end's forms both import them, and both suites run the same table. A rule or an example changes there, in one place ([contract/AGENTS.md](contract/AGENTS.md)).
 - [docs/requirements.md](docs/requirements.md) is the authority. When code and that file disagree, the code is wrong.
 
 ## Tests

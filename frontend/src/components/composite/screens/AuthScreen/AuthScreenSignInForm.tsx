@@ -1,3 +1,4 @@
+import { type SignInFields, signInSchema } from "@app/contract/field-rules";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -9,7 +10,6 @@ import { FormMessage } from "@/components/base/forms/Form/FormMessage";
 import { PasswordInput } from "@/components/base/inputs/PasswordInput";
 import { signIn } from "@/utils/api/auth-api";
 import { AuthScreenEmailField } from "./AuthScreenEmailField";
-import { type SignInFields, signInSchema } from "./AuthScreenFieldRules";
 import { AuthScreenForm } from "./AuthScreenForm/AuthScreenForm";
 
 const fields = ["email", "password"] as const;

@@ -66,7 +66,7 @@ features/<feature>/
 
 ### The auth feature
 
-- `auth.types.ts` holds the request schemas, the back end's copy of the field rules, applied by `route-validation.pipe.ts`; the front end's copy is `frontend/src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`. Change both, and both worked-examples tables, in the same commit. Every check's error is its rule id (`.max(254, "email.too_long")`).
+- The request schemas are the contract's field rules (`@app/contract/field-rules`), applied by `route-validation.pipe.ts`; change a rule in `contract/`, never here. Every check's error is its rule id (`.max(254, "email.too_long")`).
 - `refresh-credential.ts` is the only code that knows the `<sessionId>.<secret>` format; only `sha256(secret)` is stored.
 - `route-validation.pipe.ts`: `RouteValidationPipe(schema)` answers `400 request.validation_failed` with `{ path, code }` issues (`path` an array of keys), or `400 request.malformed` for a body that is not a JSON object.
 - `services/auth-cookies.service.ts`: `AuthCookiesService` owns the whole cookie policy: `httpOnly`, `SameSite=Lax`, scoped to `/api/auth`, `Secure` from `COOKIE_SECURE`, `Expires` at the Session's idle expiry with a matching `Max-Age` from `ClockService`. It writes the `Set-Cookie` line itself because Express's `res.cookie` derives `Expires` from the real clock. It is the one service that touches the response, so the services lint rule skips that file alone.
@@ -90,7 +90,7 @@ The only test seam is the real application over HTTP (`api-docs.spec.ts` also pi
 - Seed and inspect through `app.db`, never through the repository under test. Clear the collections a spec writes to between examples: several worked examples normalise to the same email.
 - Move time with `app.clock.set()` and `advance()` from `app.startedAt`. The clock starts at the real current time because MongoDB's TTL monitor deletes Sessions whose idle expiry has passed in real time.
 - Pass `{ PASSWORD_HASH_COST: "10" }` when a file signs up many Users and is not testing the hash itself.
-- `src/test/support/field-rules.examples.ts` and the front end's `AuthScreenFieldRules.examples.ts` are one table kept twice; change a row in both.
+- The worked-examples table is `@app/contract/field-rules.examples`, shared with the front end; add a row there, never in a spec.
 - Canonical example: `health.spec.ts`; `harness.spec.ts` pins the harness. The first run downloads a `mongod` binary into `~/.cache/mongodb-binaries`, shared by every checkout.
 
 ## Naming and exports

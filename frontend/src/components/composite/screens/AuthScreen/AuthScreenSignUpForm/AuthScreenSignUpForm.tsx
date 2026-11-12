@@ -1,3 +1,4 @@
+import { type SignUpFields, signUpSchema } from "@app/contract/field-rules";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
@@ -9,10 +10,6 @@ import { FormMessage } from "@/components/base/forms/Form/FormMessage";
 import { Input } from "@/components/base/inputs/Input";
 import { PasswordInput } from "@/components/base/inputs/PasswordInput";
 import { AuthScreenEmailField } from "@/components/composite/screens/AuthScreen/AuthScreenEmailField";
-import {
-  type SignUpFields,
-  signUpSchema,
-} from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules";
 import { AuthScreenForm } from "@/components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenForm";
 import { signUp } from "@/utils/api/auth-api";
 import { AuthScreenSignUpFormPasswordChecklist } from "./AuthScreenSignUpFormPasswordChecklist";

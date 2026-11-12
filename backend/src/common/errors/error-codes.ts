@@ -19,7 +19,7 @@ export type ErrorCode = keyof typeof ERROR_CODES;
 /** `path` is the keys from the body down to the field; `code` is a rule id such as `password.missing_number`. */
 export type ValidationIssue = { path: (string | number)[]; code: string };
 
-export type ErrorEnvelope = {
+type ErrorEnvelope = {
   code: ErrorCode;
   status: number;
   traceId: string;

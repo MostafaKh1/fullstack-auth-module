@@ -9,9 +9,9 @@ import { CardHeader } from "@/components/base/cards/Card/CardHeader";
 import { CardTitle } from "@/components/base/cards/Card/CardTitle";
 import { ThemeToggle } from "@/components/composite/toggles/ThemeToggle/ThemeToggle";
 import { useSession } from "@/hooks/useSession";
-import { apiErrorEnvelope } from "@/utils/api/api-error";
+import { apiFailureCode } from "@/utils/api/api-error";
 import { getCurrentUser } from "@/utils/api/users-api";
-import { clientErrorCode, errorCopy } from "@/utils/error-copy";
+import { errorCopy } from "@/utils/error-copy";
 
 export function ApplicationPage() {
   const currentUser = useQuery({ queryKey: ["users", "me"], queryFn: getCurrentUser });
@@ -66,15 +66,10 @@ export function ApplicationPage() {
             {currentUser.isSuccess && (
               <p className="text-lg text-muted-foreground">{`Signed in as ${currentUser.data.name}`}</p>
             )}
-            {currentUser.isError && <Alert>{describeFailure(currentUser.error)}</Alert>}
+            {currentUser.isError && <Alert>{errorCopy(apiFailureCode(currentUser.error))}</Alert>}
           </CardContent>
         </Card>
       </main>
     </div>
   );
-}
-
-function describeFailure(error: unknown) {
-  const envelope = apiErrorEnvelope(error);
-  return errorCopy(envelope?.code ?? clientErrorCode.unreachable);
 }

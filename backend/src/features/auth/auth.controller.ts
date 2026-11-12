@@ -11,7 +11,7 @@ import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./
 import { OriginCsrfGuard } from "./origin-csrf.guard";
 import { RouteValidationPipe } from "./route-validation.pipe";
 
-export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
+type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
 @ApiTags("auth")
 @Controller("auth")

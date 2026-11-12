@@ -5,7 +5,7 @@ import type { RevokedReason, Session } from "@/common/types/session.types";
 import { SESSION_MODEL, type SessionDocument } from "@/database/collections/session.collection";
 
 /** A Session with the hashes refresh compares against; only `findWithSecretHashesById` returns one. */
-export type SessionWithSecretHashes = {
+type SessionWithSecretHashes = {
   session: Session;
   secretHash: string;
   previousSecretHash: string | null;

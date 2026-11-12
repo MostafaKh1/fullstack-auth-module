@@ -2,7 +2,7 @@
  * The worked examples of the `returnTo` safety rule (`isSafeReturnTo` in `return-to.ts`, ADR 0009), one row per
  * case. The page tests run every row through a Sign in: a safe row lands on `returnTo`, an unsafe one on `/`.
  */
-export type ReturnToExample = {
+type ReturnToExample = {
   returnTo: string;
   safe: boolean;
   note: string;

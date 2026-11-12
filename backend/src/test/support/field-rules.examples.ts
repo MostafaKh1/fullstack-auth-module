@@ -9,7 +9,7 @@
  * A valid row may name `stored`: the value the User is saved with.
  * An invalid row lists every rule id the value breaks, in the order the rules are listed in the requirements.
  */
-export type FieldExample = {
+type FieldExample = {
   field: "email" | "name" | "password";
   input: string | undefined;
   note: string;

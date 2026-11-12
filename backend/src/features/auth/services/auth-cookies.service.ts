@@ -4,7 +4,7 @@ import { ApiError } from "@/common/errors/api-error";
 import { AppConfigService } from "@/config/app-config.service";
 import { ClockService } from "@/core/clock.service";
 
-export const REFRESH_COOKIE = "refresh_credential";
+const REFRESH_COOKIE = "refresh_credential";
 
 // The cookie travels only to the auth routes, never to the rest of the API (ADR 0001).
 const REFRESH_COOKIE_PATH = "/api/auth";

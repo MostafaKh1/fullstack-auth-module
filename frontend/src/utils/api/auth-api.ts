@@ -3,9 +3,9 @@ import type { components } from "@/utils/api/api-types.generated";
 
 export type SignedIn = components["schemas"]["SignedIn"];
 
-export type SignUpRequest = components["schemas"]["SignUpRequest"];
+type SignUpRequest = components["schemas"]["SignUpRequest"];
 
-export type SignInRequest = components["schemas"]["SignInRequest"];
+type SignInRequest = components["schemas"]["SignInRequest"];
 
 export async function signUp(request: SignUpRequest): Promise<SignedIn> {
   const response = await apiClient.post<SignedIn>("/auth/sign-up", request);

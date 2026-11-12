@@ -22,7 +22,7 @@ Imports point down this table only. A layer may skip the ones between (a page ma
 
 What one feature alone owns lives in `src/features/<name>/`, which repeats the shared kind folders (`components/`, `hooks/`, `providers/`, `utils/`) and holds nothing else. Inside them the rules of this file apply unchanged, read from the feature folder: the same sections, kind folders, component folders, hook rule and naming. What several features or the app shell use stays in the shared folders. A feature folder is named for what it does, in kebab-case, and exists only when it holds something.
 
-- `app/` and `pages/` may import a feature. A feature imports the shared folders and itself, never another feature, `app/`, `pages/` or `tests/`. The shared folders import no feature. The structure check enforces each.
+- `app/`, `pages/`, `tests/` and the entry may import a feature. A feature imports the shared folders and itself, never another feature, `app/`, `pages/` or `tests/`. The shared folders import no feature. The structure check enforces each.
 - Code moves into a feature when only that feature uses it, and out to the shared folders when a second feature or the shell needs it.
 - A page stays in `src/pages/`: the route tree is one place, and a page composes a feature's components.
 - The `auth` feature owns the Session (its provider, context and hook), the two route guards and two route switches, the auth screen and its forms, and the URL helpers (the auth form in the URL, the `returnTo` rule).

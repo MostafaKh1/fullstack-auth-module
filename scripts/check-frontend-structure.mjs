@@ -40,6 +40,7 @@ const PALETTE_COLOUR =
   /(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|outline|ring|ring-offset|fill|stroke|from|to|via|divide|decoration|accent|caret|shadow|placeholder)-(?:(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+|(?:white|black)(?![\w-]))/;
 const THEMED = ["components", "pages", "app", "features"];
 const SHARED = ["components", "hooks", "providers", "utils"];
+const FEATURE_FOLDERS = SHARED;
 
 const stemOf = (name) => name.split(".")[0];
 const startsWithPrefix = (stem, prefix) => stem.startsWith(prefix) && /[A-Z]/.test(stem[prefix.length] ?? "");
@@ -213,9 +214,9 @@ for (const item of items) {
       else if (!KEBAB.test(full[1])) violate("folder-casing", item.rel, "a feature folder is kebab-case");
     }
     if (full.length <= 2) continue;
-    if (!SHARED.includes(full[2])) {
+    if (!FEATURE_FOLDERS.includes(full[2])) {
       if (full.length === 3)
-        violate("feature-folder", item.rel, `a feature holds only the folders ${SHARED.join(", ")}`);
+        violate("feature-folder", item.rel, `a feature holds only the folders ${FEATURE_FOLDERS.join(", ")}`);
       continue;
     }
   }
@@ -336,7 +337,6 @@ for (const { rel } of items.filter((item) => item.isDir && item.rel.startsWith("
   }
 }
 
-// A feature imports the shared folders and itself; only app/, pages/ and the entry import a feature from outside.
 for (const [file, targets] of imports) {
   const { feature } = scopeOf(file);
   const sharedFile = SHARED.includes(file.split("/")[0]);

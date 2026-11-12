@@ -4,7 +4,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 export type RefreshCredential = { sessionId: string; secret: string };
 
 /** A newly minted credential: `value` goes only in the cookie, `secretHash` is all that is stored. */
-export type MintedRefreshCredential = { value: string; secretHash: string };
+type MintedRefreshCredential = { value: string; secretHash: string };
 
 const FORMAT = /^([0-9a-f]{24})\.([A-Za-z0-9_-]+)$/;
 

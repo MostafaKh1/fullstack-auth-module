@@ -8,7 +8,7 @@ import { assignRequestId } from "./request-id";
  * Every path whose value is a secret. New secret-bearing fields are added here, never hand-masked.
  * `*.x` covers `x` one level deep in any logged object; request and response headers are listed explicitly.
  */
-export const REDACTED_PATHS = [
+const REDACTED_PATHS = [
   "req.headers.authorization",
   "req.headers.cookie",
   'res.headers["set-cookie"]',

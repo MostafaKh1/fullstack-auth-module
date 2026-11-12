@@ -6,7 +6,7 @@ import type { User } from "@/utils/api/users-api";
 export type Session =
   { status: "restoring" } | { status: "signed-out" } | { status: "signed-in"; user: User };
 
-export type SessionContextValue = {
+type SessionContextValue = {
   session: Session;
   startSession: (signedIn: SignedIn) => void;
   /** Ends the Session in this tab whether or not the back end call succeeded (ADR 0008). Never rejects. */

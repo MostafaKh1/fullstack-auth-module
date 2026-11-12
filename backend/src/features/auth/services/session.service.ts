@@ -18,10 +18,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type IssuedRefreshCredential = { value: string; idleExpiresAt: Date };
 
-export type StartedSession = { claims: AuthContext; issued: IssuedRefreshCredential };
+type StartedSession = { claims: AuthContext; issued: IssuedRefreshCredential };
 
 /** `issued` is `null` within the grace window: the credential the rotation issued stays current (ADR 0001). */
-export type RefreshedSession = { claims: AuthContext; issued: IssuedRefreshCredential | null };
+type RefreshedSession = { claims: AuthContext; issued: IssuedRefreshCredential | null };
 
 /** The Session lifecycle (ADR 0001). Liveness is the guard's rule (`isSessionLive`), applied here too. */
 @Injectable()

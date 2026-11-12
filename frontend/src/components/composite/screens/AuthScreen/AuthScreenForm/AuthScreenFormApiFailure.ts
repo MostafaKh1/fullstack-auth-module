@@ -1,5 +1,5 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-import { apiErrorEnvelope, type ValidationIssue } from "@/utils/api/api-error";
+import { apiErrorEnvelope, apiFailureCode, type ValidationIssue } from "@/utils/api/api-error";
 import { clientErrorCode } from "@/utils/error-copy";
 
 const FORM_ALERT = "root.server";
@@ -12,7 +12,7 @@ export function applyApiFailure<Fields extends FieldValues>(
 ) {
   const envelope = apiErrorEnvelope(error);
   if (!envelope) {
-    setError(FORM_ALERT, { type: "server", message: clientErrorCode.unreachable });
+    setError(FORM_ALERT, { type: "server", message: apiFailureCode(error) });
     return;
   }
 
@@ -40,5 +40,5 @@ export function applyApiFailure<Fields extends FieldValues>(
     return;
   }
 
-  setError(FORM_ALERT, { type: "server", message: envelope.code });
+  setError(FORM_ALERT, { type: "server", message: apiFailureCode(error) });
 }

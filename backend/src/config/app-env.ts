@@ -101,7 +101,7 @@ export type AppConfig = {
 };
 
 /** The value is never included: it may be a secret. */
-export type ConfigProblem = { variable: string; problem: string };
+type ConfigProblem = { variable: string; problem: string };
 
 export class InvalidConfigError extends Error {
   constructor(readonly problems: ConfigProblem[]) {

@@ -13,7 +13,7 @@ type ContractClient = JsonifiedClient<ContractRouterClient<typeof contract>>;
 /** What Sign up, Sign in and refresh answer: the access token and the User. */
 export type SignedIn = Awaited<ReturnType<ContractClient["auth"]["refresh"]>>;
 
-/** A User as the client sees it: never with its password hash, its date an ISO string. */
+/** A User as the client sees it: its date is an ISO string. */
 export type User = SignedIn["user"];
 
 const procedureAt = (path: readonly string[]) => {

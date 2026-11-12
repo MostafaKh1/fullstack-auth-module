@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useLocation } from "react-router";
-import { authFormIn } from "@/utils/auth-url/auth-url";
+import { authFormIn } from "@/features/auth/utils/auth-url";
 
 type Props = {
   /** Shown for `?auth=sign-in` and for any `auth` value it does not know. */

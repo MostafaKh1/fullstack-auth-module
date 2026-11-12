@@ -1,7 +1,7 @@
 import { use } from "react";
 import { useFormContext, useFormState } from "react-hook-form";
-import { FormFieldContext } from "@/providers/form-field-context";
-import { FormItemContext } from "@/providers/form-item-context";
+import { FormFieldContext } from "./FormFieldContext";
+import { FormItemContext } from "./FormItemContext";
 
 /** The ids that tie a field's label, control and message together, and the field's validation state. */
 export function useFormField() {

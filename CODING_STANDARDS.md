@@ -61,6 +61,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ## Architecture: front end
 
+- Shared code is organised by role and a feature's code by feature: what one feature alone owns lives in `src/features/<name>/`, which repeats the shared `components/`, `hooks/`, `providers/` and `utils/` folders. A feature imports the shared folders and itself, never another feature; shared code imports no feature; only `app/`, `pages/`, `tests/` and the entry import a feature ([frontend/AGENTS.md](frontend/AGENTS.md), "Features").
 - Pages live in `src/pages/`, one `<Name>Page.tsx` per route, default-exported only where the router requires it; every other component is a **named** export.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.

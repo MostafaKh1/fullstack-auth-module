@@ -23,7 +23,7 @@ const MAY_IMPORT = {
 const NEVER_IMPORTED_BY_COMPONENTS = ["pages", "app", "tests"];
 const OUTSIDE_COMPONENTS = {
   primitives: ["utils"],
-  base: ["utils", "hooks", "providers"],
+  base: ["utils"],
   utility: ["utils"],
 };
 
@@ -38,10 +38,18 @@ const TEST = /\.test\.[tj]sx?$/;
 // A Tailwind palette colour utility (`text-indigo-600`, `hover:bg-slate-100`): colours come from the theme tokens in index.css.
 const PALETTE_COLOUR =
   /(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|outline|ring|ring-offset|fill|stroke|from|to|via|divide|decoration|accent|caret|shadow|placeholder)-(?:(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+|(?:white|black)(?![\w-]))/;
-const THEMED = ["components", "pages", "app"];
+const THEMED = ["components", "pages", "app", "features"];
+const SHARED = ["components", "hooks", "providers", "utils"];
+const FEATURE_FOLDERS = SHARED;
 
 const stemOf = (name) => name.split(".")[0];
 const startsWithPrefix = (stem, prefix) => stem.startsWith(prefix) && /[A-Z]/.test(stem[prefix.length] ?? "");
+// A feature's folder repeats the shared ones: features/<name>/components/x is judged as components/x.
+function scopeOf(rel) {
+  const segs = rel.split("/");
+  if (segs[0] === "features" && segs.length >= 3) return { feature: segs[1], local: segs.slice(2).join("/") };
+  return { feature: undefined, local: rel };
+}
 const isComponentFolder = (dir) => dir.startsWith("components/") && PASCAL.test(dir.split("/").at(-1));
 
 function walk(dir) {
@@ -88,7 +96,7 @@ const imports = new Map();
 for (const file of files.filter((f) => SOURCE.test(f))) {
   const text = readFileSync(join(root, file), "utf8");
   const targets = new Set();
-  const dir = file.includes("/") ? file.slice(0, file.lastIndexOf("/")) : "";
+  const dir = scopeOf(file.includes("/") ? file.slice(0, file.lastIndexOf("/")) : "").local;
   for (const match of text.matchAll(IMPORT)) {
     const spec = match[1];
     if (spec.startsWith(".") && !(isComponentFolder(dir) && spec.startsWith("./"))) {
@@ -109,7 +117,7 @@ const importersOf = (target) =>
     .map(([file]) => file);
 
 function checkComponents(item, segs) {
-  const { rel, isDir } = item;
+  const { rel, isDir, local } = item;
   const name = segs.at(-1);
   const depth = segs.length;
   const stem = stemOf(name);
@@ -144,7 +152,7 @@ function checkComponents(item, segs) {
     if (inComponentFolder && !startsWithPrefix(name, parent)) {
       violate("folder-prefix", rel, `a child folder's name starts with ${parent}`);
     }
-    if (name.endsWith("Screen") && !rel.startsWith(screenHome)) {
+    if (name.endsWith("Screen") && !local.startsWith(screenHome)) {
       violate("screen-folder", rel, "a Screen component sits in components/composite/screens/");
     }
     return;
@@ -162,7 +170,7 @@ function checkComponents(item, segs) {
     if (!startsWithPrefix(stem, parent) && stem !== parent) {
       violate("folder-prefix", rel, `a child file's name starts with ${parent}`);
     }
-  } else if (stem.endsWith("Screen") && !rel.startsWith(screenHome)) {
+  } else if (stem.endsWith("Screen") && !local.startsWith(screenHome)) {
     violate("screen-folder", rel, "a Screen component sits in components/composite/screens/");
   }
 }
@@ -199,7 +207,21 @@ function checkOther(item, segs) {
 }
 
 for (const item of items) {
-  const segs = item.rel.split("/");
+  const full = item.rel.split("/");
+  if (full[0] === "features") {
+    if (full.length === 2) {
+      if (!item.isDir) violate("feature-folder", item.rel, "features/ holds only one folder per feature");
+      else if (!KEBAB.test(full[1])) violate("folder-casing", item.rel, "a feature folder is kebab-case");
+    }
+    if (full.length <= 2) continue;
+    if (!FEATURE_FOLDERS.includes(full[2])) {
+      if (full.length === 3)
+        violate("feature-folder", item.rel, `a feature holds only the folders ${FEATURE_FOLDERS.join(", ")}`);
+      continue;
+    }
+  }
+  item.local = scopeOf(item.rel).local;
+  const segs = item.local.split("/");
   const name = segs.at(-1);
   if (
     !item.isDir &&
@@ -217,8 +239,16 @@ for (const item of items) {
       );
       continue;
     }
-    if (importersOf(item.rel).length >= 2) {
-      violate("hook-shared", item.rel, "a hook used by two or more files lives in hooks/ as useX");
+    if (
+      importersOf(item.rel).filter(
+        (file) => !file.startsWith(`${item.rel.slice(0, item.rel.lastIndexOf("/"))}/`),
+      ).length >= 2
+    ) {
+      violate(
+        "hook-shared",
+        item.rel,
+        "a hook used by two or more files outside its folder lives in hooks/ as useX",
+      );
     }
   }
   if (
@@ -262,16 +292,22 @@ for (const file of files.filter((f) => SOURCE.test(f))) {
 }
 
 // Helpers: three or more sharing a first word belong in a folder named for the concern.
-const concerns = new Map();
-for (const name of childrenOf.get("utils") ?? []) {
-  if (items.find((item) => item.rel === `utils/${name}`)?.isDir) continue;
-  const stem = stemOf(name);
-  concerns.set(stem.split("-")[0], [...(concerns.get(stem.split("-")[0]) ?? []), name]);
-}
-for (const names of concerns.values()) {
-  if (new Set(names.map(stemOf)).size < 3) continue;
-  for (const name of names)
-    violate("helper-concern", `utils/${name}`, "three or more helpers of one concern get a folder");
+const utilsFolders = [
+  "utils",
+  ...items.filter((item) => item.isDir && /^features\/[^/]+\/utils$/.test(item.rel)).map((item) => item.rel),
+];
+for (const folder of utilsFolders) {
+  const concerns = new Map();
+  for (const name of childrenOf.get(folder) ?? []) {
+    if (items.find((item) => item.rel === `${folder}/${name}`)?.isDir) continue;
+    const stem = stemOf(name);
+    concerns.set(stem.split("-")[0], [...(concerns.get(stem.split("-")[0]) ?? []), name]);
+  }
+  for (const names of concerns.values()) {
+    if (new Set(names.map(stemOf)).size < 3) continue;
+    for (const name of names)
+      violate("helper-concern", `${folder}/${name}`, "three or more helpers of one concern get a folder");
+  }
 }
 
 // Single-use children and section import direction.
@@ -302,11 +338,28 @@ for (const { rel } of items.filter((item) => item.isDir && item.rel.startsWith("
 }
 
 for (const [file, targets] of imports) {
-  const segs = file.split("/");
+  const { feature } = scopeOf(file);
+  const sharedFile = SHARED.includes(file.split("/")[0]);
+  for (const target of targets) {
+    const targetFeature = scopeOf(target).feature;
+    if (feature && targetFeature !== feature && !SHARED.includes(target.split("/")[0])) {
+      violate(
+        "feature-imports",
+        file,
+        `a feature imports only the shared folders and itself, not ${target.split("/")[0]}/`,
+      );
+    } else if (targetFeature && targetFeature !== feature && sharedFile) {
+      violate("feature-imports", file, "shared code imports no feature");
+    }
+  }
+}
+
+for (const [file, targets] of imports) {
+  const segs = scopeOf(file).local.split("/");
   if (segs[0] !== "components" || TEST.test(file) || !SECTIONS.includes(segs[1])) continue;
   const section = segs[1];
   for (const target of targets) {
-    const tsegs = target.split("/");
+    const tsegs = scopeOf(target).local.split("/");
     if (tsegs[0] === "components") {
       const targetSection = tsegs[1];
       if (targetSection !== section && !MAY_IMPORT[section].includes(targetSection)) {

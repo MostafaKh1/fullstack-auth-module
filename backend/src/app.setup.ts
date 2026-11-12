@@ -5,12 +5,12 @@ import { jsonBody } from "@/common/middleware/json-body.middleware.js";
 import { AppConfigService } from "@/config/app-config.service.js";
 import { setupApiDocs } from "@/docs/api-document.js";
 
-/** Builds the bare Nest application from its options: `NestFactory` in `main.ts`, the testing module in the harness. */
+/** Builds the bare Nest application: with `NestFactory` in `main.ts`, from the testing module in the harness. */
 export type NestAppBuilder = (
   options: NestApplicationOptions,
 ) => INestApplication | Promise<INestApplication>;
 
-/** Creates and wires the application; shared by `main.ts` and the test harness, so tests run it exactly as production. */
+/** Creates and wires the application for `main.ts` and the test harness, so tests run it as production does. */
 export async function createApp(build: NestAppBuilder): Promise<INestApplication> {
   // Nest's own body parsers stay off: its urlencoded one would read a cross-site form post as data (login CSRF,
   // ADR 0001), past our body cap. The JSON parser below is the only one.

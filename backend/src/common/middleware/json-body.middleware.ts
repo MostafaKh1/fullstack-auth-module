@@ -3,14 +3,11 @@ import { type ErrorRequestHandler, json, type RequestHandler } from "express";
 import { errorEnvelope } from "@/common/errors/error-envelope.js";
 import { assignRequestId } from "@/logging/request-id.js";
 
-/**
- * The API's only body parser. The parser's client errors are answered here, so the caller's mistake is never logged as
- * a server failure; its own failures go on to the global filter.
- */
+/** The API's only body parser; it answers its client errors itself, so none is logged as a server failure. */
 export function jsonBody(limit: string, isProduction: boolean): (RequestHandler | ErrorRequestHandler)[] {
   const parse = json({ limit });
-  // oRPC reads the stream itself, with no size cap, when it finds no body: a body this parser skipped (a form, multipart,
-  // text) must reach a procedure as no body at all, which its input schema refuses as `request.malformed`.
+  // oRPC reads the stream itself, with no size cap, when it finds no body: a body this parser skipped (a form,
+  // multipart, text) must reach a procedure as no body at all, which its input schema refuses as `request.malformed`.
   const settle: RequestHandler = (req, _res, next) => {
     req.body ??= null;
     next();

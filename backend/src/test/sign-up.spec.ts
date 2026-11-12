@@ -7,6 +7,7 @@ const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
 const valid = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
+const frontEnd = "http://localhost:5173";
 
 describe("Sign up", () => {
   let app: TestApp;
@@ -234,11 +235,7 @@ describe("Sign up", () => {
     });
 
     it("accepts a configured front-end Origin", async () => {
-      const response = await app
-        .http()
-        .post("/api/auth/sign-up")
-        .set("Origin", "http://localhost:5173")
-        .send(valid);
+      const response = await app.http().post("/api/auth/sign-up").set("Origin", frontEnd).send(valid);
 
       expect(response.status).toBe(201);
       expect(refreshCookie(response.headers["set-cookie"])).toMatch(/^refresh_credential=/);

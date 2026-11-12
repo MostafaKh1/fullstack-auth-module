@@ -3,6 +3,7 @@ import { refreshCookie } from "@/test/support/refresh-cookie.js";
 import { startTestApp, type TestApp } from "./boot.js";
 
 const ada = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
+const frontEnd = "http://localhost:5173";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -179,7 +180,7 @@ describe("Sign in", () => {
       const response = await app
         .http()
         .post("/api/auth/sign-in")
-        .set("Origin", "http://localhost:5173")
+        .set("Origin", frontEnd)
         .send({ email: ada.email, password: ada.password });
 
       expect(response.status).toBe(200);

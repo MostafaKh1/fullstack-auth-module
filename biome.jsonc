@@ -20,7 +20,7 @@
   "files": {
     "ignoreUnknown": true,
     // Installed skills are vendored from upstream, not our code.
-    "includes": ["**", "!.claude/skills", "!.agents/skills", "!**/package-lock.json", "!**/*.generated.ts"],
+    "includes": ["**", "!.claude/skills", "!.agents/skills", "!**/package-lock.json"],
   },
   "linter": {
     "enabled": true,
@@ -180,7 +180,7 @@
                     "message": "Only repositories read collections; import the domain type from src/common/types/.",
                   },
                   {
-                    "group": ["**/auth-cookies.service"],
+                    "group": ["**/auth-cookies.service.js"],
                     "message": "A service never touches a cookie: the controller calls AuthCookiesService.",
                   },
                 ],
@@ -208,7 +208,7 @@
                     "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
                   },
                   {
-                    "group": ["**/database/**", "**/clock.service", "**/app-config.service"],
+                    "group": ["**/database/**", "**/clock.service.js", "**/app-config.service.js"],
                     "message": "A controller is the API only: the business rule, the time and the configuration belong in a service.",
                   },
                 ],

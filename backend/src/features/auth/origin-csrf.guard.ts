@@ -1,7 +1,7 @@
 import { type CanActivate, type ExecutionContext, Injectable } from "@nestjs/common";
 import type { Request } from "express";
-import { ApiError } from "@/common/errors/api-error";
-import { AppConfigService } from "@/config/app-config.service";
+import { ApiError } from "@/common/errors/api-error.js";
+import { AppConfigService } from "@/config/app-config.service.js";
 
 /**
  * The `Origin` check is what stops another site from using the refresh cookie, which is `SameSite=Lax` (ADR 0001).

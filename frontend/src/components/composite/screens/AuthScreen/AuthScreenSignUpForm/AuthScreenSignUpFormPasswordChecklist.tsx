@@ -1,5 +1,5 @@
+import { passwordRule } from "@app/contract/field-rules";
 import { useId } from "react";
-import { passwordRule } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules";
 import { cn } from "@/utils/cn";
 
 const rules = [

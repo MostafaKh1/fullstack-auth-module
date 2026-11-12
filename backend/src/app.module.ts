@@ -1,15 +1,15 @@
 import { type DynamicModule, Module } from "@nestjs/common";
 import { APP_FILTER } from "@nestjs/core";
-import { CommonModule } from "@/common/common.module";
-import { AllExceptionsFilter } from "@/common/filters/all-exceptions.filter";
-import { AppConfigModule } from "@/config/app-config.module";
-import type { AppConfig } from "@/config/app-env";
-import { CoreModule } from "@/core/core.module";
-import { PersistenceModule } from "@/database/persistence.module";
-import { AuthModule } from "@/features/auth/auth.module";
-import { HealthModule } from "@/features/health/health.module";
-import { UsersModule } from "@/features/users/users.module";
-import { LoggingModule, type LoggingOptions } from "@/logging/logging.module";
+import { CommonModule } from "@/common/common.module.js";
+import { AllExceptionsFilter } from "@/common/filters/all-exceptions.filter.js";
+import { AppConfigModule } from "@/config/app-config.module.js";
+import type { AppConfig } from "@/config/app-env.js";
+import { CoreModule } from "@/core/core.module.js";
+import { PersistenceModule } from "@/database/persistence.module.js";
+import { AuthModule } from "@/features/auth/auth.module.js";
+import { HealthModule } from "@/features/health/health.module.js";
+import { UsersModule } from "@/features/users/users.module.js";
+import { LoggingModule, type LoggingOptions } from "@/logging/logging.module.js";
 
 @Module({})
 export class AppModule {

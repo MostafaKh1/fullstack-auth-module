@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { AppConfigService } from "@/config/app-config.service";
+import { AppConfigService } from "@/config/app-config.service.js";
 
 /** `sub` is the User, `sid` the Session the access token was issued for. */
 export type AuthContext = { userId: string; sessionId: string };

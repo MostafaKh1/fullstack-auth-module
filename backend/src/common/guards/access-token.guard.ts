@@ -1,11 +1,11 @@
 import { type CanActivate, type ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request } from "express";
-import { IS_PUBLIC } from "@/common/decorators/auth.decorator";
-import { ApiError } from "@/common/errors/api-error";
-import { AccessTokenService, type AuthContext } from "@/common/services/access-token.service";
-import { ClockService } from "@/core/clock.service";
-import { SessionRepository } from "@/database/repositories/session.repository";
+import { IS_PUBLIC } from "@/common/decorators/auth.decorator.js";
+import { ApiError } from "@/common/errors/api-error.js";
+import { AccessTokenService, type AuthContext } from "@/common/services/access-token.service.js";
+import { ClockService } from "@/core/clock.service.js";
+import { SessionRepository } from "@/database/repositories/session.repository.js";
 
 export type RequestWithAuthContext = Request & { authContext?: AuthContext };
 

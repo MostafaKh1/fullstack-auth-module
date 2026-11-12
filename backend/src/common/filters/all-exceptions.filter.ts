@@ -1,9 +1,10 @@
+import type { ErrorCode } from "@app/contract/error-envelope";
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { PinoLogger } from "nestjs-pino";
-import { ApiError } from "@/common/errors/api-error";
-import { type ErrorCode, errorEnvelope } from "@/common/errors/error-codes";
-import { AppConfigService } from "@/config/app-config.service";
+import { ApiError } from "@/common/errors/api-error.js";
+import { errorEnvelope } from "@/common/errors/error-envelope.js";
+import { AppConfigService } from "@/config/app-config.service.js";
 
 // What an HttpException raised by Nest or Express itself (not by our code) means in the closed set.
 const CODE_BY_STATUS: Record<number, ErrorCode> = {

@@ -30,7 +30,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `services/`, `types/`), which imports nothing from a feature _(lint)_.
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard, oRPC's `ORPCModule`) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `orpc/`, `services/`, `types/`), which imports nothing from a feature _(lint)_.
 - A repository imports the domain types from `src/common/types/` as types only, so no runtime edge points to a higher tier.
 - A module imports only from a lower tier. A feature module exports nothing, and a feature imports nothing from another feature _(lint)_. `forwardRef` is never needed and never used.
 
@@ -42,7 +42,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ### Errors
 
-- Every error leaving the API is the envelope in [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md), produced by the one global exception filter.
+- Every error leaving the API is the envelope in [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md), produced by the one global exception filter or, for a caller's mistake inside a contract procedure, by oRPC's error encoder ([ADR 0012](docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md); [backend/AGENTS.md](backend/AGENTS.md), "The error envelope").
 - Code throws `ApiError(code, { issues? })`. Branching anywhere on an error's message text is a bug: branch on `code`.
 - A code is added to the closed set on the back end and to the copy map on the front end in the same change.
 - A 5xx is logged with its stack; nothing internal (stack, driver error, query) reaches the response.
@@ -64,13 +64,14 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Pages live in `src/pages/`, one `<Name>Page.tsx` per route, default-exported only where the router requires it; every other component is a **named** export.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
-- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/api/<resource>-api.ts`.
-- Forms use React Hook Form with the Zod schema from `src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts` as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Server state goes through TanStack Query; the only client state is the Session context. No component calls the oRPC client directly: it uses the client's TanStack Query helpers (`orpc` in `src/utils/api/orpc-client.ts`).
+- Forms use React Hook Form with the contract's Zod schemas (`@app/contract/field-rules`) as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules
 
-- The field rules exist twice, once per app, because there is no shared package. Each copy carries a comment pointing at the other, and both suites test the same table of worked examples. A rule changes in both places in the same commit.
+- The field rules exist once, in `contract/src/field-rules.ts`, with their table of worked examples (`field-rules.examples.ts`): the back end's request schemas and the front end's forms both import them, and both suites run the same table. A rule or an example changes there, in one place ([contract/AGENTS.md](contract/AGENTS.md)).
+- The API is described once, by the contract: a route, its schemas and its error codes are declared there and nowhere else, and `contract/openapi.json` and Swagger UI are generated from it. A route that needs a second description (a decorator, a hand-written type) is not on the contract yet.
 - [docs/requirements.md](docs/requirements.md) is the authority. When code and that file disagree, the code is wrong.
 
 ## Tests

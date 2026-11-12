@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import type { Request, Response } from "express";
-import { ApiError } from "@/common/errors/api-error";
-import { AppConfigService } from "@/config/app-config.service";
-import { ClockService } from "@/core/clock.service";
+import type { Request } from "express";
+import { ApiError } from "@/common/errors/api-error.js";
+import { AppConfigService } from "@/config/app-config.service.js";
+import { ClockService } from "@/core/clock.service.js";
 
 const REFRESH_COOKIE = "refresh_credential";
 
@@ -16,14 +16,14 @@ export class AuthCookiesService {
     private readonly clock: ClockService,
   ) {}
 
-  setRefreshCookie(response: Response, credential: { value: string; idleExpiresAt: Date }): void {
+  setRefreshCookie(headers: Headers, credential: { value: string; idleExpiresAt: Date }): void {
     const { value, idleExpiresAt } = credential;
     const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
-    this.writeRefreshCookie(response, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
+    this.writeRefreshCookie(headers, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
   }
 
-  clearRefreshCookie(response: Response): void {
-    this.writeRefreshCookie(response, "", 0, new Date(0));
+  clearRefreshCookie(headers: Headers): void {
+    this.writeRefreshCookie(headers, "", 0, new Date(0));
   }
 
   readRefreshCookie(request: Request): string | null {
@@ -45,8 +45,7 @@ export class AuthCookiesService {
     }
   }
 
-  // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
-  private writeRefreshCookie(response: Response, value: string, maxAgeSeconds: number, expires: Date): void {
+  private writeRefreshCookie(headers: Headers, value: string, maxAgeSeconds: number, expires: Date): void {
     const attributes = [
       `${REFRESH_COOKIE}=${value}`,
       `Max-Age=${maxAgeSeconds}`,
@@ -56,6 +55,6 @@ export class AuthCookiesService {
       ...(this.config.get("cookieSecure") ? ["Secure"] : []),
       "SameSite=Lax",
     ];
-    response.append("Set-Cookie", attributes.join("; "));
+    headers.append("Set-Cookie", attributes.join("; "));
   }
 }

@@ -1,9 +1,10 @@
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { testEnv } from "./boot";
+import { fileURLToPath } from "node:url";
+import { testEnv } from "./boot.js";
 
-const backendRoot = path.resolve(__dirname, "..", "..");
+const backendRoot = fileURLToPath(new URL("../../", import.meta.url));
 // The arguments that let plain Node run the TypeScript entry point; the end-to-end suite starts the API with the same file.
 const registerArgs: string[] = JSON.parse(
   readFileSync(path.join(backendRoot, "node-register-args.json"), "utf8"),

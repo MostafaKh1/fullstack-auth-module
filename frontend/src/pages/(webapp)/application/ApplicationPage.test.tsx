@@ -18,7 +18,7 @@ import {
 import { expectedCopy } from "@/tests/support/expected-copy";
 import { fillForm } from "@/tests/support/fill-form";
 import { renderApp, renderRestoringApp } from "@/tests/support/render-app";
-import { getCurrentUser } from "@/utils/api/users-api";
+import { orpc } from "@/utils/api/orpc-client";
 import { returnToExamples } from "@/utils/auth-url/return-to.examples";
 
 type Router = ReturnType<typeof renderRestoringApp>["router"];
@@ -303,7 +303,7 @@ describe("Sign out", () => {
     await screen.findByText("Signed in as Ada Lovelace");
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
-    const refused = expect(getCurrentUser()).rejects.toThrow();
+    const refused = expect(orpc.users.me.call()).rejects.toThrow();
     await waitFor(() => expect(seen).toHaveLength(2));
     await settle();
     signOut.release();
@@ -406,7 +406,7 @@ describe("the Session survives reloads", () => {
 
     // The page's own request is refused and starts a refresh; two more requests are refused while it runs.
     await secondRefreshReached;
-    const others = [getCurrentUser(), getCurrentUser()];
+    const others = [orpc.users.me.call(), orpc.users.me.call()];
     await waitFor(() => expect(currentUser.seen).toHaveLength(3));
     release();
 

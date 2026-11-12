@@ -1,18 +1,15 @@
-import { type AxiosError, type InternalAxiosRequestConfig, isAxiosError } from "axios";
-import { apiClient } from "@/utils/api/api-client";
-import { apiErrorEnvelope } from "@/utils/api/api-error";
-import { refreshSession, type SignedIn } from "@/utils/api/auth-api";
+import type { SignedIn } from "@/utils/api/orpc-client";
 
-/** How a refresh's outcome reaches the Session context, which alone writes the access token (ADR 0008). */
+/** How the Session context refreshes and hears the outcome; it alone writes the access token (ADR 0008). */
 export type SessionListener = {
+  /** Sends `POST /api/auth/refresh`: the refresh cookie buys a new access token and the User. */
+  refresh: () => Promise<SignedIn>;
   restored: (signedIn: SignedIn) => void;
   /** The refresh found no Session, or failed: the Session is over in this tab. */
   ended: () => void;
 };
 
-type RetriableConfig = InternalAxiosRequestConfig & { sessionRetried?: boolean };
-
-type InFlight = { owner: SessionListener | null; attempt: Promise<boolean>; discarded: boolean };
+type InFlight = { owner: SessionListener; attempt: Promise<boolean>; discarded: boolean };
 
 let listener: SessionListener | null = null;
 let inFlight: InFlight | null = null;
@@ -30,19 +27,20 @@ export function listenForSessionChanges(next: SessionListener | null) {
  * registering again (StrictMode's second effect run) joins it.
  */
 export function refreshSessionOnce(): Promise<boolean> {
-  if (stopped) return Promise.resolve(false);
+  // With no listener there is no app to restore, and nothing to send the refresh.
+  if (stopped || listener === null) return Promise.resolve(false);
   if (inFlight && inFlight.owner === listener) return inFlight.attempt;
   const owner = listener;
   // Read only once the request is answered, after `current` below exists.
   const applies = () => !current.discarded && listener === owner;
-  const attempt = refreshSession().then(
+  const attempt = owner.refresh().then(
     (signedIn) => {
       if (!applies()) return false;
-      owner?.restored(signedIn);
+      owner.restored(signedIn);
       return true;
     },
     () => {
-      if (applies()) owner?.ended();
+      if (applies()) owner.ended();
       return false;
     },
   );
@@ -68,23 +66,9 @@ export function resumeRefreshing() {
   stopped = false;
 }
 
-// A `401 auth.unauthenticated` means the access token expired or was never there: refresh once, shared by every
-// request refused meanwhile, then send each request again, once. The auth routes are left alone, refresh among them.
-apiClient.interceptors.response.use(undefined, async (error: unknown) => {
-  if (!isAxiosError(error) || !shouldRefresh(error)) throw error;
-  const config = error.config as RetriableConfig;
-  if (!(await refreshSessionOnce())) throw error;
-  config.sessionRetried = true;
-  return apiClient.request(config);
-});
-
-function shouldRefresh(error: AxiosError): boolean {
-  const config = error.config as RetriableConfig | undefined;
-  return (
-    listener !== null &&
-    config !== undefined &&
-    !config.sessionRetried &&
-    !config.url?.startsWith("/auth/") &&
-    apiErrorEnvelope(error)?.code === "auth.unauthenticated"
-  );
+/** Whether a refused request is refreshed for and sent once more. */
+// Only an expired or missing access token qualifies, never on an auth route (refresh among them), and only while an
+// app listens for the outcome.
+export function shouldRefreshAndRetry(code: string | undefined, isAuthRoute: boolean): boolean {
+  return listener !== null && !isAuthRoute && code === "auth.unauthenticated";
 }

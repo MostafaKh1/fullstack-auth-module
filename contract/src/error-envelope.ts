@@ -1,4 +1,6 @@
-/** The closed set of API error codes (ADR 0002). */
+import { z } from "zod";
+
+/** The closed set of API error codes (ADR 0002), each with its HTTP status and whether a retry can succeed. */
 export const ERROR_CODES = {
   "request.validation_failed": { status: 400, retryable: false },
   "request.malformed": { status: 400, retryable: false },
@@ -16,27 +18,24 @@ export const ERROR_CODES = {
 
 export type ErrorCode = keyof typeof ERROR_CODES;
 
+const errorCodes = Object.keys(ERROR_CODES) as [ErrorCode, ...ErrorCode[]];
+
 /** `path` is the keys from the body down to the field; `code` is a rule id such as `password.missing_number`. */
-export type ValidationIssue = { path: (string | number)[]; code: string };
+export const validationIssueSchema = z.strictObject({
+  path: z.array(z.union([z.string(), z.int()])),
+  code: z.string().describe("A rule id such as password.missing_number."),
+});
 
-type ErrorEnvelope = {
-  code: ErrorCode;
-  status: number;
-  traceId: string;
-  retryable: boolean;
-  issues?: ValidationIssue[];
-  message?: string;
-};
+export type ValidationIssue = z.infer<typeof validationIssueSchema>;
 
-/** The one place an envelope is built; `message` is a developer hint, left out in production (ADR 0002). */
-export function errorEnvelope(
-  code: ErrorCode,
-  traceId: string,
-  detail: { issues?: ValidationIssue[]; message: string; isProduction: boolean },
-): ErrorEnvelope {
-  const { status, retryable } = ERROR_CODES[code];
-  const envelope: ErrorEnvelope = { code, status, traceId, retryable };
-  if (detail.issues) envelope.issues = detail.issues;
-  if (!detail.isProduction) envelope.message = detail.message;
-  return envelope;
-}
+/** The body of every API error response; `message` is a developer hint, left out in production. */
+export const errorEnvelopeSchema = z.strictObject({
+  code: z.enum(errorCodes),
+  status: z.int(),
+  traceId: z.string().describe("The request id, also the X-Request-Id header."),
+  retryable: z.boolean(),
+  issues: z.array(validationIssueSchema).optional(),
+  message: z.string().optional().describe("A developer hint, omitted in production."),
+});
+
+export type ErrorEnvelope = z.infer<typeof errorEnvelopeSchema>;

@@ -1,4 +1,4 @@
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 const ENVELOPE = (code: string, status: number) => ({
   code,

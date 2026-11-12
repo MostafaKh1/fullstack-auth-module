@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 type Operation = {
   security?: Record<string, string[]>[];
@@ -51,12 +51,28 @@ describe("the API documentation", () => {
     ]);
   });
 
-  it("documents each request body from the Zod schema, with the field rules", () => {
-    const body = document.paths["/api/auth/sign-up"].post.requestBody?.content["application/json"].schema;
-    const schema = document.components.schemas.SignUpRequest;
+  it("documents the auth routes from their procedures in the contract", () => {
+    const operationIds = ["sign-up", "sign-in", "refresh", "sign-out"].map(
+      (route) => (document.paths[`/api/auth/${route}`].post as { operationId?: string }).operationId,
+    );
 
-    expect(body).toEqual({ $ref: "#/components/schemas/SignUpRequest" });
-    expect(schema).toMatchObject({ type: "object", required: ["email", "name", "password"] });
+    expect(operationIds).toEqual(["auth.signUp", "auth.signIn", "auth.refresh", "auth.signOut"]);
+  });
+
+  it("documents the current User from its procedure in the contract", () => {
+    const operation = document.paths["/api/users/me"].get as { operationId?: string; responses: object };
+
+    expect(operation.operationId).toBe("users.me");
+    expect(Object.keys(operation.responses)).toEqual(expect.arrayContaining(["200", "401"]));
+    expect(JSON.stringify(operation.responses)).toContain("auth.unauthenticated");
+  });
+
+  it("documents each request body from the Zod schema, with the field rules", () => {
+    const signUp = document.paths["/api/auth/sign-up"].post.requestBody?.content["application/json"].schema;
+    const signIn = document.paths["/api/auth/sign-in"].post.requestBody?.content["application/json"].schema;
+
+    expect(signUp).toMatchObject({ type: "object", required: ["email", "name", "password"] });
+    expect(signIn).toMatchObject({ type: "object", required: ["email", "password"] });
   });
 
   it("documents the success statuses and the error codes", () => {
@@ -79,8 +95,18 @@ describe("the API documentation", () => {
     expect(document.paths["/api/auth/sign-in"].post.security).toBeUndefined();
   });
 
+  it("marks the cookie routes as needing the refresh cookie", () => {
+    expect(document.components.securitySchemes).toMatchObject({
+      cookie: { type: "apiKey", in: "cookie", name: "refresh_credential" },
+    });
+    expect(document.paths["/api/auth/refresh"].post.security).toEqual([{ cookie: [] }]);
+    expect(document.paths["/api/auth/sign-out"].post.security).toEqual([{ cookie: [] }]);
+  });
+
   it("is the document checked in as contract/openapi.json", () => {
-    const contract = JSON.parse(readFileSync(resolve(__dirname, "../../../contract/openapi.json"), "utf8"));
+    const contract = JSON.parse(
+      readFileSync(fileURLToPath(new URL("../../../contract/openapi.json", import.meta.url)), "utf8"),
+    );
 
     expect(contract).toEqual(document);
   });

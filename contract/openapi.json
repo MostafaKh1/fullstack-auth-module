@@ -1,16 +1,137 @@
 {
-  "openapi": "3.0.0",
+  "info": {
+    "title": "Auth API",
+    "description": "Sign up, Sign in, refresh, Sign out and the signed-in User.",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refresh_credential"
+      }
+    },
+    "schemas": {
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "request.validation_failed",
+              "request.malformed",
+              "request.too_large",
+              "request.rate_limited",
+              "auth.unauthenticated",
+              "auth.invalid_credentials",
+              "auth.session_expired",
+              "auth.origin_rejected",
+              "route.not_found",
+              "user.email_taken",
+              "server.internal",
+              "server.unavailable"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "traceId": {
+            "type": "string",
+            "description": "The request id, also the X-Request-Id header."
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    ]
+                  }
+                },
+                "code": {
+                  "type": "string",
+                  "description": "A rule id such as password.missing_number."
+                }
+              },
+              "required": [
+                "path",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "message": {
+            "description": "A developer hint, omitted in production.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "traceId",
+          "retryable"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "openapi": "3.1.1",
   "paths": {
     "/api/auth/sign-up": {
       "post": {
-        "operationId": "AuthController_signUp",
-        "parameters": [],
+        "operationId": "auth.signUp",
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignUpRequest"
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 254,
+                    "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "name",
+                  "password"
+                ]
               }
             }
           }
@@ -21,13 +142,56 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SignedIn"
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Seconds until the access token expires."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "name",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "expiresIn",
+                    "user"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "Error codes: request.validation_failed, request.malformed",
+            "description": "400",
             "content": {
               "application/json": {
                 "schema": {
@@ -53,7 +217,7 @@
             }
           },
           "409": {
-            "description": "Error codes: user.email_taken",
+            "description": "409",
             "content": {
               "application/json": {
                 "schema": {
@@ -78,7 +242,7 @@
             }
           },
           "413": {
-            "description": "Error codes: request.too_large",
+            "description": "413",
             "content": {
               "application/json": {
                 "schema": {
@@ -103,7 +267,7 @@
             }
           },
           "429": {
-            "description": "Error codes: request.rate_limited",
+            "description": "429",
             "content": {
               "application/json": {
                 "schema": {
@@ -127,22 +291,37 @@
               }
             }
           }
-        },
-        "tags": [
-          "auth"
-        ]
+        }
       }
     },
     "/api/auth/sign-in": {
       "post": {
-        "operationId": "AuthController_signIn",
-        "parameters": [],
+        "operationId": "auth.signIn",
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignInRequest"
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 254,
+                    "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
               }
             }
           }
@@ -153,13 +332,56 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SignedIn"
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Seconds until the access token expires."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "name",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "expiresIn",
+                    "user"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "Error codes: request.validation_failed, request.malformed",
+            "description": "400",
             "content": {
               "application/json": {
                 "schema": {
@@ -185,7 +407,7 @@
             }
           },
           "401": {
-            "description": "Error codes: auth.invalid_credentials",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -210,7 +432,7 @@
             }
           },
           "413": {
-            "description": "Error codes: request.too_large",
+            "description": "413",
             "content": {
               "application/json": {
                 "schema": {
@@ -235,7 +457,7 @@
             }
           },
           "429": {
-            "description": "Error codes: request.rate_limited",
+            "description": "429",
             "content": {
               "application/json": {
                 "schema": {
@@ -259,29 +481,71 @@
               }
             }
           }
-        },
-        "tags": [
-          "auth"
-        ]
+        }
       }
     },
     "/api/auth/refresh": {
       "post": {
-        "operationId": "AuthController_refresh",
-        "parameters": [],
+        "operationId": "auth.refresh",
+        "tags": [
+          "auth"
+        ],
         "responses": {
           "200": {
             "description": "A rotated Session; the refresh cookie is replaced.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SignedIn"
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Seconds until the access token expires."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "name",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "expiresIn",
+                    "user"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "401": {
-            "description": "Error codes: auth.unauthenticated, auth.session_expired",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -307,7 +571,7 @@
             }
           },
           "403": {
-            "description": "Error codes: auth.origin_rejected",
+            "description": "403",
             "content": {
               "application/json": {
                 "schema": {
@@ -332,7 +596,7 @@
             }
           },
           "429": {
-            "description": "Error codes: request.rate_limited",
+            "description": "429",
             "content": {
               "application/json": {
                 "schema": {
@@ -361,22 +625,21 @@
           {
             "cookie": []
           }
-        ],
-        "tags": [
-          "auth"
         ]
       }
     },
     "/api/auth/sign-out": {
       "post": {
-        "operationId": "AuthController_signOut",
-        "parameters": [],
+        "operationId": "auth.signOut",
+        "tags": [
+          "auth"
+        ],
         "responses": {
           "204": {
             "description": "The Session ended and the refresh cookie is cleared."
           },
           "401": {
-            "description": "Error codes: auth.unauthenticated",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -401,7 +664,7 @@
             }
           },
           "403": {
-            "description": "Error codes: auth.origin_rejected",
+            "description": "403",
             "content": {
               "application/json": {
                 "schema": {
@@ -430,29 +693,109 @@
           {
             "cookie": []
           }
-        ],
-        "tags": [
-          "auth"
         ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health.check",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "200": {
+            "description": "The database answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "ok"
+                    },
+                    "database": {
+                      "const": "up"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "database"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "503",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "server.unavailable"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/users/me": {
       "get": {
-        "operationId": "UsersController_me",
-        "parameters": [],
+        "operationId": "users.me",
+        "tags": [
+          "users"
+        ],
         "responses": {
           "200": {
             "description": "The signed-in User.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "x-native-type": "date"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "name",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "401": {
-            "description": "Error codes: auth.unauthenticated",
+            "description": "401",
             "content": {
               "application/json": {
                 "schema": {
@@ -481,264 +824,7 @@
           {
             "bearer": []
           }
-        ],
-        "tags": [
-          "users"
         ]
-      }
-    },
-    "/api/health": {
-      "get": {
-        "operationId": "HealthController_check",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "The database answers.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Health"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Error codes: server.unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ErrorEnvelope"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "enum": [
-                            "server.unavailable"
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "health"
-        ]
-      }
-    }
-  },
-  "info": {
-    "title": "Auth API",
-    "description": "Sign up, Sign in, refresh, Sign out and the signed-in User.",
-    "version": "1.0.0",
-    "contact": {}
-  },
-  "tags": [],
-  "servers": [],
-  "components": {
-    "securitySchemes": {
-      "bearer": {
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "type": "http"
-      },
-      "cookie": {
-        "type": "apiKey",
-        "in": "cookie",
-        "name": "refresh_credential"
-      }
-    },
-    "schemas": {
-      "SignUpRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 254,
-            "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "email",
-          "name",
-          "password"
-        ]
-      },
-      "SignInRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 254,
-            "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
-      },
-      "User": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "email",
-          "name",
-          "createdAt"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "SignedIn": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "accessToken",
-          "expiresIn",
-          "user"
-        ],
-        "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "expiresIn": {
-            "type": "integer",
-            "description": "Seconds until the access token expires."
-          },
-          "user": {
-            "$ref": "#/components/schemas/User"
-          }
-        }
-      },
-      "Health": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "database"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "ok"
-            ]
-          },
-          "database": {
-            "type": "string",
-            "enum": [
-              "up"
-            ]
-          }
-        }
-      },
-      "ErrorEnvelope": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "code",
-          "status",
-          "traceId",
-          "retryable"
-        ],
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": [
-              "request.validation_failed",
-              "request.malformed",
-              "request.too_large",
-              "request.rate_limited",
-              "auth.unauthenticated",
-              "auth.invalid_credentials",
-              "auth.session_expired",
-              "auth.origin_rejected",
-              "route.not_found",
-              "user.email_taken",
-              "server.internal",
-              "server.unavailable"
-            ]
-          },
-          "status": {
-            "type": "integer"
-          },
-          "traceId": {
-            "type": "string",
-            "description": "The request id, also the X-Request-Id header."
-          },
-          "retryable": {
-            "type": "boolean"
-          },
-          "issues": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "path",
-                "code"
-              ],
-              "properties": {
-                "path": {
-                  "type": "array",
-                  "items": {
-                    "oneOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "integer"
-                      }
-                    ]
-                  }
-                },
-                "code": {
-                  "type": "string",
-                  "description": "A rule id such as password.missing_number."
-                }
-              }
-            }
-          },
-          "message": {
-            "type": "string",
-            "description": "A developer hint, omitted in production."
-          }
-        }
       }
     }
   }

@@ -1,29 +1,19 @@
-import { isAxiosError } from "axios";
-import type { components } from "@/utils/api/api-types.generated";
+import type { ValidationIssue } from "@app/contract/error-envelope";
+import { ORPCError } from "@orpc/client";
 import { clientErrorCode } from "@/utils/error-copy";
 
-/** One field-level problem: `path` is the keys from the body down to the field, `code` is a rule id. */
-export type ValidationIssue = NonNullable<components["schemas"]["ErrorEnvelope"]["issues"]>[number];
+// The API's codes read `area.reason` (ADR 0002), a code the front end may not know yet included; the ones oRPC raises
+// itself, for a response that is no envelope (a proxy's page), are SCREAMING_CASE.
+const isApiCode = (code: string) => /^[a-z]+\.[a-z_]+$/.test(code);
 
-/** The body of every API error response (ADR 0002). `message` is a developer hint and is never shown. */
-type ApiErrorEnvelope = components["schemas"]["ErrorEnvelope"];
-
-/**
- * The error envelope a failed request carries, or `null` when none arrived: no response at all, or a
- * response from something other than the API (a proxy's error page), which means the API is unreachable.
- */
-export function apiErrorEnvelope(error: unknown): ApiErrorEnvelope | null {
-  if (!isAxiosError(error)) return null;
-  const body: unknown = error.response?.data;
-  if (typeof body !== "object" || body === null) return null;
-  const { code } = body as { code?: unknown };
-  return typeof code === "string" ? (body as ApiErrorEnvelope) : null;
-}
-
-/** The code a failed request is shown by: the envelope's, or `unreachable` when none arrived. */
+/** The code a failed request is shown by: the API's, or `unreachable` when no error of the API arrived. */
 export function apiFailureCode(error: unknown): string {
-  return apiErrorEnvelope(error)?.code ?? clientErrorCode.unreachable;
+  return error instanceof ORPCError && isApiCode(error.code) ? error.code : clientErrorCode.unreachable;
 }
 
-/** The closed set of error codes, from the contract. */
-export type ApiErrorCode = ApiErrorEnvelope["code"];
+/** The typed error of a request the contract's schema refused; `defined` means oRPC checked its data against it. */
+export function isValidationFailure(
+  error: unknown,
+): error is ORPCError<"request.validation_failed", { issues: ValidationIssue[] }> {
+  return error instanceof ORPCError && error.defined && error.code === "request.validation_failed";
+}

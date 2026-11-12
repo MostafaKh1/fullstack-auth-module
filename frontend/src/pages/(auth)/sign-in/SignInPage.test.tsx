@@ -1,7 +1,8 @@
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signInExamples } from "../../../components/composite/AuthScreen/AuthScreenFieldRules.examples";
+import { signInExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
+import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   ada,
   adaPassword,
@@ -9,15 +10,15 @@ import {
   envelope,
   heldUntilReleased,
   signedInAsAda,
-} from "../../../tests/support/auth-fixtures";
+} from "@/tests/support/auth-fixtures";
 import {
   contractErrorCodes,
   expectedCopy,
   expectedErrorCopy,
   unreachableCopy,
-} from "../../../tests/support/expected-copy";
-import { enterField, fillForm } from "../../../tests/support/fill-form";
-import { renderApp } from "../../../tests/support/render-app";
+} from "@/tests/support/expected-copy";
+import { enterField, fillForm } from "@/tests/support/fill-form";
+import { renderApp } from "@/tests/support/render-app";
 
 const labels = { email: "Email", password: "Password" } as const;
 const validForm = { Email: ada.email, Password: adaPassword };
@@ -181,6 +182,35 @@ describe("Sign in page", () => {
 
     held.release();
     await waitFor(() => expect(signInButton()).toBeEnabled());
+  });
+
+  it("has no accessibility violations when empty", async () => {
+    const { container } = await renderApp("/?auth=sign-in");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
+  it("has no accessibility violations while showing the generic failure", async () => {
+    const { user, container } = await renderApp("/?auth=sign-in", {
+      handlers: [http.post("/api/auth/sign-in", () => envelope("auth.invalid_credentials", 401))],
+    });
+
+    await fillForm(user, validForm);
+    await user.click(signInButton());
+    await screen.findByRole("alert");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
+  it("has no accessibility violations with every field in error", async () => {
+    const { user, container } = await renderApp("/?auth=sign-in");
+
+    await user.click(signInButton());
+    await waitFor(() =>
+      expect(screen.getByLabelText("Password")).toHaveAccessibleDescription(expectedCopy["field.required"]),
+    );
+
+    expect(await accessibilityViolations(container)).toEqual([]);
   });
 
   it("links to Sign up", async () => {

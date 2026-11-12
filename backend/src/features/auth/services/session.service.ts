@@ -1,27 +1,27 @@
 import { Injectable } from "@nestjs/common";
 import { PinoLogger } from "nestjs-pino";
-import { ApiError } from "../../../common/errors/api-error";
-import { isSessionLive } from "../../../common/guards/access-token.guard";
-import type { AuthContext } from "../../../common/services/access-token.service";
-import { AppConfigService } from "../../../config/app-config.service";
-import { ClockService } from "../../../core/clock.service";
-import { SessionRepository } from "../../../database/repositories/session.repository";
-import type { RevokedReason } from "../auth.types";
+import { ApiError } from "@/common/errors/api-error";
+import { isSessionLive } from "@/common/guards/access-token.guard";
+import type { AuthContext } from "@/common/services/access-token.service";
+import type { RevokedReason } from "@/common/types/session.types";
+import { AppConfigService } from "@/config/app-config.service";
+import { ClockService } from "@/core/clock.service";
+import { SessionRepository } from "@/database/repositories/session.repository";
 import {
   mintRefreshCredential,
   parseRefreshCredential,
   type RefreshCredential,
   secretMatches,
-} from "../refresh-credential";
+} from "@/features/auth/refresh-credential";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type IssuedRefreshCredential = { value: string; idleExpiresAt: Date };
 
-export type StartedSession = { claims: AuthContext; issued: IssuedRefreshCredential };
+type StartedSession = { claims: AuthContext; issued: IssuedRefreshCredential };
 
 /** `issued` is `null` within the grace window: the credential the rotation issued stays current (ADR 0001). */
-export type RefreshedSession = { claims: AuthContext; issued: IssuedRefreshCredential | null };
+type RefreshedSession = { claims: AuthContext; issued: IssuedRefreshCredential | null };
 
 /** The Session lifecycle (ADR 0001). Liveness is the guard's rule (`isSessionLive`), applied here too. */
 @Injectable()
@@ -69,9 +69,19 @@ export class SessionService {
     const credential = presented ? parseRefreshCredential(presented) : null;
     if (!credential) return;
     const found = await this.sessions.findWithSecretHashesById(credential.sessionId);
-    if (!found || !secretMatches(credential, found.secretHash)) return;
+    if (!found) return;
+    // A Sign out racing a refresh carries the secret that refresh replaced, and must still end the Session (ADR 0001).
+    const justReplaced =
+      secretMatches(credential, found.previousSecretHash) && this.isWithinGrace(found, this.clock.now());
+    if (!secretMatches(credential, found.secretHash) && !justReplaced) return;
     await this.revoke(credential.sessionId, "sign-out");
     this.logger.info({ userId: found.session.userId, sessionId: credential.sessionId }, "session.signed_out");
+  }
+
+  /** Two tabs refreshing together must not read as replay (ADR 0001). */
+  private isWithinGrace({ previousReplacedAt }: { previousReplacedAt: Date | null }, now: Date): boolean {
+    const graceMs = this.config.get("refreshGraceSeconds") * 1000;
+    return previousReplacedAt !== null && now.getTime() - previousReplacedAt.getTime() <= graceMs;
   }
 
   private async rotate(credential: RefreshCredential): Promise<RefreshedSession> {
@@ -102,8 +112,7 @@ export class SessionService {
     // Any other secret proves nothing (the Session id is readable from the access token), so it changes nothing (ADR 0001).
     if (!secretMatches(credential, found.previousSecretHash)) throw sessionExpired();
 
-    const graceMs = this.config.get("refreshGraceSeconds") * 1000;
-    if (isWithinGrace(found.previousReplacedAt, now, graceMs)) return { claims, issued: null };
+    if (this.isWithinGrace(found, now)) return { claims, issued: null };
 
     // A replaced secret replayed after the grace window: only a holder of a real credential has it, and the
     // credential has been used twice, so one of the two holders is a thief and the Session ends (ADR 0001).
@@ -115,11 +124,6 @@ export class SessionService {
 
 function slidIdleExpiry(now: Date, idleTtlMs: number, absoluteExpiresAt: Date): Date {
   return new Date(Math.min(now.getTime() + idleTtlMs, absoluteExpiresAt.getTime()));
-}
-
-/** Two tabs refreshing together must not read as replay (ADR 0001). */
-function isWithinGrace(replacedAt: Date | null, now: Date, graceMs: number): boolean {
-  return replacedAt !== null && now.getTime() - replacedAt.getTime() <= graceMs;
 }
 
 function sessionExpired(): ApiError {

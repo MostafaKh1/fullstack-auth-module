@@ -1,15 +1,20 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { testEnv } from "./boot";
 
 const backendRoot = path.resolve(__dirname, "..", "..");
+// The arguments that let plain Node run the TypeScript entry point; the end-to-end suite starts the API with the same file.
+const registerArgs: string[] = JSON.parse(
+  readFileSync(path.join(backendRoot, "node-register-args.json"), "utf8"),
+);
 
 type Exit = { code: number | null; output: string };
 
 /** Starts the real entry point, `src/main.ts`, with exactly the given environment. */
 function startApi(env: Record<string, string>): Promise<Exit> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ["-r", "ts-node/register/transpile-only", "src/main.ts"], {
+    const child = spawn(process.execPath, [...registerArgs, "src/main.ts"], {
       cwd: backendRoot,
       env: { PATH: process.env.PATH ?? "", SystemRoot: process.env.SystemRoot ?? "", ...env },
     });
@@ -61,11 +66,24 @@ describe("starting with invalid configuration", () => {
     expect(exit.output).not.toContain("leaky-short-secret");
   });
 
+  it("refuses a MongoDB connection string without credentials in production", async () => {
+    const exit = await startApi({
+      ...testEnv,
+      NODE_ENV: "production",
+      MONGODB_URI: "mongodb://mongo:27017/auth",
+      COOKIE_SECURE: "true",
+    });
+
+    expect(exit.code).not.toBe(0);
+    expect(exit.output).toContain("MONGODB_URI");
+    expect(exit.output).toContain("credentials");
+  });
+
   it("refuses insecure cookies in production", async () => {
     const exit = await startApi({
       ...testEnv,
       NODE_ENV: "production",
-      MONGODB_URI: "mongodb://localhost:27017/auth",
+      MONGODB_URI: "mongodb://app:secret@localhost:27017/auth",
       COOKIE_SECURE: "false",
     });
 
@@ -77,7 +95,7 @@ describe("starting with invalid configuration", () => {
     const exit = await startApi({
       ...testEnv,
       NODE_ENV: "production",
-      MONGODB_URI: "mongodb://localhost:27017/auth",
+      MONGODB_URI: "mongodb://app:secret@localhost:27017/auth",
       COOKIE_SECURE: "true",
       JWT_ACCESS_SECRET: "dev-only-access-secret-change-me-0123456789",
     });

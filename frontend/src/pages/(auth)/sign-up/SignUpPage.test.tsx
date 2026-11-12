@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signUpExamples } from "../../../components/composite/AuthScreen/AuthScreenFieldRules.examples";
+import { signUpExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
+import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   ada,
   adaPassword,
@@ -9,10 +10,10 @@ import {
   envelope,
   heldUntilReleased,
   signedInAsAda,
-} from "../../../tests/support/auth-fixtures";
-import { expectedCopy, fallbackCopy, unreachableCopy } from "../../../tests/support/expected-copy";
-import { enterField, fillForm } from "../../../tests/support/fill-form";
-import { renderApp } from "../../../tests/support/render-app";
+} from "@/tests/support/auth-fixtures";
+import { expectedCopy, fallbackCopy, unreachableCopy } from "@/tests/support/expected-copy";
+import { enterField, fillForm } from "@/tests/support/fill-form";
+import { renderApp } from "@/tests/support/render-app";
 
 const labels = { email: "Email", name: "Name", password: "Password" } as const;
 const validForm = { Email: ada.email, Name: ada.name, Password: adaPassword };
@@ -169,6 +170,20 @@ describe("Sign up page", () => {
     expect(password).toHaveAttribute("type", "password");
   });
 
+  it("shows the password control as an icon with no visible text, pressed while the password is shown", async () => {
+    const { user } = await renderApp("/?auth=sign-up");
+
+    const show = screen.getByRole("button", { name: "Show password" });
+    expect(show).toHaveTextContent("");
+    expect(show).toHaveAttribute("aria-pressed", "false");
+
+    show.focus();
+    await user.keyboard("{Enter}");
+    const hide = screen.getByRole("button", { name: "Hide password" });
+    expect(hide).toHaveTextContent("");
+    expect(hide).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("does not send the request while a field breaks a rule", async () => {
     const { user } = await renderApp("/?auth=sign-up");
 
@@ -294,6 +309,26 @@ describe("Sign up page", () => {
 
     held.release();
     await waitFor(() => expect(signUpButton()).toBeEnabled());
+  });
+
+  it("has no accessibility violations when empty", async () => {
+    const { container } = await renderApp("/?auth=sign-up");
+
+    expect(await accessibilityViolations(container)).toEqual([]);
+  });
+
+  it("has no accessibility violations with every field in error", async () => {
+    const { user, container } = await renderApp("/?auth=sign-up");
+
+    await user.click(signUpButton());
+    await waitFor(() =>
+      expect(screen.getByLabelText("Password")).toHaveAccessibleDescription(expectedCopy["field.required"]),
+    );
+    for (const label of Object.values(labels)) {
+      expect(screen.getByLabelText(label)).toHaveAttribute("aria-invalid", "true");
+    }
+
+    expect(await accessibilityViolations(container)).toEqual([]);
   });
 
   it("links to Sign in", async () => {

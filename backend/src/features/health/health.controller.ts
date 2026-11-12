@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { ApiErrors } from "../../common/decorators/api-errors.decorator";
-import { Public } from "../../common/decorators/auth.decorator";
+import { ApiErrors } from "@/common/decorators/api-errors.decorator";
+import { Public } from "@/common/decorators/auth.decorator";
 import { type Health, HealthService } from "./health.service";
 
 @ApiTags("health")

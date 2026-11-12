@@ -1,9 +1,15 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { setAccessToken } from "../utils/api-client";
-import { type SignedIn, signOut } from "../utils/auth-api";
-import { listenForSessionChanges, refreshSessionOnce, type SessionListener } from "../utils/session-refresh";
-import { type Session, SessionContext } from "./session-context";
+import { type Session, SessionContext } from "@/providers/session-context";
+import { setAccessToken } from "@/utils/api/api-client";
+import { type SignedIn, signOut } from "@/utils/api/auth-api";
+import {
+  listenForSessionChanges,
+  refreshSessionOnce,
+  resumeRefreshing,
+  type SessionListener,
+  stopRefreshing,
+} from "@/utils/api/session-refresh";
 
 type Props = {
   children: ReactNode;
@@ -15,6 +21,7 @@ export function SessionProvider({ children }: Props) {
   const [session, setSession] = useState<Session>({ status: "restoring" });
 
   const startSession = useCallback((signedIn: SignedIn) => {
+    resumeRefreshing();
     setAccessToken(signedIn.accessToken);
     setSession({ status: "signed-in", user: signedIn.user });
   }, []);
@@ -27,6 +34,7 @@ export function SessionProvider({ children }: Props) {
   }, [queryClient]);
 
   const endSession = useCallback(async () => {
+    stopRefreshing();
     try {
       await signOut();
     } catch {
@@ -44,6 +52,7 @@ export function SessionProvider({ children }: Props) {
 
   useEffect(() => {
     listenForSessionChanges(listener);
+    resumeRefreshing();
     void refreshSessionOnce();
     // Unmounting ends the app, so its token goes with it.
     return () => {

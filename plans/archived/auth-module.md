@@ -60,12 +60,12 @@ Vocabulary follows [GLOSSARY.md](../../GLOSSARY.md); the two load-bearing decisi
 - Front end: Vitest + Testing Library for the schemas, the forms and the route guards.
 - End to end: Playwright drives the real front end against the real back end through Sign up, reload, Sign out and Sign in.
 - GitHub Actions runs lint, typecheck, test and build for both apps, then the Playwright suite.
-- `docker-compose.yml` runs MongoDB (optionally the whole stack); each app ships a Dockerfile.
+- `compose.yaml` runs the whole stack and `compose.mongo.yaml` only MongoDB; each app ships a Dockerfile.
 
 ### Agent and project docs
 
 - Root `AGENTS.md` (overview, commands, rules), `CLAUDE.md` containing only `@AGENTS.md`, and an `AGENTS.md` in each app.
-- `plans/` with the proposed -> in-progress -> completed lifecycle.
+- `plans/README.md`, pointing at the issue tracker.
 - Skills in `.claude/skills/`: `git-conventions`, plus `grill-with-docs`, `grilling` and `domain-modeling`.
 - `README.md` (how to run, test and work with the repo, plus what is out of scope) and `AI.md`, written one entry per stage.
 
@@ -76,7 +76,7 @@ Vocabulary follows [GLOSSARY.md](../../GLOSSARY.md); the two load-bearing decisi
 - [ ] Root `package.json`, `.gitignore`, `.editorconfig`, Prettier, Biome, Husky + lint-staged
 - [ ] `backend/` NestJS skeleton: config, logging, health, error filter
 - [ ] `frontend/` Vite + React + Tailwind skeleton
-- [ ] `docker-compose.yml`, `.env.example` per app
+- [ ] `compose.yaml`, `compose.mongo.yaml`, `.env.example` per app
 - [ ] `AGENTS.md` files, `CLAUDE.md`, `git-conventions` skill, `AI.md` entry
 
 ### Stage 2 - Back end

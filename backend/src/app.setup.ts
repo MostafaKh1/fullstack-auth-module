@@ -1,9 +1,9 @@
 import type { INestApplication } from "@nestjs/common";
 import helmet from "helmet";
 import { Logger } from "nestjs-pino";
-import { jsonBody } from "./common/middleware/json-body.middleware";
-import { AppConfigService } from "./config/app-config.service";
-import { setupApiDocs } from "./docs/api-document";
+import { jsonBody } from "@/common/middleware/json-body.middleware";
+import { AppConfigService } from "@/config/app-config.service";
+import { setupApiDocs } from "@/docs/api-document";
 
 /** Wiring shared by `main.ts` and the test harness, so tests run the application exactly as production does. */
 export function configureApp(app: INestApplication): void {

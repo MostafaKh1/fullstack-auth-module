@@ -1,7 +1,8 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { DataRouter } from "react-router";
 import { RouterProvider } from "react-router";
-import { SessionProvider } from "../providers/SessionProvider";
+import { SessionProvider } from "@/providers/SessionProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 type Props = {
   router: DataRouter;
@@ -12,9 +13,11 @@ type Props = {
 export function App({ router, queryClient }: Props) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <RouterProvider router={router} />
-      </SessionProvider>
+      <ThemeProvider>
+        <SessionProvider>
+          <RouterProvider router={router} />
+        </SessionProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

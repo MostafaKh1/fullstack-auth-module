@@ -1,4 +1,4 @@
-import type { ApiErrorCode } from "./api-error";
+import type { ApiErrorCode } from "@/utils/api/api-error";
 
 /*
  * Every error sentence a User reads, keyed by the API's error code or a field rule id (ADR 0002).
@@ -36,12 +36,23 @@ const copyByRuleId: Record<string, string> = {
   "password.missing_special": "Password must contain at least one special character, such as ! or €.",
 };
 
-const copyByCode: Record<string, string> = { ...copyByRuleId, ...copyByErrorCode };
-
 export const fallbackCopy = "Something went wrong. Please try again.";
 
 /** For a request that got no error envelope back: the server, or the proxy in front of it, is unreachable. */
 export const unreachableCopy = "We cannot reach the server. Check your connection, then try again.";
+
+/** Codes the front end raises itself, so every error message on a form is a code, never a sentence. */
+export const clientErrorCode = {
+  unreachable: "client.unreachable",
+  unexpected: "client.unexpected",
+} as const;
+
+const copyByClientCode: Record<string, string> = {
+  [clientErrorCode.unreachable]: unreachableCopy,
+  [clientErrorCode.unexpected]: fallbackCopy,
+};
+
+const copyByCode: Record<string, string> = { ...copyByRuleId, ...copyByErrorCode, ...copyByClientCode };
 
 export function errorCopy(code: string): string {
   return Object.hasOwn(copyByCode, code) ? (copyByCode[code] as string) : fallbackCopy;

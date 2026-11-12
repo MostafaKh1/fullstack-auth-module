@@ -2,6 +2,20 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   // Biome lints; Prettier formats (ADR 0004). The formatter stays off so the two never fight.
   "formatter": { "enabled": false },
+  // The back end's layering rules that noRestrictedImports cannot express (ADR 0005).
+  "plugins": [
+    { "path": "./backend/lint/no-cross-feature-import.grit", "includes": ["backend/src/features/**"] },
+    {
+      "path": "./backend/lint/no-feature-import-below-features.grit",
+      "includes": [
+        "backend/src/config/**",
+        "backend/src/logging/**",
+        "backend/src/core/**",
+        "backend/src/database/**",
+        "backend/src/common/**",
+      ],
+    },
+  ],
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "ignoreUnknown": true,
@@ -30,6 +44,53 @@
     },
   },
   "overrides": [
+    // The front end imports through @/; the structure check also confines ./ to component folders, which a glob
+    // cannot tell apart from kind folders. Radix is reached only through primitives/, so the behaviour it provides
+    // lives in one layer (ADR 0011); the primitives override repeats the ../ ban, as the last match wins.
+    {
+      "includes": ["frontend/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["..", "../**", "**/../**", "**/.."],
+                    "message": "Import through @/ (the front end's src/), never a parent-relative path.",
+                  },
+                  {
+                    "group": ["@radix-ui/**"],
+                    "message": "Radix is wrapped once in src/components/primitives/: import the primitive.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      "includes": ["frontend/src/components/primitives/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["..", "../**", "**/../**", "**/.."],
+                    "message": "Import through @/ (the front end's src/), never a parent-relative path.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
     {
       "includes": ["backend/**"],
       "linter": {
@@ -57,8 +118,34 @@
                 },
                 "patterns": [
                   {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
+                  {
                     "group": ["**/database/collections/**"],
-                    "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
+                    "message": "Only repositories read collections; import the domain type from src/common/types/.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    // src/database/ is the one place that reaches Mongoose and the collections, so the rules above leave it out;
+    // it still imports across folders through @/.
+    {
+      "includes": ["backend/src/database/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
                   },
                 ],
               },
@@ -68,7 +155,10 @@
       },
     },
     {
-      "includes": ["backend/src/**/*.service.ts", "!backend/src/common/services/auth-cookies.service.ts"],
+      "includes": [
+        "backend/src/**/*.service.ts",
+        "!backend/src/features/auth/services/auth-cookies.service.ts",
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -82,8 +172,12 @@
                 },
                 "patterns": [
                   {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
+                  {
                     "group": ["**/database/collections/**"],
-                    "message": "Only repositories read collections; import the domain type from src/features/auth/auth.types.ts.",
+                    "message": "Only repositories read collections; import the domain type from src/common/types/.",
                   },
                   {
                     "group": ["**/auth-cookies.service"],
@@ -110,8 +204,33 @@
                 },
                 "patterns": [
                   {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
+                  },
+                  {
                     "group": ["**/database/**", "**/clock.service", "**/app-config.service"],
                     "message": "A controller is the API only: the business rule, the time and the configuration belong in a service.",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    // Every back-end file, tests included, imports across folders through @/.
+    {
+      "includes": ["backend/src/test/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", ".."],
+                    "message": "Import through @/ (the source root); only a sibling in the same folder uses ./.",
                   },
                 ],
               },

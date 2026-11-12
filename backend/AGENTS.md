@@ -12,20 +12,20 @@ src/
 ├── app.setup.ts      # global wiring shared with the test harness (prefix, helmet, CORS, body parser, Swagger UI, logger)
 ├── app.module.ts     # every module, lowest tier first, and the global filter
 ├── config/           # global: the environment, read only through AppConfigService
-├── docs/             # the OpenAPI document and Swagger UI; export-openapi.ts writes contract/openapi.json
+├── docs/             # the OpenAPI document and Swagger UI (reads the request schemas from features/auth/); export-openapi.ts writes contract/openapi.json
 ├── logging/          # global: pino, the request id, the redact list
 ├── core/             # global: injectable providers of outside things (the clock)
 ├── database/         # PersistenceModule, the only door to MongoDB: src/database/AGENTS.md
-├── common/           # CommonModule and what the global guard or several features share, by kind: src/common/AGENTS.md
+├── common/           # CommonModule and what the global wiring or several features share, by kind: src/common/AGENTS.md
 ├── features/<name>/  # one module per feature: auth, users, health
 └── test/             # the HTTP-seam suites and their harness; never built into dist/
 ```
 
-- **Module tiers**, lowest first: `AppConfigModule`, `LoggingModule`, `CoreModule` (global) -> `PersistenceModule` -> `CommonModule` -> feature modules. A module imports only from a lower tier, and `AppModule` lists them in that order. A feature module exports nothing and never imports another feature module; it imports `PersistenceModule` for repositories and `CommonModule` for the shared services.
-- **What goes in `common/`**: what the global guard or more than one feature needs. What only one feature needs stays in that feature. A type `common/` and a feature both need lives in `common/` (`AuthContext`), and the feature imports it; `common/` imports nothing from `features/`.
+- **Module tiers**, lowest first: `AppConfigModule`, `LoggingModule`, `CoreModule` (global) -> `PersistenceModule` -> `CommonModule` -> feature modules. A module imports only from a lower tier, and `AppModule` lists them in that order. A feature module exports nothing; it imports `PersistenceModule` for repositories and `CommonModule` for the shared services.
+- **Placement**: used by one feature, it lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `common/`. The test is the importers: `git grep` the file's path. A domain type the repositories or several features use lives in `common/types/` (`User`, `Session`), as does a type `common/` and a feature share (`AuthContext`, in `common/services/access-token.service.ts`). When a second feature needs a feature's file, move it to `common/` rather than import across. Two GritQL plugins in `lint/`, registered in the root `biome.jsonc`, enforce the direction: a feature imports nothing from another feature, and `config/`, `logging/`, `core/`, `database/` and `common/` import nothing from `features/`.
 - **Three doors**: the database only through a repository, configuration only through `AppConfigService`, the current time only through `ClockService`. Each door's folder is the only place its library or global is touched ([CODING_STANDARDS.md](../CODING_STANDARDS.md), "Three doors").
-- **Controller, service, repository**: a controller is the API only (extract the request, call one service method, call `AuthCookiesService`, map to the response type); a service holds the business logic and knows nothing about HTTP; a repository is the data access for one collection. Biome enforces the import rules ([CODING_STANDARDS.md](../CODING_STANDARDS.md), "Controller, service, repository").
-- **Deny by default**: the global `AccessTokenGuard` (registered by `CommonModule`) requires a live Session on every route. Mark a route `@Public()` only if it is Sign up, Sign in, refresh, Sign out or health. A cookie route (refresh, Sign out) is `@Public()` and carries `@UseGuards(OriginCsrfGuard)`. A protected route reads who is calling with `@CurrentAuth()`, an `AuthContext` (`{ userId, sessionId }`), and loads the User itself.
+- **Controller, service, repository**: a controller is the API only (extract the request, call one service method, call `AuthCookiesService`, map to the response type); a service holds the business logic and knows nothing about HTTP; a repository is the data access for one collection. Biome enforces the import rules, matching the `@/` form too ([CODING_STANDARDS.md](../CODING_STANDARDS.md), "Controller, service, repository").
+- **Deny by default**: the global `AccessTokenGuard` (registered by `CommonModule`) requires a live Session on every route. Mark a route `@Public()` only if it is Sign up, Sign in, refresh, Sign out or health. A cookie route (refresh, Sign out) is `@Public()` and carries `@UseGuards(OriginCsrfGuard)` (`features/auth/origin-csrf.guard.ts`). A protected route reads who is calling with `@CurrentAuth()` (`features/users/current-auth.decorator.ts`; a second feature that needs it moves it to `common/decorators/`), an `AuthContext` (`{ userId, sessionId }`), and loads the User itself.
 - **The error envelope**: code throws `ApiError(code)` from `src/common/errors/`; the one global filter writes the envelope of [ADR 0002](../docs/adr/0002-api-errors-carry-codes-not-copy.md).
 - Global wiring (prefix, helmet, CORS, the body parser, Swagger UI) goes in `app.setup.ts`, so tests run it too. The JSON body parser is `common/middleware/json-body.middleware.ts`: it caps the body (`REQUEST_BODY_LIMIT`) and renders `request.too_large` and `request.malformed` itself, because parser errors never reach the global filter.
 - **Throttling**: Sign up, Sign in and refresh carry `@UseGuards(ThrottlerGuard)` (refresh lists it before `OriginCsrfGuard`) (limit `THROTTLE_LIMIT` per `THROTTLE_TTL_SECONDS`, per IP); `ThrottlerModule` is configured in `AuthModule`. A new throttled route adds the same guard. Tests run with a limit high enough to never trip; a throttling spec lowers it.
@@ -37,11 +37,12 @@ The first match wins:
 
 1. A route or operation -> its feature in `src/features/<feature>/`. A new feature is a new kebab-case folder with its module, controller and service, imported in `src/app.module.ts`. The health check stays a liveness probe with no business logic; a new probe is a provider in `src/database/` (as `database-health.ts` is) or `src/core/`, called from `HealthService`.
 2. A collection's schema, an index, a query or a write -> [src/database/AGENTS.md](src/database/AGENTS.md).
-3. An error code, or a decorator, guard, pipe, filter or service the global guard or several features use -> [src/common/AGENTS.md](src/common/AGENTS.md).
+3. An error code, a domain type, or a decorator, guard, pipe, filter or service the global wiring or several features use -> [src/common/AGENTS.md](src/common/AGENTS.md).
 4. An environment variable -> `src/config/app-env.ts`; see "Configuration".
 5. A wrapper over something outside the process that tests must control (the time, an email sender, a third-party client) -> `src/core/<name>.service.ts`, listed in `core.module.ts`'s `providers` and `exports`. A duration or lifetime is configuration, not a constant there; a domain decision belongs in a feature's service.
 6. A log field that carries a secret -> `REDACTED_PATHS` in `src/logging/logging.module.ts`.
 7. A test -> `src/test/`; see "Tests".
+8. An import rule `noRestrictedImports` cannot express -> a GritQL plugin `lint/<rule>.grit`, registered with its `includes` under `plugins` in the root `biome.jsonc`, and proven red by a planted import.
 
 ## Inside a feature
 
@@ -50,20 +51,24 @@ features/<feature>/
 ├── <feature>.module.ts        # imports PersistenceModule, CommonModule; exports nothing
 ├── <feature>.controller.ts    # the API only: one method per route, each calling one service method
 ├── <feature>.service.ts       # the business logic: one public method per operation (verb and object: getCurrentUser)
-├── <feature>.types.ts         # the domain types and the Zod request schemas, when the feature has them
-└── services/                  # when the feature has more than one service (auth: AuthService, SessionService)
+├── <feature>.types.ts         # the Zod request schemas and the types only this feature uses, when it has them
+├── <name>.<kind>.ts           # a guard, pipe or decorator only this feature uses (auth: origin-csrf.guard.ts)
+└── services/                  # when the feature has more than one service (auth: AuthService, SessionService, ...)
 ```
 
 - Logic two operations share, with no I/O -> a private function in the service's file; a service of its own only when the logic carries state or I/O of its own (`SessionService`, the Session lifecycle).
 - Data access -> a repository method in `src/database/repositories/`, injected into the service; never into the controller.
-- A service imports `Injectable` and nothing else from `@nestjs/common`, throws `ApiError`, takes the time from the injected `ClockService`, and returns domain types (`src/features/auth/auth.types.ts`).
+- A service imports `Injectable` and nothing else from `@nestjs/common`, throws `ApiError`, takes the time from the injected `ClockService`, and returns domain types (`src/common/types/`).
 - The controller reads and sets the refresh cookie through `AuthCookiesService`; `AuthService` returns the credential and never sees the response.
 - Canonical example: `features/users/`; for a cookie route, `AuthService.signOut` with its controller method.
 
 ### The auth feature
 
-- `auth.types.ts` holds the domain types (`User`, `Session`, `RevokedReason`) and the request schemas, the back end's copy of the field rules; the front end's copy is `frontend/src/components/composite/AuthScreen/AuthScreenFieldRules.ts`. Change both, and both worked-examples tables, in the same commit. Every check's error is its rule id (`.max(254, "email.too_long")`).
+- `auth.types.ts` holds the request schemas, the back end's copy of the field rules, applied by `route-validation.pipe.ts`; the front end's copy is `frontend/src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`. Change both, and both worked-examples tables, in the same commit. Every check's error is its rule id (`.max(254, "email.too_long")`).
 - `refresh-credential.ts` is the only code that knows the `<sessionId>.<secret>` format; only `sha256(secret)` is stored.
+- `route-validation.pipe.ts`: `RouteValidationPipe(schema)` answers `400 request.validation_failed` with `{ path, code }` issues (`path` an array of keys), or `400 request.malformed` for a body that is not a JSON object.
+- `services/auth-cookies.service.ts`: `AuthCookiesService` owns the whole cookie policy: `httpOnly`, `SameSite=Lax`, scoped to `/api/auth`, `Secure` from `COOKIE_SECURE`, `Expires` at the Session's idle expiry with a matching `Max-Age` from `ClockService`. It writes the `Set-Cookie` line itself because Express's `res.cookie` derives `Expires` from the real clock. It is the one service that touches the response, so the services lint rule skips that file alone.
+- `origin-csrf.guard.ts`: a foreign `Origin` answers `403 auth.origin_rejected`; a missing one passes. `services/password-hash.service.ts` is scrypt ([ADR 0007](../docs/adr/0007-password-hashing-with-scrypt.md)).
 - A rule about a Session's lifecycle (rotation, the sliding idle expiry, the grace window, revocation) -> `services/session.service.ts`. Liveness is the guard's rule, `isSessionLive` in `src/common/guards/access-token.guard.ts`, which `SessionService` applies too.
 
 ## Configuration
@@ -89,6 +94,7 @@ The only test seam is the real application over HTTP (`api-docs.spec.ts` also pi
 ## Naming and exports
 
 - Files and folders are kebab-case. A file carries its role as a suffix, and its class is the file name in PascalCase: `health.service.ts` -> `HealthService`, `origin-csrf.guard.ts` -> `OriginCsrfGuard`. The suffixes in use: `.module`, `.controller`, `.service`, `.repository`, `.collection`, `.guard`, `.pipe`, `.filter`, `.decorator`, `.types`, `.spec`. A file of plain functions or a class with no Nest role is named for what it is (`refresh-credential.ts`, `database-health.ts` -> `DatabaseHealth`).
+- **Imports**: anything that leaves its own folder imports through `@/`, rooted at `src/` (`import { ClockService } from "@/core/clock.service"`); a file imports a sibling in its own folder with `./`. Never `../`: Biome forbids it. `@/` is a `paths` entry in `tsconfig.json`, `moduleNameMapper` in `jest.config.ts`, `tsconfig-paths/register` for `ts-node` (`dev`, `openapi`), and `tsc-alias` after `tsc` in `build`, which rewrites it to relative paths in `dist/`.
 - One class per file, as a named export. No default exports, no `index.ts` barrels: import the file that defines the thing.
 - Injected classes are imported as values, not `import type`: Nest reads constructor types at runtime ([ADR 0005](../docs/adr/0005-backend-architecture.md), "Consequences").
 - A controller's field for its service is the class name in camelCase (`usersService`).

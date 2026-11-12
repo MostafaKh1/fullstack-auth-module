@@ -1,0 +1,15 @@
+import { type ComponentProps, useId } from "react";
+import { FormItemContext } from "@/providers/form-item-context";
+import { cn } from "@/utils/cn";
+
+type Props = ComponentProps<"div">;
+
+export function FormItem({ className, ...props }: Props) {
+  const id = useId();
+
+  return (
+    <FormItemContext value={{ id }}>
+      <div className={cn("grid gap-2", className)} {...props} />
+    </FormItemContext>
+  );
+}

@@ -1,5 +1,6 @@
 // E2E_MONGODB_URI (CI's service container) wins; otherwise a throwaway mongodb-memory-server, so no Docker is needed.
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 let memoryServer;
@@ -11,7 +12,10 @@ if (!uri) {
 }
 
 const backendDir = fileURLToPath(new URL("../../backend", import.meta.url));
-const child = spawn(process.execPath, ["-r", "ts-node/register/transpile-only", "src/main.ts"], {
+const registerArgs = JSON.parse(
+  readFileSync(new URL("../../backend/node-register-args.json", import.meta.url), "utf8"),
+);
+const child = spawn(process.execPath, [...registerArgs, "src/main.ts"], {
   cwd: backendDir,
   stdio: "inherit",
   env: {

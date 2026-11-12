@@ -1,5 +1,5 @@
 import { Schema, type Types } from "mongoose";
-import type { RevokedReason } from "../../features/auth/auth.types";
+import type { RevokedReason } from "@/common/types/session.types";
 
 export type SessionDocument = {
   _id: Types.ObjectId;

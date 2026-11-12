@@ -16,7 +16,7 @@ env:
   # CI never commits, so it needs no git hooks.
   HUSKY: "0"
 
-# MongoDB is pinned to 8.2 (here and in compose.mongo.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
+# MongoDB is pinned to 8.2 (here and in compose.yaml and compose.mongo.yaml): the 8.0 line cannot start on kernel 6.19+ (SERVER-121912).
 jobs:
   lint:
     name: Lint and format
@@ -32,6 +32,10 @@ jobs:
         run: npx biome ci .
       - name: Prettier
         run: npm run format:check
+      - name: Front-end structure check
+        run: npm run check:structure
+      - name: Structure check tests
+        run: npm run test:structure
 
   contract:
     name: Contract
@@ -48,7 +52,7 @@ jobs:
       - name: Generated front-end types are current
         run: |
           npm run generate:api --prefix frontend
-          git diff --exit-code -- frontend/src/utils/api-types.generated.ts
+          git diff --exit-code -- frontend/src/utils/api/api-types.generated.ts
 
   app:
     name: ${{ matrix.app }}
@@ -63,31 +67,15 @@ jobs:
         working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
-      # An app without a package.json has nothing to gate, so its job passes.
-      - name: Detect app
-        id: detect
-        working-directory: .
-        run: |
-          if [ -f "${{ matrix.app }}/package.json" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::${{ matrix.app }}/package.json does not exist yet; skipping ${{ matrix.app }}."
-          fi
-      - if: steps.detect.outputs.present == 'true'
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: ${{ matrix.app }}/package-lock.json
-      - if: steps.detect.outputs.present == 'true'
-        run: npm ci
-      - if: steps.detect.outputs.present == 'true'
-        run: npm run typecheck
-      - if: steps.detect.outputs.present == 'true'
-        run: npm test
-      - if: steps.detect.outputs.present == 'true'
-        run: npm run build
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
 
   e2e:
     name: Browser journeys and containers
@@ -119,7 +107,8 @@ jobs:
       - run: npm ci --prefix backend
       - run: npm ci --prefix frontend
       - run: npm ci --prefix e2e
-      - run: npx playwright install --with-deps chromium
+      # The hosted Ubuntu runner already ships Chrome and its system libraries; apt is not needed.
+      - run: npx playwright install chromium
         working-directory: e2e
       - run: npm run typecheck
         working-directory: e2e
@@ -135,15 +124,14 @@ jobs:
             e2e/playwright-report/
             e2e/test-results/
           retention-days: 7
-      # compose.yaml requires the signing secret; every later compose command reads it from the job's environment.
-      - name: Generate the stack's access-token secret
+      # compose.yaml requires the signing secret and the database password; every later compose command reads them from the job's environment.
+      - name: Generate the stack's secrets
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
-        run: echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "MONGO_PASSWORD=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Build the images and wait for the stack's health checks
         run: docker compose up --build --detach --wait
-        # The MongoDB service container already holds host port 27017.
-        env:
-          MONGO_PORT: "27117"
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
       - name: Stack logs
         if: ${{ failure() && steps.checkout.outcome == 'success' }}

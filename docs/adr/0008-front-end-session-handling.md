@@ -2,12 +2,13 @@
 
 The return path in location state is superseded by [ADR 0009](0009-auth-forms-addressed-by-search-parameter.md): it now travels as a checked `returnTo` search parameter. The rest of this record stands.
 
-The access token from Sign up, Sign in or refresh is kept only in a module variable of the API client (`src/utils/api-client.ts`), which attaches it as `Authorization: Bearer` to every request; it is never written to `localStorage`, `sessionStorage` or a readable cookie, so an injected script cannot lift a credential that outlives the tab.
+The access token from Sign up, Sign in or refresh is kept only in a module variable of the API client (`src/utils/api/api-client.ts`), which attaches it as `Authorization: Bearer` to every request; it is never written to `localStorage`, `sessionStorage` or a readable cookie, so an injected script cannot lift a credential that outlives the tab.
 Whether the tab has a Session is one React context (`src/providers/SessionProvider.tsx`) with three states: `restoring` (the app is asking the back end whether the refresh cookie still holds a Session), `signed-in` (with the User), and `signed-out`; the context is the only writer of the token.
 Two route guards read it: `RequireSession` sends a signed-out visitor to Sign in carrying the path, query and hash they asked for in the router's location state, and `RequireSignedOut` sends a signed-in User away from Sign in and Sign up, to that carried path or the Application page; both show a full-page loading state while `restoring`, so the wrong page never flashes.
 Because `RequireSignedOut` does the redirect, a successful Sign up or Sign in only starts the Session; the forms never navigate themselves.
 
 Sign out is `endSession()` on the same context: it calls `POST /api/auth/sign-out`, then clears the token and the query cache and sets `signed-out`, and `RequireSession` sends the tab to Sign in.
+Before the call it stops refreshing (`stopRefreshing()` in `src/utils/api/session-refresh.ts`): the refresh in flight restores nothing when it is answered, no refused request is sent again, and no refresh starts until a Session starts again; a refresh answered after Sign out would otherwise sign the tab back in ([ADR 0001](0001-session-record-with-short-lived-access-token.md)).
 A failed sign-out call (network down, a `5xx`) still signs the tab out: the User asked to leave, often on a shared computer, so the tab must not stay signed in.
 The price is that the server Session then lives until its idle expiry and the cookie remains, so a reload can restore it; that is accepted, the alternative being a signed-in screen the User cannot leave.
 

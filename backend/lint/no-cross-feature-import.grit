@@ -1,0 +1,20 @@
+language js
+
+// noRestrictedImports cannot say "any feature but the importer's own", so the importer's feature comes from its path.
+or {
+  `import $_ from $source`,
+  `import type $_ from $source`,
+  `import $source`,
+  `export { $_ } from $source`,
+  `export type { $_ } from $source`,
+  `export * from $source`,
+  `import($source)`
+} where {
+  $source <: r"[\"'](?:@/|src/)features/([a-z0-9-]+)(?:/.*)?[\"']"($imported),
+  $filename <: r".*[/\\]src[/\\]features[/\\]([a-z0-9-]+)[/\\].*"($own),
+  not $imported <: $own,
+  register_diagnostic(
+    span=$source,
+    message="A feature never imports another feature: code two features use belongs in src/common/."
+  )
+}

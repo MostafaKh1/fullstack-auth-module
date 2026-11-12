@@ -1,7 +1,7 @@
 /**
  * The worked examples of the field rules in docs/requirements.md, one row per case.
  *
- * The front end keeps an identical copy of this table (`frontend/src/components/composite/AuthScreen/AuthScreenFieldRules.examples.ts`)
+ * The front end keeps an identical copy of this table (`frontend/src/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples.ts`)
  * and its tests run every row too. A rule changes in both copies, and in both apps' rules, in the same
  * commit (CODING_STANDARDS.md, "Validation rules").
  *
@@ -9,7 +9,7 @@
  * A valid row may name `stored`: the value the User is saved with.
  * An invalid row lists every rule id the value breaks, in the order the rules are listed in the requirements.
  */
-export type FieldExample = {
+type FieldExample = {
   field: "email" | "name" | "password";
   input: string | undefined;
   note: string;

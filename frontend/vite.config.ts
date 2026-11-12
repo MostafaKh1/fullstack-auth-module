@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
@@ -8,6 +9,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    // Mirrors "paths" in tsconfig.app.json; Vitest inherits it through mergeConfig.
+    resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
     server: {
       // The browser sees one origin, so the refresh cookie and the Origin check behave as in production.
       proxy: {

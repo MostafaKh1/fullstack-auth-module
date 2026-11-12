@@ -4,11 +4,11 @@ import type { RequestHandler } from "msw";
 import { StrictMode } from "react";
 import { createMemoryRouter } from "react-router";
 import { expect } from "vitest";
-import { App } from "../../app/App";
-import { createQueryClient } from "../../app/query-client";
-import { routes } from "../../app/routes";
-import { server } from "../setup/server";
-import { noSessionToRestore } from "./auth-fixtures";
+import { App } from "@/app/App";
+import { createQueryClient } from "@/app/query-client";
+import { routes } from "@/app/routes";
+import { server } from "@/tests/setup/server";
+import { noSessionToRestore } from "@/tests/support/auth-fixtures";
 
 type Options = {
   /** Any other request fails the test. The boot restore's `POST /api/auth/refresh` finds no Session unless a handler answers it. */

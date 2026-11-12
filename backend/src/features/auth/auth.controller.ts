@@ -2,15 +2,16 @@ import { Body, Controller, Headers, HttpCode, Post, Req, Res, UseGuards } from "
 import { ApiBody, ApiCookieAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import type { Request, Response } from "express";
-import { ApiErrors } from "../../common/decorators/api-errors.decorator";
-import { Public } from "../../common/decorators/auth.decorator";
-import { OriginCsrfGuard } from "../../common/guards/origin-csrf.guard";
-import { RouteValidationPipe } from "../../common/pipes/route-validation.pipe";
-import { AuthCookiesService } from "../../common/services/auth-cookies.service";
-import { type SignInBody, type SignUpBody, signInSchema, signUpSchema, type User } from "./auth.types";
-import { type AuthOutcome, AuthService } from "./services/auth.service";
+import { ApiErrors } from "@/common/decorators/api-errors.decorator";
+import { Public } from "@/common/decorators/auth.decorator";
+import type { User } from "@/common/types/user.types";
+import { type AuthOutcome, AuthService } from "@/features/auth/services/auth.service";
+import { AuthCookiesService } from "@/features/auth/services/auth-cookies.service";
+import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./auth.types";
+import { OriginCsrfGuard } from "./origin-csrf.guard";
+import { RouteValidationPipe } from "./route-validation.pipe";
 
-export type AuthResponse = { accessToken: string; expiresIn: number; user: User };
+type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
 @ApiTags("auth")
 @Controller("auth")
@@ -89,12 +90,12 @@ export class AuthController {
     return this.respond(response, signedIn);
   }
 
-  /** Idempotent: the cookie is cleared whether or not it held a live Session. */
+  /** Idempotent: the cookie is cleared whether or not it held a live Session, unless it was sent twice (ADR 0001). */
   @Public()
   @UseGuards(OriginCsrfGuard)
   @ApiCookieAuth()
   @ApiResponse({ status: 204, description: "The Session ended and the refresh cookie is cleared." })
-  @ApiErrors("auth.origin_rejected")
+  @ApiErrors("auth.unauthenticated", "auth.origin_rejected")
   @Post("sign-out")
   @HttpCode(204)
   async signOut(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<void> {

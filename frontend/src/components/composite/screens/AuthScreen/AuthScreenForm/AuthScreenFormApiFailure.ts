@@ -1,5 +1,6 @@
+import type { ValidationIssue } from "@app/contract/error-envelope";
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-import { apiErrorEnvelope, apiFailureCode, type ValidationIssue } from "@/utils/api/api-error";
+import { apiFailureCode, isValidationFailure } from "@/utils/api/api-error";
 import { clientErrorCode } from "@/utils/error-copy";
 
 const FORM_ALERT = "root.server";
@@ -10,35 +11,30 @@ export function applyApiFailure<Fields extends FieldValues>(
   fields: readonly Path<Fields>[],
   setError: UseFormSetError<Fields>,
 ) {
-  const envelope = apiErrorEnvelope(error);
-  if (!envelope) {
-    setError(FORM_ALERT, { type: "server", message: apiFailureCode(error) });
-    return;
-  }
-
+  const failureCode = apiFailureCode(error);
   const isField = (path: string): path is Path<Fields> => (fields as readonly string[]).includes(path);
 
   const email = "email";
-  if (envelope.code === "user.email_taken" && isField(email)) {
-    setError(email, { type: "server", message: envelope.code }, { shouldFocus: true });
+  if (failureCode === "user.email_taken" && isField(email)) {
+    setError(email, { type: "server", message: failureCode }, { shouldFocus: true });
     return;
   }
 
-  if (envelope.code === "request.validation_failed" && envelope.issues?.length) {
+  if (isValidationFailure(error) && error.data.issues.length) {
     // The server lists every broken rule; like the form's own check, each field shows its first.
     const shown = new Set<string>();
     const fieldOf = (path: ValidationIssue["path"]) => path.join(".");
-    for (const { path, code } of envelope.issues) {
+    for (const { path, code } of error.data.issues) {
       const field = fieldOf(path);
       if (!isField(field) || shown.has(field)) continue;
       setError(field, { type: "server", message: code }, { shouldFocus: shown.size === 0 });
       shown.add(field);
     }
-    if (envelope.issues.some(({ path }) => !isField(fieldOf(path)))) {
+    if (error.data.issues.some(({ path }) => !isField(fieldOf(path)))) {
       setError(FORM_ALERT, { type: "server", message: clientErrorCode.unexpected });
     }
     return;
   }
 
-  setError(FORM_ALERT, { type: "server", message: apiFailureCode(error) });
+  setError(FORM_ALERT, { type: "server", message: failureCode });
 }

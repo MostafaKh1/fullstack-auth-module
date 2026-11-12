@@ -1,5 +1,6 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { validationIssueSchema } from "./error-envelope.js";
 import { signInSchema, signUpSchema } from "./field-rules.js";
 import { userSchema } from "./users.contract.js";
 
@@ -9,11 +10,8 @@ const signedInSchema = z.strictObject({
   user: userSchema,
 });
 
-/** `path` is the keys from the body down to the field; `code` is a rule id such as `password.missing_number`. */
-const validationIssueSchema = z.strictObject({
-  path: z.array(z.union([z.string(), z.number()])),
-  code: z.string(),
-});
+/** What Sign up, Sign in and refresh answer. */
+export type SignedInResponse = z.infer<typeof signedInSchema>;
 
 // What a route with a body can answer before it runs: the body parser's refusals and the schema's.
 const bodyErrors = {

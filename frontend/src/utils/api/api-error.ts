@@ -1,31 +1,19 @@
-import type { ErrorEnvelope, ValidationIssue } from "@app/contract/error-envelope";
+import type { ValidationIssue } from "@app/contract/error-envelope";
 import { ORPCError } from "@orpc/client";
 import { clientErrorCode } from "@/utils/error-copy";
 
-export type { ValidationIssue };
+// The API's codes read `area.reason` (ADR 0002), a code the front end may not know yet included; the ones oRPC raises
+// itself, for a response that is no envelope (a proxy's page), are SCREAMING_CASE.
+const isApiCode = (code: string) => /^[a-z]+\.[a-z_]+$/.test(code);
 
-/** The body of every API error response (ADR 0002). `message` is a developer hint and is never shown. */
-type ApiErrorEnvelope = ErrorEnvelope;
-
-/** Whether a response body is the API's error envelope rather than, say, a proxy's error page. */
-export function isErrorEnvelope(body: unknown): body is ApiErrorEnvelope {
-  return (
-    typeof body === "object" &&
-    body !== null &&
-    typeof (body as { code?: unknown }).code === "string" &&
-    typeof (body as { status?: unknown }).status === "number"
-  );
-}
-
-/** The error envelope a failed request carries, or `null` when none arrived. */
-export function apiErrorEnvelope(error: unknown): ApiErrorEnvelope | null {
-  // No envelope means no response at all, or a response from something other than the API, so it is unreachable.
-  // The oRPC client keeps the envelope it decoded an error from as that error's cause.
-  const body: unknown = error instanceof ORPCError ? error.cause : undefined;
-  return isErrorEnvelope(body) ? body : null;
-}
-
-/** The code a failed request is shown by: the envelope's, or `unreachable` when none arrived. */
+/** The code a failed request is shown by: the API's, or `unreachable` when no error of the API arrived. */
 export function apiFailureCode(error: unknown): string {
-  return apiErrorEnvelope(error)?.code ?? clientErrorCode.unreachable;
+  return error instanceof ORPCError && isApiCode(error.code) ? error.code : clientErrorCode.unreachable;
+}
+
+/** The typed error of a request the contract's schema refused; `defined` means oRPC checked its data against it. */
+export function isValidationFailure(
+  error: unknown,
+): error is ORPCError<"request.validation_failed", { issues: ValidationIssue[] }> {
+  return error instanceof ORPCError && error.defined && error.code === "request.validation_failed";
 }

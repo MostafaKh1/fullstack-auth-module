@@ -20,7 +20,7 @@ common/
 ## Where does this file belong?
 
 1. An error code -> `ERROR_CODES` in the contract's `error-envelope.ts` ([contract/AGENTS.md](../../../contract/AGENTS.md)); the envelope builder is `errors/error-envelope.ts`.
-2. A decorator, guard, pipe or filter used by the global wiring or by more than one feature -> `<kind>s/<name>.<kind>.ts` here; one used by a single feature -> beside that feature's controller.
+2. A decorator, guard or filter used by the global wiring or by more than one feature -> `<kind>s/<name>.<kind>.ts` here; one used by a single feature -> beside that feature's controller.
 3. A service more than one feature injects -> `services/<name>.service.ts`, listed in `common.module.ts`'s `providers` and `exports`; one a single feature uses -> that feature's `services/`, provided by its module.
 4. A domain type the repositories or more than one feature use -> `types/<entity>.types.ts`, one file per entity; a type only one feature uses stays in its `<feature>.types.ts`.
 

@@ -41,10 +41,7 @@ const name = z
   .refine((value) => !/\p{Cc}/u.test(value), "name.invalid_characters");
 
 // Passwords are never trimmed: a space is a legitimate password character.
-const anyPassword = z
-  .string(required)
-  .min(1, present)
-  .refine((value) => characters(value) <= 128, "password.too_long");
+const anyPassword = z.string(required).min(1, present).refine(passwordRule.shortEnough, "password.too_long");
 
 const newPassword = z
   .string(required)

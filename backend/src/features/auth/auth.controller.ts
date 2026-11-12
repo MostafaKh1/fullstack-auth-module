@@ -1,17 +1,16 @@
 import { contract } from "@app/contract";
+import type { SignedInResponse } from "@app/contract/auth.contract";
 import { Controller, Res, UseGuards } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { Implement, implement } from "@orpc/nest";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { Public } from "@/common/decorators/auth.decorator.js";
-import type { User } from "@/common/types/user.types.js";
 import { type AuthOutcome, AuthService } from "@/features/auth/services/auth.service.js";
 import { AuthCookiesService } from "@/features/auth/services/auth-cookies.service.js";
 import { OriginCsrfGuard } from "./origin-csrf.guard.js";
 
-type AuthResponse = { accessToken: string; expiresIn: number; user: User };
+const userAgentOf = (request: Request): string | null => request.headers["user-agent"] ?? null;
 
-// No controller path: a contract procedure carries its whole path (`/auth/sign-up`).
 @Controller()
 export class AuthController {
   constructor(
@@ -24,8 +23,8 @@ export class AuthController {
   @Implement(contract.auth.signUp)
   signUp() {
     return implement(contract.auth.signUp).handler(async ({ input, context }) => {
-      const userAgent = context.request.headers["user-agent"] ?? null;
-      return this.respond(context.resHeaders, await this.authService.signUp({ ...input, userAgent }));
+      const signedIn = await this.authService.signUp({ ...input, userAgent: userAgentOf(context.request) });
+      return this.respond(context.resHeaders, signedIn);
     });
   }
 
@@ -34,8 +33,8 @@ export class AuthController {
   @Implement(contract.auth.signIn)
   signIn() {
     return implement(contract.auth.signIn).handler(async ({ input, context }) => {
-      const userAgent = context.request.headers["user-agent"] ?? null;
-      return this.respond(context.resHeaders, await this.authService.signIn({ ...input, userAgent }));
+      const signedIn = await this.authService.signIn({ ...input, userAgent: userAgentOf(context.request) });
+      return this.respond(context.resHeaders, signedIn);
     });
   }
 
@@ -64,7 +63,7 @@ export class AuthController {
   }
 
   /** Within the grace window there is no new credential, so the cookie the rotation set is left in place (ADR 0001). */
-  private respond(headers: Headers, signedIn: AuthOutcome): AuthResponse {
+  private respond(headers: Headers, signedIn: AuthOutcome): SignedInResponse {
     if (signedIn.refreshCredential) this.authCookies.setRefreshCookie(headers, signedIn.refreshCredential);
     return { accessToken: signedIn.accessToken, expiresIn: signedIn.expiresIn, user: signedIn.user };
   }

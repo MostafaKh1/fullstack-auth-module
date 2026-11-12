@@ -5,7 +5,6 @@ import type { AuthContext } from "@/common/services/access-token.service.js";
 import { CurrentAuth } from "./current-auth.decorator.js";
 import { UsersService } from "./users.service.js";
 
-// No controller path: a contract procedure carries its whole path (`/users/me`).
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

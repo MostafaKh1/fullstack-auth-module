@@ -1,11 +1,11 @@
 import { contract } from "@app/contract";
+import type { ErrorEnvelope } from "@app/contract/error-envelope";
 import { createORPCClient, ORPCError } from "@orpc/client";
 import { type ContractRouterClient, isContractProcedure, validateORPCError } from "@orpc/contract";
 import type { JsonifiedClient } from "@orpc/openapi-client";
 import { OpenAPILink } from "@orpc/openapi-client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { currentAccessToken } from "@/utils/api/access-token";
-import { isErrorEnvelope } from "@/utils/api/api-error";
 import { refreshSessionOnce, shouldRefreshAndRetry } from "@/utils/api/session-refresh";
 
 type ContractClient = JsonifiedClient<ContractRouterClient<typeof contract>>;
@@ -15,6 +15,13 @@ export type SignedIn = Awaited<ReturnType<ContractClient["auth"]["refresh"]>>;
 
 /** A User as the client sees it: its date is an ISO string. */
 export type User = SignedIn["user"];
+
+/** Whether a response body is the API's error envelope rather than, say, a proxy's error page. */
+const isErrorEnvelope = (body: unknown): body is ErrorEnvelope =>
+  typeof body === "object" &&
+  body !== null &&
+  typeof (body as { code?: unknown }).code === "string" &&
+  typeof (body as { status?: unknown }).status === "number";
 
 const procedureAt = (path: readonly string[]) => {
   const found = path.reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], contract);
@@ -31,15 +38,14 @@ const link = new OpenAPILink(contract, {
     return token ? { authorization: `Bearer ${token}` } : {};
   },
   fetch: (request, init) => fetch(request, { ...init, credentials: "include" }),
-  // The envelope of ADR 0002 becomes an error with its code, kept whole as the cause. A body that is not an envelope (a
-  // proxy's error page) is left to oRPC, so it never passes for one.
+  // The envelope of ADR 0002 becomes an error with its code. A body that is not an envelope (a proxy's error page) is
+  // left to oRPC, so it never passes for one.
   customErrorResponseBodyDecoder: (body) =>
     isErrorEnvelope(body)
       ? new ORPCError(body.code, {
           status: body.status,
           message: body.message,
           data: body.issues === undefined ? undefined : { issues: body.issues },
-          cause: body,
         })
       : null,
   interceptors: [

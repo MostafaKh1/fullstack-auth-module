@@ -356,4 +356,144 @@ export const a = <p className="bg-primary text-muted-foreground border-input rin
       "components/composite/screens/AuthScreen/AuthScreenForm.tsx",
     );
   });
+
+  describe("features", () => {
+    const feature = {
+      "features/auth/components/layout/route-guards/RequireAuth.tsx":
+        'import { useAuth } from "@/features/auth/hooks/useAuth";\nimport { PageLoader } from "@/components/utility/PageLoader";\nimport { cn } from "@/utils/cn";\n',
+      "features/auth/hooks/useAuth.ts":
+        'import { AuthContext } from "@/features/auth/providers/auth-context";\n',
+      "features/auth/providers/AuthProvider.tsx":
+        'import { AuthContext } from "@/features/auth/providers/auth-context";\n',
+      "features/auth/providers/auth-context.ts": stub,
+      "features/auth/utils/return-to.ts": stub,
+      "features/auth/utils/return-to.test.ts": 'import "@/features/auth/utils/return-to";\n',
+      "features/billing/components/utility/BillingBadge.tsx": stub,
+      "app/App.tsx":
+        'import { AuthProvider } from "@/features/auth/providers/AuthProvider";\nimport { routes } from "@/app/routes";\n',
+      "pages/not-found/NotFoundPage.tsx":
+        'import { RequireAuth } from "@/features/auth/components/layout/route-guards/RequireAuth";\nimport { useAuth } from "@/features/auth/hooks/useAuth";\n',
+      "pages/(auth)/sign-in/SignInPage.tsx":
+        'import { useAuth } from "@/features/auth/hooks/useAuth";\nimport { AuthProvider } from "@/features/auth/providers/AuthProvider";\n',
+    };
+
+    it("accepts a feature that repeats the shared folders and imports only shared code and itself", () => {
+      const { status, out } = check(feature);
+      assert.equal(status, 0, out);
+    });
+
+    it("feature-imports: a feature never imports another feature", () => {
+      fails(
+        {
+          ...feature,
+          "features/auth/utils/return-to.ts":
+            'import { BillingBadge } from "@/features/billing/components/utility/BillingBadge";\n',
+        },
+        "feature-imports",
+        "features/auth/utils/return-to.ts",
+      );
+    });
+
+    it("feature-imports: a feature imports no app, page or test code", () => {
+      fails(
+        { ...feature, "features/auth/utils/return-to.ts": 'import { routes } from "@/app/routes";\n' },
+        "feature-imports",
+        "features/auth/utils/return-to.ts",
+      );
+    });
+
+    it("feature-imports: shared code never imports a feature", () => {
+      for (const path of [
+        "utils/cn.ts",
+        "hooks/useSession.ts",
+        "providers/session-context.ts",
+        "components/utility/PageLoader.tsx",
+      ]) {
+        fails(
+          { ...feature, [path]: 'import { useAuth } from "@/features/auth/hooks/useAuth";\n' },
+          "feature-imports",
+          path,
+        );
+      }
+    });
+
+    it("feature-folder: a feature holds only components, hooks, providers and utils folders", () => {
+      fails(
+        { ...feature, "features/auth/pages/x/AuthPage.tsx": stub },
+        "feature-folder",
+        "features/auth/pages",
+      );
+      fails({ ...feature, "features/loose.ts": stub }, "feature-folder", "features/loose.ts");
+      fails({ ...feature, "features/auth/notes.ts": stub }, "feature-folder", "features/auth/notes.ts");
+    });
+
+    it("folder-casing: a feature folder is kebab-case", () => {
+      fails({ ...feature, "features/Auth/utils/return-to.ts": stub }, "folder-casing", "features/Auth");
+    });
+
+    it("the naming rules apply inside a feature", () => {
+      fails(
+        { ...feature, "features/auth/components/base/Thing.tsx": stub },
+        "kind-folder",
+        "features/auth/components/base/Thing.tsx",
+      );
+      fails(
+        { ...feature, "features/auth/components/extras/Thing.tsx": stub },
+        "section-unknown",
+        "features/auth/components/extras",
+      );
+      fails(
+        { ...feature, "features/auth/utils/ReturnTo.ts": stub },
+        "file-casing",
+        "features/auth/utils/ReturnTo.ts",
+      );
+      fails(
+        { ...feature, "features/auth/hooks/useSingle.ts": stub },
+        "hook-single-use",
+        "features/auth/hooks/useSingle.ts",
+      );
+      fails(
+        { ...feature, "features/auth/components/layout/route-guards/Wrapper/Thing.tsx": stub },
+        "component-folder-entry",
+        "features/auth/components/layout/route-guards/Wrapper",
+      );
+    });
+
+    it("section-imports: a feature's components follow the section direction", () => {
+      fails(
+        {
+          ...feature,
+          "features/auth/components/utility/AuthSpinner.tsx":
+            'import { RequireAuth } from "@/features/auth/components/layout/route-guards/RequireAuth";\n',
+        },
+        "section-imports",
+        "features/auth/components/utility/AuthSpinner.tsx",
+      );
+    });
+
+    it("helper-concern: three helpers of one concern in a feature's utils get a folder", () => {
+      fails(
+        {
+          ...feature,
+          "features/auth/utils/auth-a.ts": stub,
+          "features/auth/utils/auth-b.ts": stub,
+          "features/auth/utils/auth-c.ts": stub,
+        },
+        "helper-concern",
+        "features/auth/utils/auth-a.ts",
+      );
+    });
+
+    it("palette-colour: a feature's components use theme tokens", () => {
+      fails(
+        {
+          ...feature,
+          "features/billing/components/utility/BillingBadge.tsx":
+            'export const a = <p className="text-indigo-600" />;\n',
+        },
+        "palette-colour",
+        "features/billing/components/utility/BillingBadge.tsx",
+      );
+    });
+  });
 });

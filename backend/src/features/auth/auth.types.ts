@@ -1,20 +1,5 @@
 import { z } from "zod";
 
-/** A User as the application sees it: never with its password hash. */
-export type User = { id: string; email: string; name: string; createdAt: Date };
-
-export type RevokedReason = "sign-out" | "reuse-detected";
-
-/** A Session as the application sees it: never with its secret hashes (ADR 0001). */
-export type Session = {
-  id: string;
-  userId: string;
-  idleExpiresAt: Date;
-  absoluteExpiresAt: Date;
-  revokedAt: Date | null;
-  revokedReason: RevokedReason | null;
-};
-
 /*
  * The field rules of docs/requirements.md. The front end enforces the same rules in
  * `frontend/src/components/composite/screens/AuthScreen/AuthScreenFieldRules.ts`; change both in the same commit, and both copies of the

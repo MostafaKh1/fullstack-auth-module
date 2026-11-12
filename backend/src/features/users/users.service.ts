@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ApiError } from "@/common/errors/api-error";
+import type { User } from "@/common/types/user.types";
 import { UserRepository } from "@/database/repositories/user.repository";
-import type { User } from "@/features/auth/auth.types";
 
 @Injectable()
 export class UsersService {

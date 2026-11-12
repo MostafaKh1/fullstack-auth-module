@@ -15,7 +15,7 @@ Every back-end capability has exactly one door, and the door is injected:
 
 ### Controller, service, repository
 
-The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.md). Biome's `noRestrictedImports` (`biome.jsonc`) enforces the import rules marked _(lint)_.
+The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.md). Biome (`biome.jsonc`: `noRestrictedImports` and the GritQL plugins in `backend/lint/`) enforces the import rules marked _(lint)_.
 
 | Layer                                                       | Owns                                                                                                                                                            | Never                                                                                        |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -24,15 +24,15 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 | Repository (`database/repositories/<entity>.repository.ts`) | queries and writes for one collection, mapping documents onto the domain types                                                                                  | business rules, other collections                                                            |
 
 - A module's business logic is one service named for its area (`AuthService`, `UsersService`, `HealthService`), with one public method per operation (`signUp`, `getCurrentUser`). A rule several operations share is a service of its own (`SessionService`) or a private function in the service's file, never a free-floating rules file.
-- A service throws `ApiError` with a code from the closed set and returns plain data typed with the domain types (`User`, `Session` in `src/features/auth/auth.types.ts`, `AuthContext` in `src/common/services/access-token.service.ts`), never a type from `src/database/`.
+- A service throws `ApiError` with a code from the closed set and returns plain data typed with the domain types (`User`, `Session` in `src/common/types/`, `AuthContext` in `src/common/services/access-token.service.ts`), never a type from `src/database/`.
 - Setting or reading the refresh cookie is transport: the controller calls `AuthCookiesService`, which owns the whole cookie policy. A service returns the credential and never sees the response.
 - A controller's field for an injected service is the class name in camelCase (`authService`).
 
 ### Modules
 
-- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the token, password and cookie services, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). `src/common/` holds what the global guard or more than one feature needs, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `pipes/`, `services/`), and imports nothing from a feature.
-- A repository imports the domain types from `src/features/auth/auth.types.ts` as types only, so no runtime edge points to a higher tier.
-- A module imports only from a lower tier. A feature module exports nothing and never imports another feature module. `forwardRef` is never needed and never used.
+- Module tiers, lowest first: `AppConfigModule`, `LoggingModule` and `CoreModule` (global) -> `PersistenceModule` (collections, repositories, the database health ping) -> `CommonModule` (the access-token service, the global guard) -> feature modules in `src/features/` (`auth`, `users`, `health`). Placement follows the importers: used by one feature, a file lives beside that feature; used by more, or by the global wiring (the global guard, the filter, the body parser), it lives in `src/common/`, by kind (`decorators/`, `errors/`, `filters/`, `guards/`, `middleware/`, `services/`, `types/`), which imports nothing from a feature _(lint)_.
+- A repository imports the domain types from `src/common/types/` as types only, so no runtime edge points to a higher tier.
+- A module imports only from a lower tier. A feature module exports nothing, and a feature imports nothing from another feature _(lint)_. `forwardRef` is never needed and never used.
 
 ### Authentication is deny-by-default
 

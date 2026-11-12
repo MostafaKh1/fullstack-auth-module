@@ -1,5 +1,7 @@
 # Two independent npm apps under a thin root, without workspace tooling
 
+**Superseded by [ADR 0012](0012-shared-orpc-contract-in-an-npm-workspace.md):** the apps now share one oRPC contract package in an npm workspace. This ADR records why they were kept apart until then.
+
 The repository holds two apps, `backend/` (NestJS) and `frontend/` (React), each with its own `package.json`, its own `package-lock.json` and its own `node_modules`, installed and run on its own with npm.
 The root `package.json` holds only shared tooling and convenience scripts that delegate into the apps with `npm --prefix <app>`: `setup` runs `npm ci` in the root and in each app; `dev` runs both apps' `dev` scripts side by side (through `concurrently`); `typecheck`, `test` and `build` run each app's script of the same name in turn; `db:up` starts the local MongoDB from `compose.mongo.yaml`; `compose.yaml` runs its own authenticated MongoDB for the whole stack.
 Every app therefore owes the root a `dev`, `typecheck`, `test` and `build` script; the root scripts fail until both apps exist and provide them.

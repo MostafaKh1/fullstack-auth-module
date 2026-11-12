@@ -1,5 +1,7 @@
 # The back end is layered controller, service, repository
 
+**Amended by [ADR 0012](0012-shared-orpc-contract-in-an-npm-workspace.md):** a controller method now implements one contract procedure with `@Implement`, and its route, input and output come from the contract; it is still the API only and calls one service method.
+
 The back end follows NestJS's usual layering, so every class sits where a NestJS engineer looks for it: a **controller** is the API only (the route, extracting the body, headers and current User, calling one service method, calling `AuthCookiesService`, and mapping the result to the response type); a **service** holds the business logic (an operation's rules, ordering and failure policy, throwing `ApiError`) and knows nothing about HTTP; a **repository** in `src/database/repositories/` is the data-access layer for one collection, mapping documents onto the domain types in `src/common/types/`.
 This supersedes the one-handler-per-operation part of ADR 0005: `SignUpHandler`, `SignInHandler` and `RefreshHandler` became methods of `AuthService`, the Session rules and `SessionIssuerService` became `SessionService`, and each feature has one `<feature>.service.ts`.
 The rest of ADR 0005 (the tiers, repositories as the only door to Mongoose, Zod, pino) stands.

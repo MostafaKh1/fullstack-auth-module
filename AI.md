@@ -327,3 +327,13 @@ What survived from the discarded attempt, because it was learned rather than wri
 - **Verified:** front-end tests 173 and back-end tests 168, before and after. Lint, format, structure check, typecheck, both builds and `openapi:check` pass; both journeys pass on spare ports 3141 and 5241. Every other colour and radius token has a consumer in a class name or in `@apply`, so only `--radius-sm` was removed.
 - **Decided:** exports used only by tests stay exported. The two `*.examples.ts` tables stay, since tests read them. No new test: the Application page's failure copy and the forms' unreachable copy were already covered through the rendered app, and both now go through one helper.
 - **Not verified:** CI on GitHub.
+
+### Security review and skill cleanup
+
+- The User asked for a security review with an external skill; it was read before installing (defensive, source-first, its scripts only validate its own report files), installed into the project, and run in its focused guidance mode as two independent source-only reviews (back end; front end), since this Windows machine cannot provide the OS sandbox the skill requires for executing code.
+- Confirmed, high: MongoDB was published on every network interface with no authentication, so anyone reaching the host could read password hashes or forge a Session. Fixed in #38: the development database listens on 127.0.0.1 only and stays password-free; the full container stack publishes no database port and requires a password, and production refuses a credential-less connection string. Verified in Docker.
+- Needs validation, fixed anyway because cheap: a Sign out racing a refresh could leave the Session alive, and a refresh cookie planted from a sibling domain could switch a User's Session; fixed in #39 (late refreshes discarded, Sign out also revokes with the immediately previous secret, duplicate refresh cookies refused).
+- Needs validation, documented: the `TRUST_PROXY` hop count must match the real number of proxies in front of the API (README).
+- Rejected after checking: login CSRF, the email-taken message, scrypt cost as denial of service, missing CSP on the HTML, a spoofed X-Forwarded-For.
+- A read-only dead-code sweep found unused exports, a duplicated helper, a dead CI step, stale docs, an undeclared dependency, and code placed against the repository's own rules; fixed in #40 (shared types in the shared section, single-feature code beside its feature, ADR 0005 amended, lint rules forbidding cross-feature imports) and #41.
+- The User asked to keep only skills the workflow used: 25 installed but unused skills were removed, leaving 15, and two docs that referenced removed skills were corrected.

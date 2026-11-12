@@ -15,7 +15,7 @@ What stays on the wire is unchanged: plain REST routes under `/api` with their e
 
 ## Consequences
 
-- oRPC ships only ES modules while the back end compiles to CommonJS; Node 22.12+ can `require()` ESM. The first ticket moves the health route alone onto the contract, end to end, and switches the back end to ESM if `require(esm)` fails under Jest or the build. Node 22 loads oRPC from CommonJS, but Jest supports `require(esm)` only from Node 24.9, so the back end is ES modules: its Jest runs with `--experimental-vm-modules`, and plain Node runs its sources through ts-node's ES-module loader.
+- The back end is ES modules, because oRPC ships only ES modules and Jest supports `require(esm)` only from Node 24.9: its Jest runs with `--experimental-vm-modules`, and plain Node runs its sources through ts-node's ES-module loader.
 - One lockfile hoists both apps' toolchains together (Jest and ts-jest beside Vite and Vitest); a conflict is fixed in the workspace, not by splitting it again.
 - An oRPC error never reaches Nest's exception filters, so the envelope is written in two places: the global filter for everything outside a procedure, the encoder for errors inside one. Both are tested through the HTTP seam.
 - Testing a procedure with oRPC's `call()` skips the Nest guards, so the HTTP seam (ADR 0004) stays the only back-end test seam.

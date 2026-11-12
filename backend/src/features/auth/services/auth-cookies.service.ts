@@ -19,14 +19,14 @@ export class AuthCookiesService {
     private readonly clock: ClockService,
   ) {}
 
-  setRefreshCookie(response: ResponseHeaders, credential: { value: string; idleExpiresAt: Date }): void {
+  setRefreshCookie(headers: ResponseHeaders, credential: { value: string; idleExpiresAt: Date }): void {
     const { value, idleExpiresAt } = credential;
     const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
-    this.writeRefreshCookie(response, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
+    this.writeRefreshCookie(headers, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
   }
 
-  clearRefreshCookie(response: ResponseHeaders): void {
-    this.writeRefreshCookie(response, "", 0, new Date(0));
+  clearRefreshCookie(headers: ResponseHeaders): void {
+    this.writeRefreshCookie(headers, "", 0, new Date(0));
   }
 
   readRefreshCookie(request: Request): string | null {
@@ -50,7 +50,7 @@ export class AuthCookiesService {
 
   // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
   private writeRefreshCookie(
-    response: ResponseHeaders,
+    headers: ResponseHeaders,
     value: string,
     maxAgeSeconds: number,
     expires: Date,
@@ -64,6 +64,6 @@ export class AuthCookiesService {
       ...(this.config.get("cookieSecure") ? ["Secure"] : []),
       "SameSite=Lax",
     ];
-    response.append("Set-Cookie", attributes.join("; "));
+    headers.append("Set-Cookie", attributes.join("; "));
   }
 }

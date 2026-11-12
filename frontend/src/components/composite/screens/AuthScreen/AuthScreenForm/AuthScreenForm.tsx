@@ -30,13 +30,13 @@ export function AuthScreenForm<Fields extends FieldValues, Values extends FieldV
   children,
 }: Props<Fields, Values, Failure>) {
   const { startSession } = useSession();
-  const submit = useMutation({ ...mutation, onSuccess: startSession });
+  const submission = useMutation({ ...mutation, onSuccess: startSession });
   const { errors, isSubmitting } = form.formState;
   const failure = errors.root?.server?.message;
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await submit.mutateAsync(values);
+      await submission.mutateAsync(values);
     } catch (error) {
       applyApiFailure(error, fields, form.setError);
     }

@@ -39,11 +39,7 @@ function asCallerError(error: unknown): unknown {
   });
 }
 
-/**
- * oRPC's options for one request. A caller's mistake (a 4xx code) is written by oRPC's error encoder as the envelope of
- * ADR 0002; every other error is handed back to Nest, so the global filter logs a failure on our side with its stack,
- * which the encoder would answer silently.
- */
+/** oRPC's options for one request: its context, its error encoder writing the envelope of ADR 0002, its plugins. */
 export function orpcOptions(request: Request & { id?: unknown }, isProduction: boolean): ORPCModuleConfig {
   return {
     // ResponseHeadersPlugin merges these headers into the response, the refresh cookie among them.
@@ -59,6 +55,8 @@ export function orpcOptions(request: Request & { id?: unknown }, isProduction: b
     ],
     plugins: [
       new ResponseHeadersPlugin(),
+      // Only a caller's mistake (a 4xx code) is left to the encoder. Every other error goes back to Nest, so the global
+      // filter logs a failure on our side with its stack, which the encoder would answer silently.
       new RethrowHandlerPlugin({
         filter: (error) => !(error instanceof ORPCError && isErrorCode(error.code)),
       }),

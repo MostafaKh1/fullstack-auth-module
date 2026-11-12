@@ -1,6 +1,6 @@
 import { type AxiosError, type InternalAxiosRequestConfig, isAxiosError } from "axios";
 import { apiClient } from "@/utils/api/api-client";
-import { apiFailure } from "@/utils/api/api-error";
+import { apiErrorEnvelope } from "@/utils/api/api-error";
 import { refreshSession, type SignedIn } from "@/utils/api/auth-api";
 
 /** How a refresh's outcome reaches the Session context, which alone writes the access token (ADR 0008). */
@@ -85,6 +85,6 @@ function shouldRefresh(error: AxiosError): boolean {
     config !== undefined &&
     !config.sessionRetried &&
     !config.url?.startsWith("/auth/") &&
-    apiFailure(error)?.code === "auth.unauthenticated"
+    apiErrorEnvelope(error)?.code === "auth.unauthenticated"
   );
 }

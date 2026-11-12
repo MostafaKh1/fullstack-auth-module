@@ -6,10 +6,7 @@ type SchemaIssue = {
   readonly path?: ReadonlyArray<PropertyKey | { readonly key: PropertyKey }>;
 };
 
-/**
- * The answer to a body the request schema refused: `request.malformed` when it is not a JSON object, otherwise
- * `request.validation_failed` with one `{ path, code }` issue per check, the check's error being its rule id (ADR 0002).
- */
+/** A refused body: `request.malformed` if not a JSON object, else one `{ path, code }` issue per failed rule id. */
 export function invalidRequest(body: unknown, issues: readonly SchemaIssue[]): ApiError {
   if (typeof body !== "object" || body === null || Array.isArray(body)) {
     return new ApiError("request.malformed", { message: "The body must be a JSON object." });

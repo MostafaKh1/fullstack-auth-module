@@ -14,6 +14,11 @@ export function setAccessToken(token: string | null) {
   accessToken = token;
 }
 
+/** Read by both clients when they attach the Bearer header. */
+export function currentAccessToken(): string | null {
+  return accessToken;
+}
+
 apiClient.interceptors.request.use((config) => {
   if (accessToken) config.headers.set("Authorization", `Bearer ${accessToken}`);
   return config;

@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { type UseMutationOptions, useMutation } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { Alert } from "@/components/base/alerts/Alert";
@@ -9,33 +9,34 @@ import type { SignedIn } from "@/utils/api/auth-api";
 import { errorCopy } from "@/utils/error-copy";
 import { applyApiFailure } from "./AuthScreenFormApiFailure";
 
-type Props<Fields extends FieldValues, Values extends FieldValues> = {
+type Props<Fields extends FieldValues, Values extends FieldValues, Failure> = {
   form: UseFormReturn<Fields, unknown, Values>;
   /** The fields a server error may be set on; any other failure becomes the form-level alert. */
   fields: readonly Path<Fields>[];
-  submit: (values: Values) => Promise<SignedIn>;
+  /** The request the form sends; its success starts the Session. */
+  mutation: UseMutationOptions<SignedIn, Failure, Values>;
   submitLabel: string;
   pendingLabel: string;
   children: ReactNode;
 };
 
 /** The form, its submit, its failure alert and its submit button; `children` are the fields. */
-export function AuthScreenForm<Fields extends FieldValues, Values extends FieldValues>({
+export function AuthScreenForm<Fields extends FieldValues, Values extends FieldValues, Failure>({
   form,
   fields,
-  submit,
+  mutation,
   submitLabel,
   pendingLabel,
   children,
-}: Props<Fields, Values>) {
+}: Props<Fields, Values, Failure>) {
   const { startSession } = useSession();
-  const mutation = useMutation({ mutationFn: submit, onSuccess: startSession });
+  const submission = useMutation({ ...mutation, onSuccess: startSession });
   const { errors, isSubmitting } = form.formState;
   const failure = errors.root?.server?.message;
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await mutation.mutateAsync(values);
+      await submission.mutateAsync(values);
     } catch (error) {
       applyApiFailure(error, fields, form.setError);
     }

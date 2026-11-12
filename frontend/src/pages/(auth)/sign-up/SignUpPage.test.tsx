@@ -270,6 +270,19 @@ describe("Sign up page", () => {
     expect(signUpButton()).toBeEnabled();
   });
 
+  it("shows a readable message when a proxy answers without the error envelope", async () => {
+    const { user } = await renderApp("/?auth=sign-up", {
+      handlers: [
+        http.post("/api/auth/sign-up", () => HttpResponse.json({ error: "Bad Gateway" }, { status: 502 })),
+      ],
+    });
+
+    await fillForm(user, validForm);
+    await user.click(signUpButton());
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(unreachableCopy);
+  });
+
   it("shows a readable message when the server fails, and never the server's own message", async () => {
     const { user } = await renderApp("/?auth=sign-up", {
       handlers: [

@@ -3,14 +3,37 @@
   "paths": {
     "/api/auth/sign-up": {
       "post": {
-        "operationId": "AuthController_signUp",
-        "parameters": [],
+        "operationId": "auth.signUp",
+        "tags": [
+          "auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignUpRequest"
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 254,
+                    "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "name",
+                  "password"
+                ]
               }
             }
           }
@@ -21,13 +44,56 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SignedIn"
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Seconds until the access token expires."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "name",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "expiresIn",
+                    "user"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "400": {
-            "description": "Error codes: request.validation_failed, request.malformed",
+            "description": "400",
             "content": {
               "application/json": {
                 "schema": {
@@ -53,7 +119,7 @@
             }
           },
           "409": {
-            "description": "Error codes: user.email_taken",
+            "description": "409",
             "content": {
               "application/json": {
                 "schema": {
@@ -78,7 +144,7 @@
             }
           },
           "413": {
-            "description": "Error codes: request.too_large",
+            "description": "413",
             "content": {
               "application/json": {
                 "schema": {
@@ -103,7 +169,7 @@
             }
           },
           "429": {
-            "description": "Error codes: request.rate_limited",
+            "description": "429",
             "content": {
               "application/json": {
                 "schema": {
@@ -127,10 +193,7 @@
               }
             }
           }
-        },
-        "tags": [
-          "auth"
-        ]
+        }
       }
     },
     "/api/auth/sign-in": {
@@ -568,30 +631,6 @@
       }
     },
     "schemas": {
-      "SignUpRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 254,
-            "pattern": "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "email",
-          "name",
-          "password"
-        ]
-      },
       "SignInRequest": {
         "type": "object",
         "properties": {

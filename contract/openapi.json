@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.1",
   "paths": {
     "/api/auth/sign-up": {
       "post": {
@@ -489,21 +489,36 @@
     },
     "/api/health": {
       "get": {
-        "operationId": "HealthController_check",
-        "parameters": [],
+        "operationId": "health.check",
+        "tags": [
+          "health"
+        ],
         "responses": {
           "200": {
             "description": "The database answers.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Health"
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "ok"
+                    },
+                    "database": {
+                      "const": "up"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "database"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
           },
           "503": {
-            "description": "Error codes: server.unavailable",
+            "description": "503",
             "content": {
               "application/json": {
                 "schema": {
@@ -527,10 +542,7 @@
               }
             }
           }
-        },
-        "tags": [
-          "health"
-        ]
+        }
       }
     }
   },
@@ -642,28 +654,6 @@
           },
           "user": {
             "$ref": "#/components/schemas/User"
-          }
-        }
-      },
-      "Health": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "database"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "ok"
-            ]
-          },
-          "database": {
-            "type": "string",
-            "enum": [
-              "up"
-            ]
           }
         }
       },

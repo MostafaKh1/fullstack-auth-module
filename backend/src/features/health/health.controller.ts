@@ -1,23 +1,16 @@
-import { Controller, Get } from "@nestjs/common";
-import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { ApiErrors } from "@/common/decorators/api-errors.decorator";
-import { Public } from "@/common/decorators/auth.decorator";
-import { type Health, HealthService } from "./health.service";
+import { contract } from "@app/contract";
+import { Controller } from "@nestjs/common";
+import { Implement, implement } from "@orpc/nest";
+import { Public } from "@/common/decorators/auth.decorator.js";
+import { HealthService } from "./health.service.js";
 
-@ApiTags("health")
-@Controller("health")
+@Controller()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
   @Public()
-  @ApiResponse({
-    status: 200,
-    description: "The database answers.",
-    schema: { $ref: "#/components/schemas/Health" },
-  })
-  @ApiErrors("server.unavailable")
-  @Get()
-  check(): Promise<Health> {
-    return this.healthService.check();
+  @Implement(contract.health.check)
+  check() {
+    return implement(contract.health.check).handler(() => this.healthService.check());
   }
 }

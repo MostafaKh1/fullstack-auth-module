@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 const ada = { email: "ada@example.com", name: "Ada Lovelace", password: "Passw0rd!" };
 

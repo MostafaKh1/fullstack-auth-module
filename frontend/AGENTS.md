@@ -118,7 +118,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 ## Container
 
-`Dockerfile` builds the static files and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
+`Dockerfile` builds the static files from the repository root (the workspace lockfile and the contract package are there) and serves them with nginx; `nginx.conf.template` proxies `/api` to `BACKEND_URL`, so the browser sees one origin as under the Vite dev proxy.
 
 ## Commands
 

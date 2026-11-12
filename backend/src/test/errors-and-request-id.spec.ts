@@ -1,4 +1,4 @@
-import { startTestApp, type TestApp } from "./boot";
+import { startTestApp, type TestApp } from "./boot.js";
 
 describe("the error envelope and the request id", () => {
   let app: TestApp;

@@ -45,13 +45,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci --prefix backend
-      - run: npm ci --prefix frontend
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w contract
       - name: openapi.json is current
-        run: npm run openapi:check --prefix backend
+        run: npm run openapi:check -w backend
       - name: Generated front-end types are current
         run: |
-          npm run generate:api --prefix frontend
+          npm run generate:api -w frontend
           git diff --exit-code -- frontend/src/utils/api/api-types.generated.ts
 
   app:
@@ -62,20 +63,18 @@ jobs:
       fail-fast: false
       matrix:
         app: [backend, frontend]
-    defaults:
-      run:
-        working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+      # One root lockfile for the whole workspace; each app consumes the contract package's build (ADR 0012).
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - run: npm run build -w contract
+      - run: npm run typecheck -w ${{ matrix.app }}
+      - run: npm test -w ${{ matrix.app }}
+      - run: npm run build -w ${{ matrix.app }}
 
   e2e:
     name: Browser journeys and containers
@@ -100,13 +99,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
-            e2e/package-lock.json
-      - run: npm ci --prefix backend
-      - run: npm ci --prefix frontend
-      - run: npm ci --prefix e2e
+      - run: npm ci
+      - run: npm run build -w contract
       # The hosted Ubuntu runner already ships Chrome and its system libraries; apt is not needed.
       - run: npx playwright install chromium
         working-directory: e2e

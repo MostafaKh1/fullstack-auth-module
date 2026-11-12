@@ -1,8 +1,8 @@
 import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { isValidObjectId, type Model } from "mongoose";
-import type { User } from "@/common/types/user.types";
-import { USER_MODEL, type UserDocument } from "@/database/collections/user.collection";
+import type { User } from "@/common/types/user.types.js";
+import { USER_MODEL, type UserDocument } from "@/database/collections/user.collection.js";
 
 const DUPLICATE_KEY = 11_000;
 

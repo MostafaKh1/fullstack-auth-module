@@ -1,6 +1,6 @@
 import { getConnectionToken } from "@nestjs/mongoose";
-import { ClockService } from "@/core/clock.service";
-import { startTestApp, type TestApp } from "./boot";
+import { ClockService } from "@/core/clock.service.js";
+import { startTestApp, type TestApp } from "./boot.js";
 
 // The harness is the seam every later back-end test stands on, so its promises are pinned here.
 describe("the HTTP test harness", () => {

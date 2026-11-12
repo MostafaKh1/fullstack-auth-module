@@ -1,10 +1,10 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiBearerAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { ApiErrors } from "@/common/decorators/api-errors.decorator";
-import type { AuthContext } from "@/common/services/access-token.service";
-import type { User } from "@/common/types/user.types";
-import { CurrentAuth } from "./current-auth.decorator";
-import { UsersService } from "./users.service";
+import { ApiErrors } from "@/common/decorators/api-errors.decorator.js";
+import type { AuthContext } from "@/common/services/access-token.service.js";
+import type { User } from "@/common/types/user.types.js";
+import { CurrentAuth } from "./current-auth.decorator.js";
+import { UsersService } from "./users.service.js";
 
 @ApiTags("users")
 @ApiBearerAuth("bearer")

@@ -2,14 +2,14 @@ import { Body, Controller, Headers, HttpCode, Post, Req, Res, UseGuards } from "
 import { ApiBody, ApiCookieAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import type { Request, Response } from "express";
-import { ApiErrors } from "@/common/decorators/api-errors.decorator";
-import { Public } from "@/common/decorators/auth.decorator";
-import type { User } from "@/common/types/user.types";
-import { type AuthOutcome, AuthService } from "@/features/auth/services/auth.service";
-import { AuthCookiesService } from "@/features/auth/services/auth-cookies.service";
-import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./auth.types";
-import { OriginCsrfGuard } from "./origin-csrf.guard";
-import { RouteValidationPipe } from "./route-validation.pipe";
+import { ApiErrors } from "@/common/decorators/api-errors.decorator.js";
+import { Public } from "@/common/decorators/auth.decorator.js";
+import type { User } from "@/common/types/user.types.js";
+import { type AuthOutcome, AuthService } from "@/features/auth/services/auth.service.js";
+import { AuthCookiesService } from "@/features/auth/services/auth-cookies.service.js";
+import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "./auth.types.js";
+import { OriginCsrfGuard } from "./origin-csrf.guard.js";
+import { RouteValidationPipe } from "./route-validation.pipe.js";
 
 type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 

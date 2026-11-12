@@ -1,6 +1,16 @@
 import { applyDecorators } from "@nestjs/common";
 import { ApiResponse } from "@nestjs/swagger";
-import { ERROR_CODES, type ErrorCode } from "@/common/errors/error-codes";
+import { ERROR_CODES, type ErrorCode } from "@/common/errors/error-codes.js";
+
+/** The envelope of ADR 0002 narrowed to the codes one response can carry. */
+export function errorEnvelopeSchema(codes: string[]) {
+  return {
+    allOf: [
+      { $ref: "#/components/schemas/ErrorEnvelope" },
+      { type: "object", properties: { code: { type: "string", enum: codes } } },
+    ],
+  };
+}
 
 export function ApiErrors(...codes: ErrorCode[]): MethodDecorator & ClassDecorator {
   const byStatus = new Map<number, ErrorCode[]>();
@@ -13,12 +23,7 @@ export function ApiErrors(...codes: ErrorCode[]): MethodDecorator & ClassDecorat
       ApiResponse({
         status,
         description: `Error codes: ${group.join(", ")}`,
-        schema: {
-          allOf: [
-            { $ref: "#/components/schemas/ErrorEnvelope" },
-            { type: "object", properties: { code: { type: "string", enum: group } } },
-          ],
-        },
+        schema: errorEnvelopeSchema(group),
       }),
     ),
   );

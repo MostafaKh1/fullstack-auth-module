@@ -1,7 +1,7 @@
 import { scrypt } from "node:crypto";
-import { signUpExamples } from "@/test/support/field-rules.examples";
-import { refreshCookie } from "@/test/support/refresh-cookie";
-import { startTestApp, type TestApp } from "./boot";
+import { signUpExamples } from "@/test/support/field-rules.examples.js";
+import { refreshCookie } from "@/test/support/refresh-cookie.js";
+import { startTestApp, type TestApp } from "./boot.js";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;

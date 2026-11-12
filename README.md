@@ -6,7 +6,7 @@ A complete authentication module: a React front end where a User signs up, signs
 - **Back end** (`backend/`): NestJS 11, MongoDB through Mongoose, Zod, pino logging, Swagger.
 - **Quality**: three test seams (back-end HTTP, rendered front end, browser journeys), Biome and Prettier gates, CI, Docker images and a Compose stack.
 
-The two apps share no code; HTTP is the only contract between them ([ADR 0003](docs/adr/0003-two-npm-apps-without-workspace-tooling.md)).
+The repository is one npm workspace with one lockfile: the two apps, the browser journeys in `e2e/`, and `contract/`, the package `@app/contract` that holds the API contract written with oRPC, which the apps build from ([ADR 0012](docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)). At runtime HTTP is the only link between the apps.
 
 ## Prerequisites
 
@@ -33,11 +33,11 @@ The stack runs with `NODE_ENV=production`, so the refresh cookie is `Secure`. Ch
 ### Without Docker for the apps
 
 ```sh
-npm run setup                                  # installs the root, backend, frontend and e2e dependencies
+npm run setup                                  # installs the whole workspace and builds the contract package
 cp backend/.env.example backend/.env           # local defaults; every variable is documented inside
 cp frontend/.env.example frontend/.env
 npm run db:up                                  # MongoDB alone, from compose.mongo.yaml: no password, reachable from this machine only
-npm run dev                                    # back end and front end together
+npm run dev                                    # back end, front end and the contract's compiler together
 ```
 
 Stop the database with `npm run db:down`. If port 27017 is taken on your machine, set `MONGO_PORT` (for example `MONGO_PORT=27117 npm run db:up`) and use the same port in `MONGODB_URI`.
@@ -56,15 +56,15 @@ In development Vite proxies `/api` to the back end (`API_PROXY_TARGET`), so the 
 
 | What                                         | Command                                                              | Needs                                                |
 | -------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
-| Back end (HTTP tests against a throwaway DB) | `npm test --prefix backend`                                          | nothing: it downloads a `mongod` binary on first run |
-| Front end (rendered app, network faked, MSW) | `npm test --prefix frontend`                                         | nothing                                              |
+| Back end (HTTP tests against a throwaway DB) | `npm test -w backend`                                                | nothing: it downloads a `mongod` binary on first run |
+| Front end (rendered app, network faked, MSW) | `npm test -w frontend`                                               | nothing                                              |
 | Both unit-level suites                       | `npm test`                                                           | nothing                                              |
 | Browser journeys (real Chromium, both apps)  | `cd e2e && npx playwright install chromium` once, then `npm run e2e` | nothing else: it starts a throwaway `mongod`         |
 | Lint (Biome) and format (Prettier)           | `npm run lint`, `npm run format:check`                               | nothing                                              |
 | Types and production builds                  | `npm run typecheck`, `npm run build`                                 | nothing                                              |
-| API contract is current                      | `npm run openapi:check --prefix backend`                             | nothing                                              |
+| API contract is current                      | `npm run openapi:check -w backend`                                   | nothing                                              |
 
-Set `E2E_MONGODB_URI` to use an existing MongoDB instead of the throwaway one ([e2e/AGENTS.md](e2e/AGENTS.md)). CI runs all of the above, then builds the images and waits for the containers' health checks ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
+The apps use the contract package's build: `npm run setup` and the root scripts build it first; after changing it outside `npm run dev`, run `npm run build -w contract` before a `-w` command. Set `E2E_MONGODB_URI` to use an existing MongoDB instead of the throwaway one ([e2e/AGENTS.md](e2e/AGENTS.md)). CI runs all of the above, then builds the images and waits for the containers' health checks ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
 ## Project layout
 
@@ -73,7 +73,8 @@ backend/     NestJS API: features/ (auth, users, health), common/ (guards, filte
              database/ (collections, repositories), config/, logging/, docs/, test/ (HTTP tests)
 frontend/    React app: pages/, components/, providers/ (the Session), hooks/, utils/ (API client), tests/ (harness)
 e2e/         Playwright journeys, run against the real apps
-contract/    openapi.json, exported from the back end; the front end's API types are generated from it
+contract/    @app/contract, the oRPC contract both apps build from, and openapi.json, exported from the back end;
+             the front end's API types are generated from it
 docs/        requirements.md (rules and traceability), spec/, adr/ (decisions), agents/
 compose.yaml MongoDB (authenticated, unpublished), API and front end as containers; compose.mongo.yaml is the development database
 AI.md        how AI was used; AGENTS.md files hold the navigation for people and agents

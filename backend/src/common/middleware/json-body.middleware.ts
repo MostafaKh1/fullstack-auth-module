@@ -1,6 +1,6 @@
 import { type ErrorRequestHandler, json, type RequestHandler } from "express";
-import { type ErrorCode, errorEnvelope } from "@/common/errors/error-codes";
-import { assignRequestId } from "@/logging/request-id";
+import { type ErrorCode, errorEnvelope } from "@/common/errors/error-codes.js";
+import { assignRequestId } from "@/logging/request-id.js";
 
 const BODY_PARSER_ERRORS: Record<string, ErrorCode> = {
   "entity.too.large": "request.too_large",

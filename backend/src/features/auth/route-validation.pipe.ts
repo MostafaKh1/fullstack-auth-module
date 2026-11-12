@@ -1,6 +1,6 @@
 import type { PipeTransform } from "@nestjs/common";
 import type { z } from "zod";
-import { ApiError } from "@/common/errors/api-error";
+import { ApiError } from "@/common/errors/api-error.js";
 
 /** Every check of the schema carries a rule id as its error (ADR 0002), reported as one `{ path, code }` issue. */
 export class RouteValidationPipe<Schema extends z.ZodType> implements PipeTransform<

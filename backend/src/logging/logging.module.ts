@@ -40,6 +40,8 @@ export class LoggingModule {
               level: config.get("logLevel"),
               genReqId: assignRequestId,
               redact: { paths: REDACTED_PATHS, censor: "[Redacted]" },
+              // pino-pretty is a devDependency: only development may name it, or the production image cannot start.
+              ...(config.get("env") === "development" && { transport: { target: "pino-pretty" } }),
             };
             return {
               pinoHttp: options.logDestination ? [pinoOptions, options.logDestination] : pinoOptions,

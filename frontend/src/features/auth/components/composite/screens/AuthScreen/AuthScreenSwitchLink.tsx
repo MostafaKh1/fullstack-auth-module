@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { type AuthForm, withAuthForm } from "@/utils/auth-url/auth-url";
+import { type AuthForm, withAuthForm } from "@/features/auth/utils/auth-url";
 
 type Props = {
   to: AuthForm;

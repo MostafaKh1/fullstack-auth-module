@@ -4,42 +4,53 @@ React 19 + Vite + TypeScript single-page app. Architecture and its reasons: [ADR
 
 ## Layers
 
-Imports point down this table only. A layer may skip the ones between (a page may import `utils/`), never point up.
+Imports point down this table only. A layer may skip the ones between (a page may import `utils/`), never point up. A feature is the one place the shared kind folders repeat; see "Features".
 
-| Layer      | Folder            | Owns                                                                                                                           |
-| ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| App        | `src/app/`        | the providers around the router (`App.tsx`), the one route table, the query client                                             |
-| Pages      | `src/pages/`      | one screen per route, composing components                                                                                     |
-| Components | `src/components/` | every component that is not a page, in five sections (see below)                                                               |
-| Hooks      | `src/hooks/`      | hooks two or more components or pages use                                                                                      |
-| Providers  | `src/providers/`  | React context providers mounted once in `App` (the Session, the theme), and the contexts a hook reads                          |
-| Utils      | `src/utils/`      | framework-free helpers: `api/` (the oRPC client, the access token, the refresh, the error code), `auth-url/`, `cn()`, the copy |
+| Layer      | Folder            | Owns                                                                                                                     |
+| ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| App        | `src/app/`        | the providers around the router (`App.tsx`), the one route table, the query client                                       |
+| Pages      | `src/pages/`      | one screen per route, composing components                                                                               |
+| Features   | `src/features/`   | one folder per feature, holding what that feature alone owns (see "Features")                                            |
+| Components | `src/components/` | every shared component that is not a page, in five sections (see below)                                                  |
+| Hooks      | `src/hooks/`      | shared hooks two or more components, features or pages use                                                               |
+| Providers  | `src/providers/`  | shared context providers mounted once in `App` (the theme), and the contexts a hook reads                                |
+| Utils      | `src/utils/`      | framework-free shared helpers: `api/` (the oRPC client, the access token, the refresh, the error code), `cn()`, the copy |
 
 `src/tests/` is the rendered-app harness and sits outside the stack (see "Tests"). `src/main.tsx` is the browser entry; it and the harness build the app from the same `src/app/` files, so tests run the real providers and routes.
 
+## Features
+
+What one feature alone owns lives in `src/features/<name>/`, which repeats the shared kind folders (`components/`, `hooks/`, `providers/`, `utils/`) and holds nothing else. Inside them the rules of this file apply unchanged, read from the feature folder: the same sections, kind folders, component folders, hook rule and naming. What several features or the app shell use stays in the shared folders. A feature folder is named for what it does, in kebab-case, and exists only when it holds something.
+
+- `app/` and `pages/` may import a feature. A feature imports the shared folders and itself, never another feature, `app/`, `pages/` or `tests/`. The shared folders import no feature. The structure check enforces each.
+- Code moves into a feature when only that feature uses it, and out to the shared folders when a second feature or the shell needs it.
+- A page stays in `src/pages/`: the route tree is one place, and a page composes a feature's components.
+- The `auth` feature owns the Session (its provider, context and hook), the two route guards and two route switches, the auth screen and its forms, and the URL helpers (the auth form in the URL, the `returnTo` rule).
+
 ## Where does this file belong?
 
-Take the first that fits. Each line names the file to copy where one exists.
+Take the first that fits. Each line names the file to copy where one exists. Paths below are the shared ones; a feature's file takes the same path under `src/features/<name>/`.
 
-1. **A screen at a URL** -> `src/pages/<group>/<route>/<Name>Page.tsx`, plus its entry in `src/app/routes.tsx` (the only place a route is added; a route guard wraps elements there). A parenthesised group (`(auth)`, `(webapp)`) groups screens by who sees them and adds nothing to the URL; the route folder is named for the path or, for Sign in and Sign up (both at `/`), for their `auth` value ([ADR 0009](../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)). A protected screen goes inside `RequireSession`. Copy `src/pages/(auth)/sign-in/SignInPage.tsx`.
-2. **A component** -> `src/components/`, in the first section that fits, in this order:
+1. **Code only one feature uses** -> that feature's folder, `src/features/<name>/`, in the folder the lines below pick for it (its screen's components, its hook, its provider, its helpers); the page itself stays in `pages/`. Copy `src/features/auth/`.
+2. **A screen at a URL** -> `src/pages/<group>/<route>/<Name>Page.tsx`, plus its entry in `src/app/routes.tsx` (the only place a route is added; a route guard wraps elements there). A parenthesised group (`(auth)`, `(webapp)`) groups screens by who sees them and adds nothing to the URL; the route folder is named for the path or, for Sign in and Sign up (both at `/`), for their `auth` value ([ADR 0009](../docs/adr/0009-auth-forms-addressed-by-search-parameter.md)). A protected screen goes inside `RequireSession`. Copy `src/pages/(auth)/sign-in/SignInPage.tsx`.
+3. **A component** -> `src/components/`, in the first section that fits, in this order:
    1. `primitives/`: an accessible, behaviour-only building block that owns roles, focus and keyboard handling and knows nothing of the app. Flat: `primitives/<Name>.tsx`, no folders. Each wraps one Radix part, and nothing else imports `@radix-ui` (Biome rejects it). Copy `primitives/Slot.tsx`.
-   2. `base/<kind>/`: a styled atom, built on primitives, usually from shadcn/ui, that knows nothing of the app: it is driven by props, and the `Form*` parts also read the form's context through `useFormField` (see "shadcn/ui"). Copy `base/buttons/Button.tsx`; a family of parts is a component folder with one part per file: copy `base/cards/Card/`.
-   3. `composite/<kind>/`: a compound component, or anything that knows about the Session, a form schema or an endpoint. A screen (`<Name>Screen`) goes in `composite/screens/`: copy `composite/screens/AuthScreen/`.
-   4. `layout/<kind>/`: application chrome and routing pieces, such as route guards and route switches. Pages arrive as props. Copy `layout/route-guards/RequireSession.tsx`.
+   2. `base/<kind>/`: a styled atom, built on primitives, usually from shadcn/ui, that knows nothing of the app: it is driven by props, and the `Form*` parts also read the form's context through `FormUseFormField` (see "shadcn/ui"). Copy `base/buttons/Button.tsx`; a family of parts is a component folder with one part per file: copy `base/cards/Card/`.
+   3. `composite/<kind>/`: a compound component, or anything that knows about the Session, a form schema or an endpoint. A screen (`<Name>Screen`) goes in `composite/screens/`: copy `src/features/auth/components/composite/screens/AuthScreen/`.
+   4. `layout/<kind>/`: application chrome and routing pieces, such as route guards and route switches. Pages arrive as props. Copy `src/features/auth/components/layout/route-guards/RequireSession.tsx`.
    5. `utility/`: a small cross-cutting piece with no design role (a loading state, a fallback). Copy `utility/PageLoader.tsx`.
 
-   UI one page alone uses still goes here: pages hold no components of their own. A feature module that two or more routes share has no section yet; agree its place in the spec before adding one.
+   UI one page alone uses still goes here: pages hold no components of their own. A feature that two or more routes share is a feature folder.
 
-3. **A hook** used by two or more components or pages -> `src/hooks/useX.ts` (copy `useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file); the structure check treats a `<Folder>UseX` file as a hook, and moves it to `hooks/` once two files use it. Copy `useFormField.ts`: the `Form*` parts share it, and its two contexts sit in `src/providers/` so the hook can import them.
-4. **An app-wide context** -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider; the `Form*` parts' two contexts have no provider of their own, since `FormField` and `FormItem` provide them), mounted in `src/app/App.tsx` inside the query client. Copy `SessionProvider.tsx`.
-5. **A call to an endpoint** -> for a route in the contract, nothing: a page or component uses the oRPC client's TanStack Query helpers, `orpc.<feature>.<procedure>` from `src/utils/api/orpc-client.ts` (copy `AuthScreenSignUpForm.tsx`). A route not yet in the contract is added to it first, test first ([contract/AGENTS.md](../contract/AGENTS.md)); the app has no other HTTP client. A read is `useQuery(orpc.<feature>.<procedure>.queryOptions())` (copy `ApplicationPage.tsx`).
-6. **Any other helper** -> a kebab-case module in `src/utils/` (copy `cn.ts`), or in the concern folder it belongs to. Three helpers at the top of `src/utils/` that start with the same word make a concern: they move into `src/utils/<concern>/`, which then holds every helper of that concern, as `api/` holds the client, the access token and the refresh, and `auth-url/` holds the `returnTo` rule. `cn.ts` and `error-copy.ts` stay at the top.
-7. **A test** -> beside the file it covers, named after it (see "Tests"). Copy `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
+4. **A hook** used by two or more components or pages -> `src/hooks/useX.ts`, or its feature's `hooks/` when one feature owns it (copy `src/features/auth/hooks/useSession.ts`). One used by a single component -> that component's folder, as `<Folder>UseX.ts` (the component becomes a folder if it is a file); the structure check treats a `<Folder>UseX` file as a hook, and moves it to `hooks/` once two files outside its folder use it. Copy `base/forms/Form/FormUseFormField.ts`: the `Form*` parts share it, and its two contexts sit in the same folder as `FormFieldContext.ts` and `FormItemContext.ts`, so it is used only inside its own component folder.
+5. **An app-wide context** -> `src/providers/<Name>Provider.tsx`, its context and types in `<name>-context.ts` beside it (so a hook can import the context without the provider; a context with no provider of its own sits in its component's folder, as the `Form*` parts' do, since `FormField` and `FormItem` provide them), mounted in `src/app/App.tsx` inside the query client. A provider only one feature uses sits in that feature's `providers/`. Copy `src/features/auth/providers/SessionProvider.tsx`.
+6. **A call to an endpoint** -> for a route in the contract, nothing: a page or component uses the oRPC client's TanStack Query helpers, `orpc.<feature>.<procedure>` from `src/utils/api/orpc-client.ts` (copy `AuthScreenSignUpForm.tsx`). A route not yet in the contract is added to it first, test first ([contract/AGENTS.md](../contract/AGENTS.md)); the app has no other HTTP client. A read is `useQuery(orpc.<feature>.<procedure>.queryOptions())` (copy `ApplicationPage.tsx`).
+7. **Any other helper** -> a kebab-case module in `src/utils/` (copy `cn.ts`), or in the concern folder it belongs to. Three helpers at the top of `src/utils/` that start with the same word make a concern: they move into `src/utils/<concern>/`, which then holds every helper of that concern, as `api/` holds the client, the access token and the refresh. `cn.ts` and `error-copy.ts` stay at the top.
+8. **A test** -> beside the file it covers, named after it (see "Tests"). Copy `src/pages/(auth)/sign-in/SignInPage.test.tsx`.
 
 ### Sections import in one direction
 
-Dependencies point from app-aware toward behaviour-only: base imports primitives; composite imports primitives, base and utility; layout imports all four; primitives and utility import no other section. Primitives and utility import nothing in the app outside `components/` but `src/utils/`; base imports also `hooks/` and `providers/`, for the form context its `Form*` parts read. No component imports `pages/`, `app/` or `tests/`.
+Dependencies point from app-aware toward behaviour-only: base imports primitives; composite imports primitives, base and utility; layout imports all four; primitives and utility import no other section. Primitives, base and utility import nothing in the app outside `components/` but `src/utils/`. No component imports `pages/`, `app/` or `tests/`.
 
 ## shadcn/ui
 
@@ -89,7 +100,7 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 - **The oRPC client** is `src/utils/api/orpc-client.ts`, the one client built from the contract ([ADR 0012](../docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)): oRPC's OpenAPI link at `/api` with credentials included, so the refresh cookie travels, the Bearer header, and a decoder that turns the envelope into an error with its code (`data.issues` for a validation failure); oRPC's own check then marks it `defined`, the contract's typed error, when the procedure declares that code. Its link interceptor is the refresh-and-retry of "State" above. It exports `orpc`, the TanStack Query helpers, `SignedIn`, what Sign up, Sign in and refresh answer, and `User`.
 - Nothing outside `src/utils/` imports `@orpc/client`; nothing in `src/utils/` imports React or another app folder.
 - A route is typed by the contract through the client. The error envelope's type and the closed set of error codes come from `@app/contract/common/error-envelope`, never restated. The front end imports no code from the back end ([contract/AGENTS.md](../contract/AGENTS.md)).
-- The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/auth-url/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
+- The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/features/auth/utils/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
 
 ## Copy and errors
 
@@ -114,7 +125,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 ## Structure check
 
-`npm run check:structure` (from the repository root, `scripts/check-frontend-structure.mjs`) enforces every rule in "Where does this file belong?", "Component folders", "Naming", "Imports" and the colour rule in "shadcn/ui" over `src/`, and prints each violation as `<rule> <path>: <what to do>`. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job. A new rule lands in the script with a planted violation in its tests (`npm run test:structure`, which runs the script over example trees).
+`npm run check:structure` (from the repository root, `scripts/check-frontend-structure.mjs`) enforces every rule in "Features", "Where does this file belong?", "Component folders", "Naming", "Imports" and the colour rule in "shadcn/ui" over `src/`, and prints each violation as `<rule> <path>: <what to do>`. It runs in the pre-commit hook, in `npm run lint` and in the CI lint job. A new rule lands in the script with a planted violation in its tests (`npm run test:structure`, which runs the script over example trees).
 
 ## Container
 

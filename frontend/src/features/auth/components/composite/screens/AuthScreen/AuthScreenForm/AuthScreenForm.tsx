@@ -4,7 +4,7 @@ import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { Alert } from "@/components/base/alerts/Alert";
 import { Button } from "@/components/base/buttons/Button";
 import { Form } from "@/components/base/forms/Form/Form";
-import { useSession } from "@/hooks/useSession";
+import { useSession } from "@/features/auth/hooks/useSession";
 import type { SignedIn } from "@/utils/api/orpc-client";
 import { errorCopy } from "@/utils/error-copy";
 import { applyApiFailure } from "./AuthScreenFormApiFailure";

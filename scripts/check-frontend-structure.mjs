@@ -23,7 +23,7 @@ const MAY_IMPORT = {
 const NEVER_IMPORTED_BY_COMPONENTS = ["pages", "app", "tests"];
 const OUTSIDE_COMPONENTS = {
   primitives: ["utils"],
-  base: ["utils", "hooks", "providers"],
+  base: ["utils"],
   utility: ["utils"],
 };
 
@@ -238,8 +238,16 @@ for (const item of items) {
       );
       continue;
     }
-    if (importersOf(item.rel).length >= 2) {
-      violate("hook-shared", item.rel, "a hook used by two or more files lives in hooks/ as useX");
+    if (
+      importersOf(item.rel).filter(
+        (file) => !file.startsWith(`${item.rel.slice(0, item.rel.lastIndexOf("/"))}/`),
+      ).length >= 2
+    ) {
+      violate(
+        "hook-shared",
+        item.rel,
+        "a hook used by two or more files outside its folder lives in hooks/ as useX",
+      );
     }
   }
   if (

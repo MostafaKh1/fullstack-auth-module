@@ -1,6 +1,7 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
+import { returnToExamples } from "@/features/auth/utils/return-to.examples";
 import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   accessToken,
@@ -19,7 +20,6 @@ import { expectedCopy } from "@/tests/support/expected-copy";
 import { fillForm } from "@/tests/support/fill-form";
 import { renderApp, renderRestoringApp } from "@/tests/support/render-app";
 import { orpc } from "@/utils/api/orpc-client";
-import { returnToExamples } from "@/utils/auth-url/return-to.examples";
 
 type Router = ReturnType<typeof renderRestoringApp>["router"];
 

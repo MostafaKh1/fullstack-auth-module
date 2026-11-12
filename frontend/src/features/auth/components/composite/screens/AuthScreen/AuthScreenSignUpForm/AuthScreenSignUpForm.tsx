@@ -9,8 +9,8 @@ import { FormLabel } from "@/components/base/forms/Form/FormLabel";
 import { FormMessage } from "@/components/base/forms/Form/FormMessage";
 import { Input } from "@/components/base/inputs/Input";
 import { PasswordInput } from "@/components/base/inputs/PasswordInput";
-import { AuthScreenEmailField } from "@/components/composite/screens/AuthScreen/AuthScreenEmailField";
-import { AuthScreenForm } from "@/components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenForm";
+import { AuthScreenEmailField } from "@/features/auth/components/composite/screens/AuthScreen/AuthScreenEmailField";
+import { AuthScreenForm } from "@/features/auth/components/composite/screens/AuthScreen/AuthScreenForm/AuthScreenForm";
 import { orpc } from "@/utils/api/orpc-client";
 import { AuthScreenSignUpFormPasswordChecklist } from "./AuthScreenSignUpFormPasswordChecklist";
 

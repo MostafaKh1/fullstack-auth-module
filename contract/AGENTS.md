@@ -7,7 +7,7 @@ The npm workspace package `@app/contract`, private and never published: the API 
 ```
 contract/
 ├── src/contract.ts     # the router: one key per feature, the package's main export
-├── src/common/         # what several features share: the error envelope, the User shape, the route-security helpers
+├── src/common/         # what two or more features share, or the package's own wiring needs: it imports no feature
 ├── src/features/<name>/ # one folder per feature: its procedures (<name>.contract.ts), its schemas and its own rules
 ├── lint/               # the GritQL plugin behind the boundary rule, registered in the root biome.jsonc
 ├── dist/               # the build the back end imports (ES modules and declarations); never committed

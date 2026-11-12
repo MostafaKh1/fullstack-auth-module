@@ -1,7 +1,7 @@
 /**
  * The worked examples of the field rules in docs/requirements.md, one row per case.
  *
- * Both apps' suites run every row against the rules in `field-rules.ts`.
+ * Both apps' suites run every row against the rules in `auth.field-rules.ts`.
  *
  * `input: undefined` means the field is left out of the request.
  * A valid row may name `stored`: the value the User is saved with.

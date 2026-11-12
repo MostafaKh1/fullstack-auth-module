@@ -374,7 +374,7 @@ export const a = <p className="bg-primary text-muted-foreground border-input rin
       "pages/not-found/NotFoundPage.tsx":
         'import { RequireAuth } from "@/features/auth/components/layout/route-guards/RequireAuth";\nimport { useAuth } from "@/features/auth/hooks/useAuth";\n',
       "pages/(auth)/sign-in/SignInPage.tsx":
-        'import { useAuth } from "@/features/auth/hooks/useAuth";\nimport { AuthProvider } from "@/features/auth/providers/AuthProvider";\n',
+        'import { useSession } from "@/hooks/useSession";\nimport { useAuth } from "@/features/auth/hooks/useAuth";\nimport { AuthProvider } from "@/features/auth/providers/AuthProvider";\n',
     };
 
     it("accepts a feature that repeats the shared folders and imports only shared code and itself", () => {
@@ -428,7 +428,7 @@ export const a = <p className="bg-primary text-muted-foreground border-input rin
     });
 
     it("folder-casing: a feature folder is kebab-case", () => {
-      fails({ ...feature, "features/Auth/utils/return-to.ts": stub }, "folder-casing", "features/Auth");
+      fails({ ...feature, "features/Reports/utils/totals.ts": stub }, "folder-casing", "features/Reports");
     });
 
     it("the naming rules apply inside a feature", () => {

@@ -156,6 +156,60 @@ describe("Sign up", () => {
     expect(response.body.code).toBe("request.malformed");
   });
 
+  it("answers a validation failure in the error envelope, its issues carrying the rule ids", async () => {
+    const response = await app
+      .http()
+      .post("/api/auth/sign-up")
+      .set("X-Request-Id", "sign-up-invalid")
+      .send({ ...valid, password: "abc" });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      code: "request.validation_failed",
+      status: 400,
+      traceId: "sign-up-invalid",
+      retryable: false,
+      message: expect.any(String),
+      issues: [
+        { path: ["password"], code: "password.too_short" },
+        { path: ["password"], code: "password.missing_number" },
+        { path: ["password"], code: "password.missing_special" },
+      ],
+    });
+  });
+
+  it("answers a taken email in the error envelope", async () => {
+    await app.http().post("/api/auth/sign-up").send(valid).expect(201);
+
+    const response = await app
+      .http()
+      .post("/api/auth/sign-up")
+      .set("X-Request-Id", "sign-up-taken")
+      .send(valid);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({
+      code: "user.email_taken",
+      status: 409,
+      traceId: "sign-up-taken",
+      retryable: false,
+      message: expect.any(String),
+    });
+  });
+
+  it("answers 400 request.malformed for a body sent as multipart form data, and creates no User", async () => {
+    const response = await app
+      .http()
+      .post("/api/auth/sign-up")
+      .field("email", valid.email)
+      .field("name", valid.name)
+      .field("password", valid.password);
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe("request.malformed");
+    expect(await app.db.collection("users").countDocuments()).toBe(0);
+  });
+
   it("reports every broken field at once", async () => {
     const response = await app.http().post("/api/auth/sign-up").send({ email: "ada", name: "ab" });
 
@@ -183,6 +237,41 @@ describe("Sign up with COOKIE_SECURE", () => {
     const response = await app.http().post("/api/auth/sign-up").send(valid);
 
     expect(refreshCookie(response.headers["set-cookie"])).toMatch(/; Secure(;|$)/);
+  });
+});
+
+describe("Sign up errors in production", () => {
+  let app: TestApp;
+
+  beforeAll(async () => {
+    app = await startTestApp({ NODE_ENV: "production", COOKIE_SECURE: "true" });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("omits the developer message from a validation failure and from a taken email", async () => {
+    const invalid = await app
+      .http()
+      .post("/api/auth/sign-up")
+      .send({ ...valid, name: "ab" });
+    await app.http().post("/api/auth/sign-up").send(valid).expect(201);
+    const taken = await app.http().post("/api/auth/sign-up").send(valid);
+
+    expect(invalid.body).toEqual({
+      code: "request.validation_failed",
+      status: 400,
+      traceId: invalid.headers["x-request-id"],
+      retryable: false,
+      issues: [{ path: ["name"], code: "name.too_short" }],
+    });
+    expect(taken.body).toEqual({
+      code: "user.email_taken",
+      status: 409,
+      traceId: taken.headers["x-request-id"],
+      retryable: false,
+    });
   });
 });
 

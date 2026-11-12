@@ -51,6 +51,10 @@ describe("the API documentation", () => {
     ]);
   });
 
+  it("documents Sign up from its procedure in the contract", () => {
+    expect(document.paths["/api/auth/sign-up"].post).toMatchObject({ operationId: "auth.signUp" });
+  });
+
   it("documents each request body from the Zod schema, with the field rules", () => {
     const body = document.paths["/api/auth/sign-up"].post.requestBody?.content["application/json"].schema;
     const schema = document.components.schemas.SignUpRequest;

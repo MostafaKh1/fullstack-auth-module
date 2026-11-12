@@ -18,8 +18,9 @@ export class AuthController {
     private readonly authCookies: AuthCookiesService,
   ) {}
 
+  /** Origin-checked like the cookie routes: a cross-site Sign up would plant its Session in the victim's browser. */
   @Public()
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard, OriginCsrfGuard)
   @Implement(contract.auth.signUp)
   signUp() {
     return implement(contract.auth.signUp).handler(async ({ input, context }) => {
@@ -28,8 +29,9 @@ export class AuthController {
     });
   }
 
+  /** Origin-checked against login CSRF: a cross-site Sign in would plant the attacker's Session (ADR 0001). */
   @Public()
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard, OriginCsrfGuard)
   @Implement(contract.auth.signIn)
   signIn() {
     return implement(contract.auth.signIn).handler(async ({ input, context }) => {

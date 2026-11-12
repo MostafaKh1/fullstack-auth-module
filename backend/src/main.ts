@@ -3,12 +3,11 @@ import { NestFactory } from "@nestjs/core";
 import pino from "pino";
 import { InvalidConfigError, loadConfig } from "@/config/app-env.js";
 import { AppModule } from "./app.module.js";
-import { configureApp } from "./app.setup.js";
+import { createApp } from "./app.setup.js";
 
 async function bootstrap(): Promise<void> {
   const config = loadConfig();
-  const app = await NestFactory.create(AppModule.forRoot(config), { bufferLogs: true });
-  await configureApp(app);
+  const app = await createApp((options) => NestFactory.create(AppModule.forRoot(config), options));
   await app.listen(config.port);
 }
 

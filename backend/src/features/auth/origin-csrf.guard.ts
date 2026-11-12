@@ -4,8 +4,8 @@ import { ApiError } from "@/common/errors/api-error.js";
 import { AppConfigService } from "@/config/app-config.service.js";
 
 /**
- * The `Origin` check is what stops another site from using the refresh cookie, which is `SameSite=Lax` (ADR 0001).
- * A request without `Origin` passes: browsers send one on every cross-site POST, so its absence means a
+ * The `Origin` check is what stops another site from using the refresh cookie, which is `SameSite=Lax`, or from
+ * planting one through Sign up or Sign in (ADR 0001). A request without `Origin` passes: browsers send one on every cross-site POST, so its absence means a
  * same-origin request or a non-browser client, which holds no victim's cookie.
  */
 @Injectable()

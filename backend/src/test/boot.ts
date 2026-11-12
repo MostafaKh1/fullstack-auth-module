@@ -5,7 +5,7 @@ import { type Db, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import request from "supertest";
 import { AppModule } from "@/app.module.js";
-import { configureApp } from "@/app.setup.js";
+import { createApp } from "@/app.setup.js";
 import { parseConfig } from "@/config/app-env.js";
 import { ClockService } from "@/core/clock.service.js";
 import { FakeClock } from "@/test/support/fake-clock.js";
@@ -75,8 +75,7 @@ export async function startTestApp(env: Record<string, string> = {}): Promise<Te
     .useValue(clock)
     .compile();
 
-  const app: INestApplication = moduleRef.createNestApplication({ bufferLogs: true });
-  await configureApp(app);
+  const app = await createApp((options) => moduleRef.createNestApplication(options));
   await app.init();
 
   const client = await MongoClient.connect(uri);

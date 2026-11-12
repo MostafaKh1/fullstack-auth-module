@@ -3,6 +3,10 @@
 How AI assistance was used to build this repository, written as the work happened, one entry per ticket.
 The assistant was Claude (Claude Code in VS Code). Every generated line was read, run and owned before it was committed.
 
+## Delivery and scope
+
+Every requirement of the brief was on `main` at commit `e14bb4e` (2026-11-11, PR #22). The work after it (the shared oRPC contract, feature folders, security reviews and their fixes, architecture checks) was a deliberate investment so the project scales, not part of meeting the brief; a pure speed run would have stopped at `e14bb4e`.
+
 ## In short
 
 **What was AI-assisted: everything, by agents.** Every file in this repository, code, tests, configuration and documents, was written by Claude agents (Claude Code) under my direction. My part was the decisions, the review and the corrections below. Each ticket was built by a fresh agent, read, run and checked before it landed.
@@ -334,7 +338,8 @@ What survived from the discarded attempt, because it was learned rather than wri
 - Confirmed, high: MongoDB was published on every network interface with no authentication, so anyone reaching the host could read password hashes or forge a Session. Fixed in #38: the development database listens on 127.0.0.1 only and stays password-free; the full container stack publishes no database port and requires a password, and production refuses a credential-less connection string. Verified in Docker.
 - Needs validation, fixed anyway because cheap: a Sign out racing a refresh could leave the Session alive, and a refresh cookie planted from a sibling domain could switch a User's Session; fixed in #39 (late refreshes discarded, Sign out also revokes with the immediately previous secret, duplicate refresh cookies refused).
 - Needs validation, documented: the `TRUST_PROXY` hop count must match the real number of proxies in front of the API (README).
-- Rejected after checking: login CSRF, the email-taken message, scrypt cost as denial of service, missing CSP on the HTML, a spoofed X-Forwarded-For.
+- Rejected after checking: the email-taken message, scrypt cost as denial of service, missing CSP on the HTML, a spoofed X-Forwarded-For.
+- **Corrected later:** this review also listed login CSRF as rejected, and that was wrong. Nest's default form parser read a cross-site form post to Sign in as data, and Sign in and Sign up did not check `Origin`, so a hostile page could plant the attacker's Session in a visitor's browser. Fixed in #58.
 - A read-only dead-code sweep found unused exports, a duplicated helper, a dead CI step, stale docs, an undeclared dependency, and code placed against the repository's own rules; fixed in #40 (shared types in the shared section, single-feature code beside its feature, ADR 0005 amended, lint rules forbidding cross-feature imports) and #41.
 - The User asked to keep only skills the workflow used: 25 installed but unused skills were removed, leaving 15, and two docs that referenced removed skills were corrected.
 
@@ -398,3 +403,10 @@ What survived from the discarded attempt, because it was learned rather than wri
 - **Kept, and why:** the `settle` step of `common/middleware/json-body.middleware.ts` (`req.body ??= null`) was named by no ticket, but it stays: a body the JSON parser skips (multipart, plain text) would otherwise make oRPC read the request stream itself, with no size limit, and with `null` the procedure's input schema refuses it as `request.malformed`.
 - **Decided:** an error counts as the API's when its code reads `area.reason`, not when it is in `ERROR_CODES`, because a code the front end does not know yet must still reach the generic sentence (an existing test pins it); oRPC's own codes are SCREAMING_CASE, so a proxy's page still reads as unreachable.
 - **No new behaviour:** no red commit; the back-end, front-end and Playwright suites are the safety net and assert what they did before.
+
+### Close login CSRF and refuse bodies the API cannot read (#58)
+
+- **AI-generated:** `createApp()` in `app.setup.ts`, the one place the application is created (Nest's built-in body parsers off, `bufferLogs`) and wired, called by `main.ts` with `NestFactory` and by the test harness with the testing module; the JSON body parser's error handler answering every client error it raises (status 4xx) as `400 request.malformed`, or `413 request.too_large`, and passing its own failures to the global filter; `OriginCsrfGuard` after `ThrottlerGuard` on Sign up and Sign in; the docs (back-end `AGENTS.md` widened to every route that sets or reads the refresh cookie, the README's security notes). ADRs 0001 and 0002 and the spec copy were written before the ticket and are its first commit.
+- **Red first:** seven HTTP-seam tests: a form-encoded Sign in with valid credentials and a form-encoded Sign up (both answered `200`/`201` and set the cookie), a foreign `Origin` on each (same), a JSON body in `latin1` (answered `500` and logged `request.failed` at error level), and, passing from the start, Sign up and Sign in from the front end's own `Origin`. The log assertion was run on its own against the old code and failed, so it is not vacuous; it reads every line written during the request, because a parser error can be logged before the request logger has tagged it.
+- **Decided:** a form body is refused by the procedure's input schema (`request.malformed`), as the spec says, so an oversized form body answers `400`, not `413`; it is never read, so it bypasses no limit. The rule for the parser's errors is their status, not a list of types, so a new client error type is never logged as a server failure.
+- **Verified:** back end 13 suites and 183 tests (176 before plus 7), typecheck, lint, format. A throwaway probe, not committed: an oversized form body, an unknown `Content-Encoding` and a `text/plain` body each answered `400 request.malformed` with no error-level log line.

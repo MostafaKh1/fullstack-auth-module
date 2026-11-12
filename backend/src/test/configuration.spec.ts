@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { testEnv } from "./boot.js";
+import type { MongoMemoryServer } from "mongodb-memory-server";
+import pino from "pino";
+import { startThrowawayMongo } from "@/test/support/throwaway-mongo.js";
+import { type LogLine, testEnv } from "./boot.js";
 
 const backendRoot = fileURLToPath(new URL("../../", import.meta.url));
 // The arguments that let plain Node run the TypeScript entry point; the end-to-end suite starts the API with the same file.
@@ -12,40 +14,60 @@ const registerArgs: string[] = JSON.parse(
   readFileSync(path.join(backendRoot, "node-register-args.json"), "utf8"),
 );
 
-type Exit = { code: number | null; output: string };
-type LogLine = Record<string, unknown> & { msg?: string };
+type Exit = { code: number | null; output: string; stoppedOn?: LogLine };
 
-/** Spawns the real entry point, `src/main.ts`, with exactly the given environment. */
-function spawnApi(env: Record<string, string>) {
-  return spawn(process.execPath, [...registerArgs, "src/main.ts"], {
-    cwd: backendRoot,
-    env: { PATH: process.env.PATH ?? "", SystemRoot: process.env.SystemRoot ?? "", ...env },
-  });
-}
-
-/** Starts the real entry point and waits for it to exit. */
-function startApi(env: Record<string, string>): Promise<Exit> {
+// Runs the real entry point, `src/main.ts`, with exactly the given environment until it exits, or until it logs the
+// JSON line whose message is `stopOn`, which then stops it.
+function startApi(env: Record<string, string>, stopOn?: string): Promise<Exit> {
   return new Promise((resolve, reject) => {
-    const child = spawnApi(env);
+    const child = spawn(process.execPath, [...registerArgs, "src/main.ts"], {
+      cwd: backendRoot,
+      env: { PATH: process.env.PATH ?? "", SystemRoot: process.env.SystemRoot ?? "", ...env },
+    });
     let output = "";
+    let unfinishedLine = "";
+    let stoppedOn: LogLine | undefined;
     child.stdout.on("data", (chunk: Buffer) => {
-      output += chunk.toString("utf8");
+      const text = chunk.toString("utf8");
+      output += text;
+      const lines = (unfinishedLine + text).split("\n");
+      unfinishedLine = lines.pop() ?? "";
+      for (const line of lines) {
+        if (stopOn === undefined || stoppedOn !== undefined) break;
+        const logged = parseLogLine(line);
+        if (logged?.msg === stopOn) {
+          stoppedOn = logged;
+          child.kill();
+        }
+      }
     });
     child.stderr.on("data", (chunk: Buffer) => {
       output += chunk.toString("utf8");
     });
     const timer = setTimeout(() => {
       child.kill();
-      reject(new Error(`the API did not exit within 20 s; output so far:\n${output}`));
+      reject(
+        new Error(
+          `the API did not ${stopOn ? `log ${stopOn}` : "exit"} within 20 s; output so far:\n${output}`,
+        ),
+      );
     }, 20_000);
     child.on("exit", (code) => {
       clearTimeout(timer);
-      resolve({ code, output });
+      resolve({ code, output, stoppedOn });
     });
   });
 }
 
-/** A port nothing listens on, since the start-up line's URLs are built from the configured port (0 would be useless). */
+function parseLogLine(line: string): LogLine | undefined {
+  try {
+    return JSON.parse(line) as LogLine;
+  } catch {
+    return undefined;
+  }
+}
+
+// The start-up line's URLs are built from the configured port, so the API cannot be given 0 and pick its own.
 function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -60,47 +82,11 @@ function freePort(): Promise<number> {
   });
 }
 
-/** Starts the real entry point, waits for the first JSON log line whose message is `msg`, then stops the process. */
-function startApiUntilLogged(env: Record<string, string>, msg: string): Promise<LogLine> {
-  return new Promise((resolve, reject) => {
-    const child = spawnApi(env);
-    let output = "";
-    let unfinishedLine = "";
-    let found: LogLine | undefined;
-    child.stdout.on("data", (chunk: Buffer) => {
-      const text = chunk.toString("utf8");
-      output += text;
-      const lines = (unfinishedLine + text).split("\n");
-      unfinishedLine = lines.pop() ?? "";
-      for (const line of lines) {
-        if (found !== undefined || !line.startsWith("{")) continue;
-        const parsed = JSON.parse(line) as LogLine;
-        if (parsed.msg === msg) {
-          found = parsed;
-          child.kill();
-        }
-      }
-    });
-    child.stderr.on("data", (chunk: Buffer) => {
-      output += chunk.toString("utf8");
-    });
-    const timer = setTimeout(() => {
-      child.kill();
-    }, 20_000);
-    child.on("exit", (code) => {
-      clearTimeout(timer);
-      if (found !== undefined) resolve(found);
-      else reject(new Error(`no ${msg} line before the API stopped (exit ${code}); output:\n${output}`));
-    });
-  });
-}
-
 describe("starting with valid configuration", () => {
   let mongo: MongoMemoryServer;
 
   beforeAll(async () => {
-    // A cold mongod on Windows can take longer than the 10 s default to start.
-    mongo = await MongoMemoryServer.create({ instance: { launchTimeout: 30_000 } });
+    mongo = await startThrowawayMongo();
   });
 
   afterAll(async () => {
@@ -109,13 +95,14 @@ describe("starting with valid configuration", () => {
 
   it("logs app.listening with the API's URL and its docs URL once it listens", async () => {
     const port = await freePort();
-    const line = await startApiUntilLogged(
+    const exit = await startApi(
       { ...testEnv, PORT: String(port), MONGODB_URI: mongo.getUri("auth-test") },
       "app.listening",
     );
 
-    const { level, time: _time, pid: _pid, hostname: _hostname, msg: _msg, ...fields } = line;
-    expect(level).toBe(30);
+    if (exit.stoppedOn === undefined) throw new Error(`the API exited before app.listening:\n${exit.output}`);
+    const { level, time: _time, pid: _pid, hostname: _hostname, msg: _msg, ...fields } = exit.stoppedOn;
+    expect(level).toBe(pino.levels.values.info);
     expect(fields).toEqual({
       url: `http://localhost:${port}/api`,
       docs: `http://localhost:${port}/api/docs`,

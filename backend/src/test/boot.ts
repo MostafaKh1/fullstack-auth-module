@@ -2,15 +2,15 @@ import { Writable } from "node:stream";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { type Db, MongoClient } from "mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import request from "supertest";
 import { AppModule } from "@/app.module.js";
 import { configureApp } from "@/app.setup.js";
 import { parseConfig } from "@/config/app-env.js";
 import { ClockService } from "@/core/clock.service.js";
 import { FakeClock } from "@/test/support/fake-clock.js";
+import { startThrowawayMongo } from "@/test/support/throwaway-mongo.js";
 
-type LogLine = Record<string, unknown> & { level: number; msg?: string };
+export type LogLine = Record<string, unknown> & { level: number; msg?: string };
 
 export type TestApp = {
   /** The running Nest application, for harness self-checks only; tests drive it over HTTP. */
@@ -45,8 +45,7 @@ export const testEnv: Record<string, string> = {
 
 /** Only the clock and the log destination are swapped; the rest is wired as in production (ADR 0004). Once per file. */
 export async function startTestApp(env: Record<string, string> = {}): Promise<TestApp> {
-  // A cold mongod on Windows can take longer than the 10 s default to start.
-  const mongo = await MongoMemoryServer.create({ instance: { launchTimeout: 30_000 } });
+  const mongo = await startThrowawayMongo();
   const uri = mongo.getUri("auth-test");
   // The throwaway mongod has no authentication, but the production check demands credentials: validate with fake ones,
   // connect with the real URI.

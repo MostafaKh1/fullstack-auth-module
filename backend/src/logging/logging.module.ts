@@ -40,11 +40,13 @@ export class LoggingModule {
               level: config.get("logLevel"),
               genReqId: assignRequestId,
               redact: { paths: REDACTED_PATHS, censor: "[Redacted]" },
-              // pino-pretty is a devDependency: only development may name it, or the production image cannot start.
-              ...(config.get("env") === "development" && { transport: { target: "pino-pretty" } }),
             };
+            // The harness's destination parses each line as JSON, and pino refuses a transport beside a stream.
+            if (options.logDestination) return { pinoHttp: [pinoOptions, options.logDestination] };
+            // pino-pretty is a devDependency: only development may name it, or the production image cannot start.
+            const pretty = config.get("env") === "development";
             return {
-              pinoHttp: options.logDestination ? [pinoOptions, options.logDestination] : pinoOptions,
+              pinoHttp: pretty ? { ...pinoOptions, transport: { target: "pino-pretty" } } : pinoOptions,
             };
           },
         }),

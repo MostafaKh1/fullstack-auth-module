@@ -80,6 +80,8 @@ Parsed and validated once at boot in `src/config/app-env.ts` (the one reader of 
 
 Inject `PinoLogger` from `nestjs-pino` and call `setContext(ClassName.name)` in the constructor, as `src/common/filters/all-exceptions.filter.ts` does. Event names are dotted: `request.failed`, `session.started`. A secret-bearing field is added to `REDACTED_PATHS`, never masked at the call site. The request id (`src/logging/request-id.ts`) is on every line and is the envelope's `traceId`.
 
+Development output is pretty-printed (`pino-pretty`, a devDependency, switched on in `src/logging/logging.module.ts`); every other environment logs JSON.
+
 ## Tests
 
 The only test seam is the real application over HTTP (`api-docs.spec.ts` also pins `contract/openapi.json` to the generated document) against a throwaway MongoDB ([ADR 0004](../docs/adr/0004-quality-gates-and-test-seams.md)). Jest runs `src/test/**/*.spec.ts`; `tsconfig.build.json` excludes `src/test/`.

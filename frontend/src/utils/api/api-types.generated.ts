@@ -13,7 +13,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AuthController_signUp"];
+        post: operations["auth.signUp"];
         delete?: never;
         options?: never;
         head?: never;
@@ -104,11 +104,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        SignUpRequest: {
-            email: string;
-            name: string;
-            password: string;
-        };
         SignInRequest: {
             email: string;
             password: string;
@@ -150,7 +145,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    AuthController_signUp: {
+    "auth.signUp": {
         parameters: {
             query?: never;
             header?: never;
@@ -159,7 +154,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SignUpRequest"];
+                "application/json": {
+                    email: string;
+                    name: string;
+                    password: string;
+                };
             };
         };
         responses: {
@@ -169,10 +168,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SignedIn"];
+                    "application/json": {
+                        accessToken: string;
+                        /** @description Seconds until the access token expires. */
+                        expiresIn: number;
+                        user: {
+                            id: string;
+                            email: string;
+                            name: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
                 };
             };
-            /** @description Error codes: request.validation_failed, request.malformed */
+            /** @description 400 */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -184,7 +194,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: user.email_taken */
+            /** @description 409 */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -196,7 +206,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: request.too_large */
+            /** @description 413 */
             413: {
                 headers: {
                     [name: string]: unknown;
@@ -208,7 +218,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Error codes: request.rate_limited */
+            /** @description 429 */
             429: {
                 headers: {
                     [name: string]: unknown;

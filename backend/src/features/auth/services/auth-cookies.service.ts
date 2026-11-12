@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { Request, Response } from "express";
+import type { Request } from "express";
 import { ApiError } from "@/common/errors/api-error.js";
 import { AppConfigService } from "@/config/app-config.service.js";
 import { ClockService } from "@/core/clock.service.js";
@@ -9,6 +9,9 @@ const REFRESH_COOKIE = "refresh_credential";
 // The cookie travels only to the auth routes, never to the rest of the API (ADR 0001).
 const REFRESH_COOKIE_PATH = "/api/auth";
 
+/** Where a `Set-Cookie` line is added: Express's response, or the headers oRPC adds to a procedure's response. */
+type ResponseHeaders = { append(name: string, value: string): unknown };
+
 @Injectable()
 export class AuthCookiesService {
   constructor(
@@ -16,13 +19,13 @@ export class AuthCookiesService {
     private readonly clock: ClockService,
   ) {}
 
-  setRefreshCookie(response: Response, credential: { value: string; idleExpiresAt: Date }): void {
+  setRefreshCookie(response: ResponseHeaders, credential: { value: string; idleExpiresAt: Date }): void {
     const { value, idleExpiresAt } = credential;
     const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
     this.writeRefreshCookie(response, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
   }
 
-  clearRefreshCookie(response: Response): void {
+  clearRefreshCookie(response: ResponseHeaders): void {
     this.writeRefreshCookie(response, "", 0, new Date(0));
   }
 
@@ -46,7 +49,12 @@ export class AuthCookiesService {
   }
 
   // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
-  private writeRefreshCookie(response: Response, value: string, maxAgeSeconds: number, expires: Date): void {
+  private writeRefreshCookie(
+    response: ResponseHeaders,
+    value: string,
+    maxAgeSeconds: number,
+    expires: Date,
+  ): void {
     const attributes = [
       `${REFRESH_COOKIE}=${value}`,
       `Max-Age=${maxAgeSeconds}`,

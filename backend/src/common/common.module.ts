@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, REQUEST } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
-import { ORPCError, ORPCModule } from "@orpc/nest";
-import { experimental_RethrowHandlerPlugin as RethrowHandlerPlugin } from "@orpc/server/plugins";
+import { ORPCModule } from "@orpc/nest";
+import type { Request } from "express";
 import { AccessTokenGuard } from "@/common/guards/access-token.guard.js";
+import { orpcOptions } from "@/common/orpc/orpc-options.js";
 import { AccessTokenService } from "@/common/services/access-token.service.js";
 import { AppConfigService } from "@/config/app-config.service.js";
 import { PersistenceModule } from "@/database/persistence.module.js";
@@ -18,10 +19,9 @@ import { PersistenceModule } from "@/database/persistence.module.js";
         signOptions: { algorithm: "HS256" },
       }),
     }),
-    // oRPC answers every error a procedure throws itself, as a 500 unless it is an ORPCError; rethrowing the rest
-    // hands an ApiError to the global filter, which writes the envelope of ADR 0002.
-    ORPCModule.forRoot({
-      plugins: [new RethrowHandlerPlugin({ filter: (error) => !(error instanceof ORPCError) })],
+    ORPCModule.forRootAsync({
+      inject: [REQUEST, AppConfigService],
+      useFactory: (request: Request, config: AppConfigService) => orpcOptions(request, config.isProduction),
     }),
   ],
   providers: [AccessTokenService, { provide: APP_GUARD, useClass: AccessTokenGuard }],

@@ -1,5 +1,5 @@
 import { contract } from "@app/contract";
-import { signInSchema, signUpSchema } from "@app/contract/field-rules";
+import { signInSchema } from "@app/contract/field-rules";
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { OpenAPIGenerator } from "@orpc/openapi";
@@ -31,7 +31,6 @@ const USER = {
 // Request schemas come from the Zod schemas. Response objects are closed, so `api-docs.spec.ts` fails when a route
 // sends a field the document does not describe.
 const SCHEMAS = {
-  SignUpRequest: requestSchema(signUpSchema),
   SignInRequest: requestSchema(signInSchema),
   User: USER,
   SignedIn: {

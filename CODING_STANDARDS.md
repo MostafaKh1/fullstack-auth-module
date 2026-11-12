@@ -42,7 +42,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 
 ### Errors
 
-- Every error leaving the API is the envelope in [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md), produced by the one global exception filter.
+- Every error leaving the API is the envelope in [ADR 0002](docs/adr/0002-api-errors-carry-codes-not-copy.md), produced by the one global exception filter or, for a caller's mistake inside a contract procedure, by oRPC's error encoder ([ADR 0012](docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md); [backend/AGENTS.md](backend/AGENTS.md), "The error envelope").
 - Code throws `ApiError(code, { issues? })`. Branching anywhere on an error's message text is a bug: branch on `code`.
 - A code is added to the closed set on the back end and to the copy map on the front end in the same change.
 - A 5xx is logged with its stack; nothing internal (stack, driver error, query) reaches the response.
@@ -64,7 +64,7 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Pages live in `src/pages/`, one `<Name>Page.tsx` per route, default-exported only where the router requires it; every other component is a **named** export.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
-- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios directly: it calls a function in `src/utils/api/<resource>-api.ts`.
+- Server state goes through TanStack Query; the only client state is the Session context. No component calls axios or the oRPC client directly: it uses the oRPC client's TanStack Query helpers (`orpc` in `src/utils/api/orpc-client.ts`) or, for a route not yet in the contract, a function in `src/utils/api/<resource>-api.ts`.
 - Forms use React Hook Form with the contract's Zod schemas (`@app/contract/field-rules`) as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 

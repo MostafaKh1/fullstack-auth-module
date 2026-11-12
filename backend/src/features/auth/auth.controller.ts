@@ -1,7 +1,9 @@
-import { type SignInBody, type SignUpBody, signInSchema, signUpSchema } from "@app/contract/field-rules";
+import { contract } from "@app/contract";
+import { type SignInBody, signInSchema } from "@app/contract/field-rules";
 import { Body, Controller, Headers, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiCookieAuth, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ThrottlerGuard } from "@nestjs/throttler";
+import { Implement, implement } from "@orpc/nest";
 import type { Request, Response } from "express";
 import { ApiErrors } from "@/common/decorators/api-errors.decorator.js";
 import { Public } from "@/common/decorators/auth.decorator.js";
@@ -13,8 +15,9 @@ import { RouteValidationPipe } from "./route-validation.pipe.js";
 
 type AuthResponse = { accessToken: string; expiresIn: number; user: User };
 
+// No controller path: a contract procedure carries its whole path (`/auth/sign-up`).
 @ApiTags("auth")
-@Controller("auth")
+@Controller()
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -23,26 +26,12 @@ export class AuthController {
 
   @Public()
   @UseGuards(ThrottlerGuard)
-  @ApiBody({ schema: { $ref: "#/components/schemas/SignUpRequest" } })
-  @ApiResponse({
-    status: 201,
-    description: "A new Session; the refresh cookie is set.",
-    schema: { $ref: "#/components/schemas/SignedIn" },
-  })
-  @ApiErrors(
-    "request.validation_failed",
-    "request.malformed",
-    "user.email_taken",
-    "request.too_large",
-    "request.rate_limited",
-  )
-  @Post("sign-up")
-  async signUp(
-    @Body(new RouteValidationPipe(signUpSchema)) body: SignUpBody,
-    @Headers("user-agent") userAgent: string | undefined,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<AuthResponse> {
-    return this.respond(response, await this.authService.signUp({ ...body, userAgent: userAgent ?? null }));
+  @Implement(contract.auth.signUp)
+  signUp() {
+    return implement(contract.auth.signUp).handler(async ({ input, context }) => {
+      const userAgent = context.request.headers["user-agent"] ?? null;
+      return this.respond(context.resHeaders, await this.authService.signUp({ ...input, userAgent }));
+    });
   }
 
   @Public()
@@ -60,7 +49,7 @@ export class AuthController {
     "request.too_large",
     "request.rate_limited",
   )
-  @Post("sign-in")
+  @Post("auth/sign-in")
   @HttpCode(200)
   async signIn(
     @Body(new RouteValidationPipe(signInSchema)) body: SignInBody,
@@ -80,7 +69,7 @@ export class AuthController {
     schema: { $ref: "#/components/schemas/SignedIn" },
   })
   @ApiErrors("auth.unauthenticated", "auth.session_expired", "auth.origin_rejected", "request.rate_limited")
-  @Post("refresh")
+  @Post("auth/refresh")
   @HttpCode(200)
   async refresh(
     @Req() request: Request,
@@ -96,7 +85,7 @@ export class AuthController {
   @ApiCookieAuth()
   @ApiResponse({ status: 204, description: "The Session ended and the refresh cookie is cleared." })
   @ApiErrors("auth.unauthenticated", "auth.origin_rejected")
-  @Post("sign-out")
+  @Post("auth/sign-out")
   @HttpCode(204)
   async signOut(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<void> {
     await this.authService.signOut(this.authCookies.readRefreshCookie(request));
@@ -104,7 +93,7 @@ export class AuthController {
   }
 
   /** Within the grace window there is no new credential, so the cookie the rotation set is left in place (ADR 0001). */
-  private respond(response: Response, signedIn: AuthOutcome): AuthResponse {
+  private respond(response: Response | Headers, signedIn: AuthOutcome): AuthResponse {
     if (signedIn.refreshCredential) this.authCookies.setRefreshCookie(response, signedIn.refreshCredential);
     return { accessToken: signedIn.accessToken, expiresIn: signedIn.expiresIn, user: signedIn.user };
   }

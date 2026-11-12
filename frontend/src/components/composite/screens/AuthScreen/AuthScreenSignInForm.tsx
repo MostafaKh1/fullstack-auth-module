@@ -25,7 +25,7 @@ export function AuthScreenSignInForm() {
     <AuthScreenForm
       form={form}
       fields={fields}
-      submit={signIn}
+      mutation={{ mutationFn: signIn }}
       submitLabel="Sign in"
       pendingLabel="Signing in…"
     >

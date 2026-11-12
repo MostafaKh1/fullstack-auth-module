@@ -56,11 +56,15 @@ describe("the API documentation", () => {
   });
 
   it("documents each request body from the Zod schema, with the field rules", () => {
-    const body = document.paths["/api/auth/sign-up"].post.requestBody?.content["application/json"].schema;
-    const schema = document.components.schemas.SignUpRequest;
+    const signUp = document.paths["/api/auth/sign-up"].post.requestBody?.content["application/json"].schema;
+    const signIn = document.paths["/api/auth/sign-in"].post.requestBody?.content["application/json"].schema;
 
-    expect(body).toEqual({ $ref: "#/components/schemas/SignUpRequest" });
-    expect(schema).toMatchObject({ type: "object", required: ["email", "name", "password"] });
+    expect(signUp).toMatchObject({ type: "object", required: ["email", "name", "password"] });
+    expect(signIn).toEqual({ $ref: "#/components/schemas/SignInRequest" });
+    expect(document.components.schemas.SignInRequest).toMatchObject({
+      type: "object",
+      required: ["email", "password"],
+    });
   });
 
   it("documents the success statuses and the error codes", () => {

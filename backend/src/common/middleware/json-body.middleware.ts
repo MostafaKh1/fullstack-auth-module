@@ -1,5 +1,6 @@
+import type { ErrorCode } from "@app/contract/error-envelope";
 import { type ErrorRequestHandler, json, type RequestHandler } from "express";
-import { type ErrorCode, errorEnvelope } from "@/common/errors/error-codes.js";
+import { errorEnvelope } from "@/common/errors/error-envelope.js";
 import { assignRequestId } from "@/logging/request-id.js";
 
 const BODY_PARSER_ERRORS: Record<string, ErrorCode> = {

@@ -26,7 +26,7 @@ const conforming = {
   "utils/auth-url.ts": stub,
   "utils/api/api-client.ts": stub,
   "utils/api/api-error.ts": stub,
-  "utils/api/api-types.generated.ts": stub,
+  "utils/api/api-types.ts": stub,
   "tests/support/render-app.tsx": stub,
   "components/primitives/Slot.tsx": stub,
   "components/base/buttons/Button.tsx":
@@ -234,10 +234,10 @@ describe("structure check", () => {
       {
         "utils/api/api-client.ts": null,
         "utils/api/api-error.ts": null,
-        "utils/api/api-types.generated.ts": null,
+        "utils/api/api-types.ts": null,
         "utils/api-client.ts": stub,
         "utils/api-error.ts": stub,
-        "utils/api-types.generated.ts": stub,
+        "utils/api-types.ts": stub,
       },
       "helper-concern",
       "utils/api-client.ts",

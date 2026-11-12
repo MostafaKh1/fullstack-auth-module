@@ -50,10 +50,6 @@ jobs:
       - run: npm run build -w contract
       - name: openapi.json is current
         run: npm run openapi:check -w backend
-      - name: Generated front-end types are current
-        run: |
-          npm run generate:api -w frontend
-          git diff --exit-code -- frontend/src/utils/api/api-types.generated.ts
 
   app:
     name: ${{ matrix.app }}

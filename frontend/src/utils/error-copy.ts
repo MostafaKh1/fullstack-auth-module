@@ -1,4 +1,4 @@
-import type { ApiErrorCode } from "@/utils/api/api-error";
+import type { ErrorCode } from "@app/contract/error-envelope";
 
 /*
  * Every error sentence a User reads, keyed by the API's error code or a field rule id (ADR 0002).
@@ -7,7 +7,7 @@ import type { ApiErrorCode } from "@/utils/api/api-error";
 
 // Typed against the contract, so a code added to the back end's closed set fails the typecheck until it has copy.
 // The sentences for `auth.invalid_credentials` and `user.email_taken` are fixed by docs/requirements.md.
-const copyByErrorCode: Record<ApiErrorCode, string> = {
+const copyByErrorCode: Record<ErrorCode, string> = {
   "request.validation_failed": "Some fields need attention. Check them, then try again.",
   "request.malformed": "That request could not be read. Reload the page, then try again.",
   "request.too_large": "That request was too large to send.",

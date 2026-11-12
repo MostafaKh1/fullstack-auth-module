@@ -88,7 +88,7 @@ A page renders one `<main>` with one `<h1>` (tests find the screen by that headi
 
 - **The oRPC client** is `src/utils/api/orpc-client.ts`, the one client built from the contract ([ADR 0012](../docs/adr/0012-shared-orpc-contract-in-an-npm-workspace.md)): oRPC's OpenAPI link at `/api` with credentials included, so the refresh cookie travels, the Bearer header, and a decoder that turns the envelope into an error with its code (`data.issues` for a validation failure) and the envelope as its `cause`; oRPC's own check then marks it `defined`, the contract's typed error, when the procedure declares that code. Its link interceptor is the refresh-and-retry of "State" above. It exports `orpc`, the TanStack Query helpers, `SignedIn`, what Sign up, Sign in and refresh answer, and `User`.
 - Nothing outside `src/utils/` imports `@orpc/client`; nothing in `src/utils/` imports React or another app folder.
-- A route is typed by the contract through the client. The error envelope's type is generated from `contract/openapi.json` into `src/utils/api/api-types.generated.ts` (`npm run generate:api`), never restated. The front end imports no code from the back end ([contract/AGENTS.md](../contract/AGENTS.md)).
+- A route is typed by the contract through the client. The error envelope's type and the closed set of error codes come from `@app/contract/error-envelope`, never restated. The front end imports no code from the back end ([contract/AGENTS.md](../contract/AGENTS.md)).
 - The `returnTo` safety rule has one implementation, `isSafeReturnTo()` in `src/utils/auth-url/return-to.ts`, and one table of worked examples beside it that the page tests run; a new unsafe form is a new row.
 
 ## Copy and errors
@@ -122,7 +122,7 @@ The only seam is the whole rendered app with its real router and providers, the 
 
 ## Commands
 
-Run from `frontend/`: `npm run generate:api`, `npm run dev`, `npm run typecheck`, `npm test`, `npm run build`. Lint and format run from the repository root. `.env.example` lists every variable the app reads (`API_PROXY_TARGET`, used only by the dev proxy).
+Run from `frontend/`: `npm run dev`, `npm run typecheck`, `npm test`, `npm run build`. Lint and format run from the repository root. `.env.example` lists every variable the app reads (`API_PROXY_TARGET`, used only by the dev proxy).
 
 ## Gotchas
 

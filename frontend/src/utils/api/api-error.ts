@@ -1,12 +1,11 @@
+import type { ErrorEnvelope, ValidationIssue } from "@app/contract/error-envelope";
 import { ORPCError } from "@orpc/client";
-import type { components } from "@/utils/api/api-types.generated";
 import { clientErrorCode } from "@/utils/error-copy";
 
-/** One field-level problem: `path` is the keys from the body down to the field, `code` is a rule id. */
-export type ValidationIssue = NonNullable<components["schemas"]["ErrorEnvelope"]["issues"]>[number];
+export type { ValidationIssue };
 
 /** The body of every API error response (ADR 0002). `message` is a developer hint and is never shown. */
-type ApiErrorEnvelope = components["schemas"]["ErrorEnvelope"];
+type ApiErrorEnvelope = ErrorEnvelope;
 
 /** Whether a response body is the API's error envelope rather than, say, a proxy's error page. */
 export function isErrorEnvelope(body: unknown): body is ApiErrorEnvelope {
@@ -30,6 +29,3 @@ export function apiErrorEnvelope(error: unknown): ApiErrorEnvelope | null {
 export function apiFailureCode(error: unknown): string {
   return apiErrorEnvelope(error)?.code ?? clientErrorCode.unreachable;
 }
-
-/** The closed set of error codes, from the contract. */
-export type ApiErrorCode = ApiErrorEnvelope["code"];

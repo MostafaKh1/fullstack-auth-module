@@ -6,6 +6,12 @@ import { OpenAPILink } from "@orpc/openapi-client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { currentAccessToken } from "@/utils/api/api-client";
 import { isErrorEnvelope } from "@/utils/api/api-error";
+import { refreshesAfterRefusal, refreshSessionOnce } from "@/utils/api/session-refresh";
+
+type ContractClient = JsonifiedClient<ContractRouterClient<typeof contract>>;
+
+/** What Sign up, Sign in and refresh answer: the access token and the User. */
+export type SignedIn = Awaited<ReturnType<ContractClient["auth"]["refresh"]>>;
 
 const procedureAt = (path: readonly string[]) => {
   const found = path.reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], contract);
@@ -16,6 +22,7 @@ const procedureAt = (path: readonly string[]) => {
 const link = new OpenAPILink(contract, {
   // The link needs an absolute URL; in development Vite proxies `/api` to the back end, so the browser sees one origin.
   url: () => new URL("/api", window.location.origin).href,
+  // Read for every request, a retried one included, so it carries the token the refresh just issued.
   headers: (): Record<string, string> => {
     const token = currentAccessToken();
     return token ? { authorization: `Bearer ${token}` } : {};
@@ -32,9 +39,21 @@ const link = new OpenAPILink(contract, {
           cause: body,
         })
       : null,
-  // oRPC's own check marks the error `defined`, the contract's typed error, only when the procedure called declares
-  // its code, status and data.
   interceptors: [
+    // A refused access token: refresh once, shared by every request refused meanwhile, then send the request again,
+    // once. No caller handles an expired token itself.
+    async ({ next, path }) => {
+      try {
+        return await next();
+      } catch (error) {
+        if (!(error instanceof ORPCError) || !refreshesAfterRefusal(error.code, path[0] === "auth"))
+          throw error;
+        if (!(await refreshSessionOnce())) throw error;
+        return next();
+      }
+    },
+    // oRPC's own check marks the error `defined`, the contract's typed error, only when the procedure called declares
+    // its code, status and data.
     async ({ next, path }) => {
       try {
         return await next();
@@ -46,7 +65,7 @@ const link = new OpenAPILink(contract, {
   ],
 });
 
-const orpcClient: JsonifiedClient<ContractRouterClient<typeof contract>> = createORPCClient(link);
+const orpcClient: ContractClient = createORPCClient(link);
 
 /** TanStack Query options for every procedure of the contract: `orpc.auth.signUp.mutationOptions()`. */
 export const orpc = createTanstackQueryUtils(orpcClient);

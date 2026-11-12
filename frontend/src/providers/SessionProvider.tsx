@@ -1,8 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { type Session, SessionContext } from "@/providers/session-context";
 import { setAccessToken } from "@/utils/api/api-client";
-import { type SignedIn, signOut } from "@/utils/api/auth-api";
+import { orpc, type SignedIn } from "@/utils/api/orpc-client";
 import {
   listenForSessionChanges,
   refreshSessionOnce,
@@ -19,6 +19,7 @@ type Props = {
 export function SessionProvider({ children }: Props) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session>({ status: "restoring" });
+  const { mutateAsync: signOut } = useMutation(orpc.auth.signOut.mutationOptions());
 
   const startSession = useCallback((signedIn: SignedIn) => {
     resumeRefreshing();
@@ -41,11 +42,12 @@ export function SessionProvider({ children }: Props) {
       // The tab is signed out anyway: the User asked to leave, and a failed request is not a reason to stay (ADR 0008).
     }
     endLocally();
-  }, [endLocally]);
+  }, [endLocally, signOut]);
 
   // One listener for the provider's lifetime: StrictMode's second effect run then joins the boot refresh
   // the first run started instead of sending another.
   const [listener] = useState<SessionListener>(() => ({
+    refresh: () => orpc.auth.refresh.call(),
     restored: startSession,
     ended: endLocally,
   }));

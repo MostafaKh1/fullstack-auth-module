@@ -9,9 +9,6 @@ const REFRESH_COOKIE = "refresh_credential";
 // The cookie travels only to the auth routes, never to the rest of the API (ADR 0001).
 const REFRESH_COOKIE_PATH = "/api/auth";
 
-/** Where a `Set-Cookie` line is added: Express's response, or the headers oRPC adds to a procedure's response. */
-type ResponseHeaders = { append(name: string, value: string): unknown };
-
 @Injectable()
 export class AuthCookiesService {
   constructor(
@@ -19,13 +16,13 @@ export class AuthCookiesService {
     private readonly clock: ClockService,
   ) {}
 
-  setRefreshCookie(headers: ResponseHeaders, credential: { value: string; idleExpiresAt: Date }): void {
+  setRefreshCookie(headers: Headers, credential: { value: string; idleExpiresAt: Date }): void {
     const { value, idleExpiresAt } = credential;
     const maxAgeSeconds = Math.floor((idleExpiresAt.getTime() - this.clock.now().getTime()) / 1000);
     this.writeRefreshCookie(headers, encodeURIComponent(value), maxAgeSeconds, idleExpiresAt);
   }
 
-  clearRefreshCookie(headers: ResponseHeaders): void {
+  clearRefreshCookie(headers: Headers): void {
     this.writeRefreshCookie(headers, "", 0, new Date(0));
   }
 
@@ -48,13 +45,7 @@ export class AuthCookiesService {
     }
   }
 
-  // Written by hand: Express's `res.cookie` derives `Expires` from the real clock, not from the Session.
-  private writeRefreshCookie(
-    headers: ResponseHeaders,
-    value: string,
-    maxAgeSeconds: number,
-    expires: Date,
-  ): void {
+  private writeRefreshCookie(headers: Headers, value: string, maxAgeSeconds: number, expires: Date): void {
     const attributes = [
       `${REFRESH_COOKIE}=${value}`,
       `Max-Age=${maxAgeSeconds}`,

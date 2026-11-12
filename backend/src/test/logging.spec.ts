@@ -22,6 +22,16 @@ describe("structured logs", () => {
     expect(line).toMatchObject({ req: { method: "GET", url: "/api/health" }, res: { statusCode: 200 } });
   });
 
+  it("logs no failure for a Sign out answered with 204", async () => {
+    const response = await app.http().post("/api/auth/sign-out").set("X-Request-Id", "sign-out-204");
+    // Anything Nest does after oRPC has ended the response is logged after the client has its answer.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(response.status).toBe(204);
+    const failures = app.logs().filter((entry) => hasRequestId(entry, "sign-out-204") && entry.level >= 50);
+    expect(failures).toEqual([]);
+  });
+
   it("redacts the Authorization header and cookies", async () => {
     await app
       .http()

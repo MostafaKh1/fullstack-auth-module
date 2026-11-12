@@ -19,6 +19,7 @@ type Props = {
 export function SessionProvider({ children }: Props) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session>({ status: "restoring" });
+  const { mutateAsync: refresh } = useMutation(orpc.auth.refresh.mutationOptions());
   const { mutateAsync: signOut } = useMutation(orpc.auth.signOut.mutationOptions());
 
   const startSession = useCallback((signedIn: SignedIn) => {
@@ -47,7 +48,7 @@ export function SessionProvider({ children }: Props) {
   // One listener for the provider's lifetime: StrictMode's second effect run then joins the boot refresh
   // the first run started instead of sending another.
   const [listener] = useState<SessionListener>(() => ({
-    refresh: () => orpc.auth.refresh.call(),
+    refresh: () => refresh(),
     restored: startSession,
     ended: endLocally,
   }));

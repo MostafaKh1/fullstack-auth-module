@@ -6,7 +6,7 @@ import { OpenAPILink } from "@orpc/openapi-client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { currentAccessToken } from "@/utils/api/api-client";
 import { isErrorEnvelope } from "@/utils/api/api-error";
-import { refreshesAfterRefusal, refreshSessionOnce } from "@/utils/api/session-refresh";
+import { refreshSessionOnce, shouldRefreshAndRetry } from "@/utils/api/session-refresh";
 
 type ContractClient = JsonifiedClient<ContractRouterClient<typeof contract>>;
 
@@ -46,7 +46,7 @@ const link = new OpenAPILink(contract, {
       try {
         return await next();
       } catch (error) {
-        if (!(error instanceof ORPCError) || !refreshesAfterRefusal(error.code, path[0] === "auth"))
+        if (!(error instanceof ORPCError) || !shouldRefreshAndRetry(error.code, path[0] === "auth"))
           throw error;
         if (!(await refreshSessionOnce())) throw error;
         return next();

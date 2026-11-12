@@ -21,7 +21,7 @@ const validationIssueSchema = z.strictObject({
   code: z.string(),
 });
 
-/** What a route with a body can answer before it runs: the body parser's refusals and the schema's. */
+// What a route with a body can answer before it runs: the body parser's refusals and the schema's.
 const bodyErrors = {
   "request.validation_failed": {
     status: 400,

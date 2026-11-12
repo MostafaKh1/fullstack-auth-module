@@ -10,7 +10,7 @@ import { parseConfig } from "@/config/app-env";
 import { ClockService } from "@/core/clock.service";
 import { FakeClock } from "@/test/support/fake-clock";
 
-export type LogLine = Record<string, unknown> & { level: number; msg?: string };
+type LogLine = Record<string, unknown> & { level: number; msg?: string };
 
 export type TestApp = {
   /** The running Nest application, for harness self-checks only; tests drive it over HTTP. */

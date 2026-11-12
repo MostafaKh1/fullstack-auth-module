@@ -65,7 +65,7 @@ Vocabulary follows [GLOSSARY.md](../../GLOSSARY.md); the two load-bearing decisi
 ### Agent and project docs
 
 - Root `AGENTS.md` (overview, commands, rules), `CLAUDE.md` containing only `@AGENTS.md`, and an `AGENTS.md` in each app.
-- `plans/` with the proposed -> in-progress -> completed lifecycle.
+- `plans/README.md`, pointing at the issue tracker.
 - Skills in `.claude/skills/`: `git-conventions`, plus `grill-with-docs`, `grilling` and `domain-modeling`.
 - `README.md` (how to run, test and work with the repo, plus what is out of scope) and `AI.md`, written one entry per stage.
 

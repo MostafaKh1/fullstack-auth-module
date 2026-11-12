@@ -1,4 +1,4 @@
-import type { ErrorCode, ValidationIssue } from "@app/contract/error-envelope";
+import type { ErrorCode, ValidationIssue } from "@app/contract/common/error-envelope";
 
 /** Branch on `code`, never on `message`. */
 export class ApiError extends Error {

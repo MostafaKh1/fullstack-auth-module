@@ -1,4 +1,4 @@
-import { signUpExamples } from "@app/contract/field-rules.examples";
+import { signUpExamples } from "@app/contract/auth/auth.field-rules.examples";
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";

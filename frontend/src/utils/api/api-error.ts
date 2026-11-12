@@ -1,4 +1,4 @@
-import type { ValidationIssue } from "@app/contract/error-envelope";
+import type { ValidationIssue } from "@app/contract/common/error-envelope";
 import { ORPCError } from "@orpc/client";
 import { clientErrorCode } from "@/utils/error-copy";
 

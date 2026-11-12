@@ -65,12 +65,12 @@ The layering of [ADR 0010](docs/adr/0010-controller-service-repository-layering.
 - Props are `type Props = { ... }`, not `interface`.
 - A component that renders a styleable root accepts `className` and composes it with `cn()`, so a caller can override classes deterministically. Variants are expressed with CVA, not conditional class strings.
 - Server state goes through TanStack Query; the only client state is the Session context. No component calls the oRPC client directly: it uses the client's TanStack Query helpers (`orpc` in `src/utils/api/orpc-client.ts`).
-- Forms use React Hook Form with the contract's Zod schemas (`@app/contract/field-rules`) as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
+- Forms use React Hook Form with the contract's Zod schemas (`@app/contract/auth/auth.field-rules`) as the resolver. Server `issues` are applied with `setError` on the field named by `path`.
 - Every user-facing sentence lives in the front end. Error copy is looked up by `code` in one map; a code with no entry falls back to a generic sentence, never to the server's `message`.
 
 ## Validation rules
 
-- The field rules exist once, in `contract/src/field-rules.ts`, with their table of worked examples (`field-rules.examples.ts`): the back end's request schemas and the front end's forms both import them, and both suites run the same table. A rule or an example changes there, in one place ([contract/AGENTS.md](contract/AGENTS.md)).
+- The field rules exist once, in `contract/src/features/auth/auth.field-rules.ts`, with their table of worked examples (`auth.field-rules.examples.ts`): the back end's request schemas and the front end's forms both import them, and both suites run the same table. A rule or an example changes there, in one place ([contract/AGENTS.md](contract/AGENTS.md)).
 - The API is described once, by the contract: a route, its schemas and its error codes are declared there and nowhere else, and `contract/openapi.json` and Swagger UI are generated from it. A route that needs a second description (a decorator, a hand-written type) is not on the contract yet.
 - [docs/requirements.md](docs/requirements.md) is the authority. When code and that file disagree, the code is wrong.
 

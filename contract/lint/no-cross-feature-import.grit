@@ -1,0 +1,20 @@
+language js
+
+// noRestrictedImports cannot say "any folder but common/". A feature file reaches its own siblings with ./ and the
+// shared area with ../common/, so any other ../<folder>/ is another feature.
+or {
+  `import $_ from $source`,
+  `import type $_ from $source`,
+  `import $source`,
+  `export { $_ } from $source`,
+  `export type { $_ } from $source`,
+  `export * from $source`,
+  `import($source)`
+} where {
+  $source <: r"[\"']\.\./[a-z0-9-]+/.*[\"']",
+  not $source <: r"[\"']\.\./common/.*[\"']",
+  register_diagnostic(
+    span=$source,
+    message="A contract feature never imports another feature: code two features use belongs in src/common/."
+  )
+}

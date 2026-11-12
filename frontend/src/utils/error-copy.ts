@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@app/contract/error-envelope";
+import type { ErrorCode } from "@app/contract/common/error-envelope";
 
 /*
  * Every error sentence a User reads, keyed by the API's error code or a field rule id (ADR 0002).

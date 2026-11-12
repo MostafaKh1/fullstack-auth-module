@@ -1,7 +1,7 @@
+import { signInExamples } from "@app/contract/field-rules.examples";
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signInExamples } from "@/components/composite/screens/AuthScreen/AuthScreenFieldRules.examples";
 import { accessibilityViolations } from "@/tests/support/accessibility";
 import {
   ada,

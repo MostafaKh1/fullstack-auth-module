@@ -194,14 +194,25 @@ describe("structure check", () => {
     assert.equal(status, 0, out);
   });
 
-  it("hook-shared: a <Folder>UseX hook used by two or more files moves to hooks/", () => {
+  it("accepts a <Folder>UseX hook that several files of its own folder use", () => {
+    const { status, out } = check({
+      "components/composite/screens/AuthScreen/AuthScreenUseThing.ts": stub,
+      "components/composite/screens/AuthScreen/AuthScreen.tsx":
+        'import { AuthScreenUseThing } from "./AuthScreenUseThing";\nimport { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
+      "components/composite/screens/AuthScreen/AuthScreenForm.tsx":
+        'import { AuthScreenFieldRules } from "./AuthScreenFieldRules";\nimport { AuthScreenUseThing } from "./AuthScreenUseThing";\n',
+    });
+    assert.equal(status, 0, out);
+  });
+
+  it("hook-shared: a <Folder>UseX hook used by two or more files outside its folder moves to hooks/", () => {
     fails(
       {
         "components/composite/screens/AuthScreen/AuthScreenUseThing.ts": stub,
-        "components/composite/screens/AuthScreen/AuthScreen.tsx":
-          'import { AuthScreenUseThing } from "./AuthScreenUseThing";\nimport { AuthScreenForm } from "./AuthScreenForm";\nimport { AuthScreenFieldRules } from "./AuthScreenFieldRules";\n',
-        "components/composite/screens/AuthScreen/AuthScreenForm.tsx":
-          'import { AuthScreenFieldRules } from "./AuthScreenFieldRules";\nimport { AuthScreenUseThing } from "./AuthScreenUseThing";\n',
+        "components/layout/route-guards/RequireSession.tsx":
+          'import { AuthScreenUseThing } from "@/components/composite/screens/AuthScreen/AuthScreenUseThing";\n',
+        "pages/not-found/NotFoundPage.tsx":
+          'import { AuthScreenUseThing } from "@/components/composite/screens/AuthScreen/AuthScreenUseThing";\n',
       },
       "hook-shared",
       "components/composite/screens/AuthScreen/AuthScreenUseThing.ts",
@@ -281,10 +292,16 @@ describe("structure check", () => {
     );
   });
 
-  it("accepts a base component that reads a hook and a context from hooks/ and providers/", () => {
+  it("section-imports: base reaches only utils outside components/", () => {
+    for (const spec of ["@/hooks/useSession", "@/providers/session-context"]) {
+      fails(
+        { "components/base/buttons/Button.tsx": `import { x } from "${spec}";\n` },
+        "section-imports",
+        "components/base/buttons/Button.tsx",
+      );
+    }
     const { status, out } = check({
-      "components/base/buttons/Button.tsx":
-        'import { useSession } from "@/hooks/useSession";\nimport { SessionContext } from "@/providers/session-context";\n',
+      "components/base/buttons/Button.tsx": 'import { cn } from "@/utils/cn";\n',
     });
     assert.equal(status, 0, out);
   });

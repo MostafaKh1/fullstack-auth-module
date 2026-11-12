@@ -9,7 +9,7 @@ import { z } from "zod";
 const EMAIL_FORMAT =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
-/** Length in characters (code points),, so an emoji counts once, not twice. */
+/** Length in characters (code points), so an emoji counts once, not twice. */
 const characters = (value: string): number => [...value].length;
 
 /** The checklist shows the same predicates live. */
